@@ -50,3 +50,19 @@ class SimpleEnvironment:
 
     def plot_show(self):
         plt.show()
+
+    def extend(self, start_config, goal_config, dist):
+        #extend by dist in direction goal_config
+        dist_total = self.compute_distace(start_config, goal_config)
+        dist_ratio = dist/dist_total
+        if dist_ratio > 1:
+            dist_ratio = 1
+        new_config = start_config + dist_ratio*(goal_config-start_config)
+        if self.is_in_collision(new_config):
+            return numpy.array([])
+        return new_config
+
+    def extend_ratio(self, start_config, goal_config, dist_ratio):
+        dist_total = self.compute_distace(start_config, goal_config)
+
+        return self.extend(start_config, goal_config, dist_total*dist_ratio)

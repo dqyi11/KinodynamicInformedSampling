@@ -39,15 +39,3 @@ class Tree:
 
     def total_vertices(self):
         return len(self.vertices)
-
-    def extend(self, start_config, goal_config, dist):
-        #extend by dist in direction goal_config
-        dist_total = self.planning_env.compute_distace(start_config,
-                                                       goal_config)
-        dist_ratio = dist/dist_total
-        if dist_ratio > 1:
-            dist_ratio = 1
-        new_config = start_config + dist_ratio*(goal_config-start_config)
-        if self.planning_env.is_in_collision(new_config):
-            return numpy.array([])
-        return new_config

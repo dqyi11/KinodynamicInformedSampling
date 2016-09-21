@@ -15,7 +15,7 @@ class RRT:
             random_config = self.planning_env.generate_random_configuration()
             nearest_config_id, nearest_config = tree.get_nearest_vertex(
                                                 random_config)
-            new_config = tree.extend(nearest_config, random_config, 0.1)
+            new_config = self.planning_env.extend_ratio(nearest_config, random_config, 1)
             if new_config.size > 0:
                 new_config_id = tree.add_vertex(new_config)
                 tree.add_edge(nearest_config_id, new_config_id)
