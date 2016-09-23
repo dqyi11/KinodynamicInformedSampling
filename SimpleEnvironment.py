@@ -64,5 +64,4 @@ class SimpleEnvironment:
 
     def extend_ratio(self, start_config, goal_config, dist_ratio):
         dist_total = self.compute_distace(start_config, goal_config)
-
         return self.extend(start_config, goal_config, dist_total*dist_ratio)
