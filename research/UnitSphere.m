@@ -1,10 +1,17 @@
 function UnitSphere
+    close all;
+    Ball=1;  %1=Ball; 0=Ellipse
     a_max=1;
-    x1=0; v1=1; x2=1; v2=-1;
+    x1=0; v1=0; x2=1; v2=0;
     xc = (x1+x2)/2;
     vc = (v1+v2)/2;
-    x = xc-6.0:0.04:xc+6.0;
-    y = vc-3:0.04:vc+3;
+    %x = xc-6.0:0.04:xc+6.0;
+    %y = vc-3:0.04:vc+3;
+    x = -6.0:0.04:6.0;
+    y = -3:0.04:3;
+    %x = x1-6.0:0.01:x1+6.0;
+    %y = v1-3:0.01:v1+3;
+    
     plot_surf();
     
     % returns the minimum time between 2 points ([x1,y1] and [x2,y2]) in the state space
@@ -39,18 +46,30 @@ function UnitSphere
 
     function plot_surf()
         [X, Y] = meshgrid(x, y);
-        %Z = arrayfun(@cal_min_time2, repmat(x1,size(X)), repmat(v1,size(Y)), X, Y);
-        Z = arrayfun(@cal_min_time3, repmat(x1,size(X)), repmat(v1,size(Y)), repmat(x2,size(X)), repmat(v2,size(Y)), X, Y);
-%         contour3(X,Y,Z,10,'k'); 
-%         hold on; surf(X,Y,Z, 'Edgecolor', 'none'); colorbar; hold off;
-%         xlabel('X'); ylabel('X_d_o_t'); zlabel('Time');
+        if Ball == 1
+            Z = arrayfun(@cal_min_time2, repmat(x1,size(X)), repmat(v1,size(Y)), X, Y);
+        elseif Ball == 0
+            Z = arrayfun(@cal_min_time3, repmat(x1,size(X)), repmat(v1,size(Y)), repmat(x2,size(X)), repmat(v2,size(Y)), X, Y);
+        end
+        contour3(X,Y,Z,10,'k'); 
+        hold on; surf(X,Y,Z, 'Edgecolor', 'none'); colorbar; hold off;
+        xlabel('X'); ylabel('X_d_o_t'); zlabel('Time');
         figure;
-        plot(x1,v1,'r*','markers',12); hold on; plot(x2,v2,'K*','markers',12); hold off;
+        plot(x1,v1,'r*','markers',12); if Ball==0; hold on; plot(x2,v2,'K*','markers',12); hold off; end
         hold on; pcolor(X,Y,Z); shading flat; colorbar; hold off;
         hold on; contour(X,Y,Z,2,'k'); hold off;
         xlabel('X'); ylabel('X_d_o_t'); zlabel('Time');
-        hold on; plot(x1,v1,'r*','markers',12); plot(x2,v2,'K*','markers',12); hold off;
-        legend('start','goal');
+        hold on; plot(x1,v1,'r*','markers',12); 
+        if Ball==0
+        plot(x2,v2,'K*','markers',12); 
+        end
+        hold off;
+        if Ball == 1
+            legend('start');
+        elseif Ball == 0
+            legend('start','goal');
+        end
+        
     end
 
     function s = sign(x)
