@@ -1,0 +1,1 @@
+function [ results, per_in] = mcmc( cstfxn, x1, x2, x, max_steps, sigma, T_best )
