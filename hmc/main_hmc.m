@@ -12,10 +12,10 @@ x1 = zeros(num_dim,1)';
 x2 = ones(num_dim,1)';
 h = 0.001;
 sigma = 0.5;
-epsilon = 0.001;
-L = 5000;
+epsilon = 0.01;
+L = 500;
 max_steps = 20000;
-max_steps = 10;
+max_steps = 100;
 low_range = -10;
 high_range = 10;
 alpha = 1;
@@ -23,7 +23,7 @@ surf_step = 0.1;
 no_epochs = 1000;
 global T_best;
 T_best = 10;
-no_trials = 1;
+no_trials = 5;
 last_of_run = [];
 desired_no_samples = 1000;
 %% Running gradient descent to the level set 
@@ -115,6 +115,7 @@ per_in_total / actual_trials
 % scatter3(mcmc_all_results(:,1),mcmc_all_results(:,2),mcmc_all_results(:,3),'r');
 % hold off;
 
+plot_nd_kino_surf(results, num_dim);
 % figure;
 % hold on;
 % viscircles([0,0], 1);

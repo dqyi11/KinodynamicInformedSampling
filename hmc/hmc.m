@@ -23,7 +23,7 @@ function [ results, per_in] = hmc( cstfxn, grad_cstfxn, epsilon, L, q1, q2, q, s
         for j=1:L
             q = q + epsilon * p;
             if j ~= L; p = p - epsilon * feval(grad_cstfxn, cstfxn, q, q1, q2, h); end
-            results = [results; q, feval(cstfxn, q1, q2, q)]; % Plot
+%             results = [results; q, feval(@getTime, q1, q2, q)]; % Plot
 %             hamiltonian trajectory
         end
         % Make a half step for momentum at the end
@@ -42,7 +42,7 @@ function [ results, per_in] = hmc( cstfxn, grad_cstfxn, epsilon, L, q1, q2, q, s
 %         results = [results; q, feval(@getTime, q1, q2, q);];
         if (rand <= alpha)
             per_in = per_in + 1;
-%             results = [results; q, feval(@getTime, q1, q2, q);];
+            results = [results; q, feval(@getTime, q1, q2, q);];
         else
             q = q_last;
         end
