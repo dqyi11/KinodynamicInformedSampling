@@ -8,8 +8,10 @@
 
 % Ref : https://arxiv.org/pdf/1206.1901.pdf
 
-function [ results, per_in] = hmc( cstfxn, grad_cstfxn, epsilon, L, q1, q2, q, sigma, no_steps,T_best )
+function [ results, per_in] = hmc( cstfxn, grad_cstfxn, epsilon, L, q1, q2, q, sigma, no_steps,  T_best )
     global h; % step for taking the derivative
+    results = [];
+    per_in = 0;
     for i=1:no_steps
         q_last = q;
         p = normrnd(0, sigma, size(q));
@@ -21,23 +23,30 @@ function [ results, per_in] = hmc( cstfxn, grad_cstfxn, epsilon, L, q1, q2, q, s
         for j=1:L
             q = q + epsilon * p;
             if j ~= L; p = p - epsilon * feval(grad_cstfxn, cstfxn, q, q1, q2, h); end
+            results = [results; q, feval(cstfxn, q1, q2, q)]; % Plot
+%             hamiltonian trajectory
         end
         % Make a half step for momentum at the end
-        p = p - epsilon * feval(grad_cstfxn,q)/2;
+        p = p - epsilon * feval(grad_cstfxn, cstfxn, q, q1, q2, h)/2;
         % Negate the momentum at the end of the traj to make proposal
         % symmetric
         p = -p;
         % Evaluate potential and kinetic energies at start and end of traj
         U_last = feval(cstfxn, q1, q2, q_last);
-        K_last = sum(p_last^2)/2;
+        K_last = sum(p_last.^2)/2;
         U_proposed = feval(cstfxn, q1, q2, q);
-        K_proposed = sum(p^2)/2;
+        K_proposed = sum(p.^2)/2;
         
-        % Accept or rejecct the state at the end of trajectory
-        if ( 1 < exp(U_last-U_proposed+K_last-K_proposed) ) % TODO: check ><
-            % choose proposed
+        % Accept or reject the state at the end of trajectory
+        alpha = min(1,exp(U_last-U_proposed+K_last-K_proposed));
+%         results = [results; q, feval(@getTime, q1, q2, q);];
+        if (rand <= alpha)
+            per_in = per_in + 1;
+%             results = [results; q, feval(@getTime, q1, q2, q);];
         else
-            % choose last
+            q = q_last;
         end
+        
     end
+    per_in = per_in / no_steps;
 end

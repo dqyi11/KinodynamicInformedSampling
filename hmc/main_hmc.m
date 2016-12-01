@@ -1,19 +1,29 @@
 %% Main variables
+addpath('..\mcmc');
+addpath('..\research');
+close all; clear;
 global h a_max;
+cost_fxn = @getTime;
+% cost_fxn = @my_dist3;
+
 a_max=1;
-num_dim = 8;
+num_dim = 6;
 x1 = zeros(num_dim,1)';
 x2 = ones(num_dim,1)';
 h = 0.001;
 sigma = 0.5;
+epsilon = 0.001;
+L = 5000;
 max_steps = 20000;
+max_steps = 10;
 low_range = -10;
 high_range = 10;
 alpha = 1;
 surf_step = 0.1;
 no_epochs = 1000;
-T_best = 5;
-no_trials = 100000;
+global T_best;
+T_best = 10;
+no_trials = 1;
 last_of_run = [];
 desired_no_samples = 1000;
 %% Running gradient descent to the level set 
@@ -25,19 +35,22 @@ per_in_total = 0;
 mcmc_all_results = [];
 total_t1 = 0;
 total_t2 = 0;
-for trial = 1:inf
+for trial = 1:no_trials
     % Choose a random starting point
     start = (high_range - low_range).*rand(1,num_dim) + low_range;
     
     tic;
     % Gradient descent to the level-curve
-    results{trial} = grad_descent(@getTime, no_epochs, x1, x2, start, alpha, T_best);
+    results{trial} = grad_descent(cost_fxn, no_epochs, x1, x2, start, alpha, T_best);
     total_t1 = total_t1 + toc;
     
     % MCMC
     tic;
     results_after = results{trial}(end,1:end-1);
-    [mcmc_results, per_in] = hmc(@getTime, x1, x2, results_after, max_steps, sigma, T_best);
+    
+    results{trial} = [];
+    
+    [mcmc_results, per_in] = hmc(@cal_energy, @my_grad, epsilon, L, x1, x2, results_after, sigma, max_steps,  T_best );
     mcmc_all_results = [mcmc_all_results; mcmc_results];
     total_t2 = total_t2 + toc;
     
@@ -82,21 +95,23 @@ per_in_total / actual_trials
 % no_sampled_in / rej_trials
 %% Plot results
 % figure;
-% Z = plot_surf(low_range:surf_step:high_range, low_range:surf_step:high_range, @cal_min_time3);
+% plot_surf3(x1, x2, low_range:surf_step:high_range, low_range:surf_step:high_range, cost_fxn);
 % colors = [hsv(100); jet(100)];
 % shuffled_rows = randi(size(colors,1), [no_trials, 1]);
 % colors = colors(shuffled_rows, :);
-% 
-% global v1 v2;
-% v1 = x1(2);
-% v2 = x2(2);
-% x1 = x1(1);
-% x2 = x2(2);
+
+% global xx1 xx2 vv1 vv2;
+% vv1 = x1(2);
+% vv2 = x2(2);
+% xx1 = x1(1);
+% xx2 = x2(1);
 % plot_kino_surf(low_range:surf_step:high_range, low_range:surf_step:high_range, @cal_min_time3, T_best);
-% 
-% % for trial = 1:no_trials
-% %     plot3(results{trial}(:,1),results{trial}(:,2),results{trial}(:,3), 'Color', colors(trial,:));
-% % end
+% hold on;
+% color = ['r','g','b','c','y'];
+% for trial = 1:no_trials
+%     plot3(results{trial}(:,1),results{trial}(:,2),results{trial}(:,3), 'Color', colors(trial,:));
+%     scatter3(results{trial}(:,1),results{trial}(:,2),results{trial}(:,3),strcat(color(trial)),'*');
+% end
 % scatter3(mcmc_all_results(:,1),mcmc_all_results(:,2),mcmc_all_results(:,3),'r');
 % hold off;
 

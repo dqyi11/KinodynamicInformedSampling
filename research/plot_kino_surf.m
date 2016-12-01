@@ -1,8 +1,8 @@
 function plot_kino_surf(x_range, y_range, cstfxn, T_best)
-    global x1 v1 x2 v2;
+    global xx1 vv1 xx2 vv2;
 
     [X, Y] = meshgrid(x_range, y_range);
-    Z = arrayfun(cstfxn, repmat(x1,size(X)), repmat(v1,size(Y)), repmat(x2,size(X)), repmat(v2,size(Y)), X, Y);
+    Z = arrayfun(cstfxn, repmat(xx1,size(X)), repmat(vv1,size(Y)), repmat(xx2,size(X)), repmat(vv2,size(Y)), X, Y);
 
 %     Z = arrayfun(cstfxn, [X(:), Y(:)], 2);
 %     Z = rowfun(cstfxn, [X(:), Y(:)]);
