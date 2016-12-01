@@ -7,7 +7,7 @@ cost_fxn = @getTime;
 % cost_fxn = @my_dist3;
 
 a_max=1;
-num_dim = 6;
+num_dim = 12;
 x1 = zeros(num_dim,1)';
 x2 = ones(num_dim,1)';
 h = 0.001;
@@ -23,7 +23,7 @@ surf_step = 0.1;
 no_epochs = 1000;
 global T_best;
 T_best = 10;
-no_trials = 5;
+no_trials = 1;
 last_of_run = [];
 desired_no_samples = 1000;
 %% Running gradient descent to the level set 
@@ -66,9 +66,9 @@ while(trial <= no_trials)
     
     trial = trial + 1;
     
-    if(size(mcmc_all_results,1) >= desired_no_samples)
-        break
-    end
+%     if(size(mcmc_all_results,1) >= desired_no_samples)
+%         break
+%     end
 end
 fprintf('Number of Samples \n')
 size(mcmc_all_results)
