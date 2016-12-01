@@ -6,7 +6,8 @@
 function E = cal_energy(q1, q2, q_last)
     global T_best;
     T = getTime(q1,q2,q_last);
-%      E = T + 1e4*sigmf(T-T_best,[10 0]);
+%     E = T + 1e4*sigmf(T-T_best,[10 0]);
 %     E = log(T) + 1e4*sigmf(T-T_best,[10 0]);
-    E = log(1+log(T)) + 1e4*sigmf(T-T_best,[20 0]);
+%     E = log(1+log(T)) + 1e4*sigmf(T-T_best,[20 0]);
+    E = tanh(T) + 1e4*sigmf(T-T_best,[20 0]);
 end

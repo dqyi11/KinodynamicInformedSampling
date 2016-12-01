@@ -18,6 +18,8 @@ function [ results, per_in] = hmc( cstfxn, grad_cstfxn, epsilon, L, q1, q2, q, s
         p_last = p;
         
         % Make a half step for momentum at the beginning
+        grad = feval(grad_cstfxn, cstfxn, q, q1, q2, h);
+        if(max(grad) > 1e2); return; end;
         p = p - epsilon * feval(grad_cstfxn, cstfxn, q, q1, q2, h)/2;
         % Alternate Full steps for q and p
         for j=1:L

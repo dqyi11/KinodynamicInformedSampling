@@ -35,7 +35,8 @@ per_in_total = 0;
 mcmc_all_results = [];
 total_t1 = 0;
 total_t2 = 0;
-for trial = 1:no_trials
+trial = 1;
+while(trial <= no_trials)
     % Choose a random starting point
     start = (high_range - low_range).*rand(1,num_dim) + low_range;
     
@@ -51,14 +52,20 @@ for trial = 1:no_trials
     results{trial} = [];
     
     [mcmc_results, per_in] = hmc(@cal_energy, @my_grad, epsilon, L, x1, x2, results_after, sigma, max_steps,  T_best );
+    if(size(mcmc_results,1) == 0)
+        disp('Rejected')
+        continue;
+    end
+    
     mcmc_all_results = [mcmc_all_results; mcmc_results];
     total_t2 = total_t2 + toc;
     
     per_in_total = per_in_total + per_in;
     actual_trials = actual_trials + 1;
     results{trial} = [results{trial}; mcmc_results];
-    last_of_run = [last_of_run; results(end,:)];
-
+    
+    trial = trial + 1;
+    
     if(size(mcmc_all_results,1) >= desired_no_samples)
         break
     end
