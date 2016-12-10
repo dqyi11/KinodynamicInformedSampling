@@ -1,12 +1,15 @@
+// Standard Librry
 #include <iostream>
+#include <tuple>
+#include <vector>
+#include <fstream>
+
+// Eigen
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
 
 // #include <ProblemDefinition/ProblemDefinition.h>
 #include <Sampler/Sampler.h>
-
-#include <tuple>
-#include <vector>
 
 // 
 // From stackoverflow: 
@@ -50,12 +53,12 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
     	std::vector<int> args;
 
     	// Get the number of samples
-    	if(cmdOptionExists(argv, argv+arc, "-samples")) 
+    	if(cmdOptionExists(argv, argv+argc, "-samples")) 
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-samples")));
     	else
     		args.push_back(100); // Default to 100 samples
     	// Get the boolean to determine if we should time
-    	if(cmdOptionExists(argv, argv+arc, "-time")) 
+    	if(cmdOptionExists(argv, argv+argc, "-time")) 
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-time")));
     	else
     		args.push_back(0); // Default to not print time
@@ -66,10 +69,10 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
 
 std::tuple<bool, std::string> get_filename(int argc, char * argv[])
 {
-	if(cmdOptionExists(argv, argv+arc, "-filename")) 
-		return std::make_tuple(true, atos(getCmdOption(argv, argv+argc, "-filename")));
+	if(cmdOptionExists(argv, argv+argc, "-filename")) 
+		return std::make_tuple(true, std::string(getCmdOption(argv, argv+argc, "-filename")));
 	else
-		return std::make_tuple(true, "none");
+		return std::make_tuple(false, "none");
 }
 
 int main(int argc, char * argv[])
@@ -81,19 +84,23 @@ int main(int argc, char * argv[])
 	std::tie(run, args) = handle_arguments(argc, argv);
 	if(!run) return 0;
 
-	int samples = args[0];
+	int no_samples = args[0];
 	bool time = (args[1] == 1) ? true : false;
 
+	std::string filename; bool save;
+	std::tie(save, filename) = get_filename(argc, argv);
+
 	// Create a problem definition
-	VectorXd start_state(2);
-	start_state << 0, 0;
-	VectorXd goal_state(2);
-	goal_state << 0, 1;
-	VectorXd state_min(2);
-	state_min << -5, -5;
-	VectorXd state_max(2);
-	state_max << 5, 5;
-	double level_set = 3;
+	int num_dim = 3;
+	VectorXd start_state(num_dim);
+	start_state << 0, 0, 0;
+	VectorXd goal_state(num_dim);
+	goal_state << 0, 1, 0;
+	VectorXd state_min(num_dim);
+	state_min << -10, -10, -10;
+	VectorXd state_max(num_dim);
+	state_max << 10, 10, 10;
+	double level_set = 2;
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
 		[start_state, goal_state](const VectorXd& state)
 		{
@@ -105,14 +112,20 @@ int main(int argc, char * argv[])
 	std::cout << "Created the sampler" << std::endl;
 
 	// Sampler
-	MatrixXd samples = s.sample(samples, time);
+	MatrixXd samples = s.sample(no_samples, time);
 
 	std::cout << "Got the samples" << std::endl;
 
-	// Print Samples
-	// for(int i = 0; i < samples.rows(); i++)
-	// {
-	// 	std::cout << "Sample: (" << samples.row(i)(0) << "," << samples.row(i)(1) << ") | Cost: "
-	// 			  << samples.row(i)(2) << std::endl;
-	// }
+	if(save)
+	{
+		std::ofstream file(filename);
+		if (file.is_open())
+		{
+			for(int i = 0; i < samples.rows(); i++)
+			{
+				file << samples.row(i) << std::endl;	
+			}
+		}
+		file.close();
+	}
 }
