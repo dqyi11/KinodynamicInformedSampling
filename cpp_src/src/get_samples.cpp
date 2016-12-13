@@ -9,7 +9,7 @@
 using Eigen::MatrixXd;
 
 // #include <ProblemDefinition/ProblemDefinition.h>
-#include <Sampler/Sampler.h>
+#include <Sampler/RejectionSampler.h>
 
 // 
 // From stackoverflow: 
@@ -127,5 +127,8 @@ int main(int argc, char * argv[])
 			}
 		}
 		file.close();
+		std::cout << "Saved samples and costs to " << filename << std::endl;
 	}
+
+	// print 
 }
