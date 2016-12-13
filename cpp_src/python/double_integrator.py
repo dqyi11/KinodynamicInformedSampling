@@ -100,6 +100,56 @@ def get_time(x1, x2, xi):
 	# Return maximum time
 	return max(Ts)
 
+# 
+# Estimate the gradient
+# 
+# @param fun Function to estimate the gradient for
+# @param x Input
+# @param x1 Initial State
+# @param x2 Final State
+# @param h Derivative constant
+# @return Gradient of the function at point x
+# 
+def gradient(fun, x, x1, x2, h):
+	grad = np.zeros(x.shape)
+	for dim in range(x.shape[0]):
+		x_plus = np.copy(x)
+		x_plus[dim] = x_plus[dim] + h
+		x_min = np.copy(x)
+		x_min[dim] = x_min[dim] - h
+		grad[dim] = (fun(x1, x2, x_plus) - fun(x1, x2, x_min)) / (2*h)
+
+	return grad
+
+# 
+# Function to ski down to the level set using gradient descent
+#
+# @param fun Function to perform gradient descent on
+# @param epochs Max number of epochs
+# @param x1 Initial state
+# @param x2 Final state
+# @param x Start of the ski
+# @param alpha Learning rate for gradient descent
+# @param level_set Level set to ski to
+# @return Series of points that it ski'd down (no_results, dim of space + 1 (for time))
+#
+def grad_descent(fun, epochs, x1, x2, x, alpha, level_set):
+	results = np.array([])
+	count = 0
+	h = 0.001
+	for epoch in range(epochs):
+		z = fun(x1, x2, x)
+
+		if(results.size == 0): results = np.array([[x[0], x[1], z]])
+		else: results = np.concatenate((results, np.array([[x[0], x[1], z]])), axis=0)
+
+		if(z <= level_set):
+			break
+
+		grad = gradient(fun, x, x1, x2, h);
+		x = x - alpha*grad;
+
+	return results
 
 # 
 # Function to plot the surface
@@ -144,6 +194,109 @@ def plot_surface(x1, x2):
 
 	plt.show()
 
+# 
+# Function to plot the surface
+# 
+# @param x1 Start state
+# @param x2 End state
+# @param results Samples along the path
+# @param level_set Levelset of the cost function
+# 
+def plot_surface_with_path(x1, x2, results, level_set):
+	# Assert that the dimension of the state is 2 for plotting surface
+	assert(x1.size == 2  and x2.size == 2)
+
+	# Import plotting stuff
+	from mpl_toolkits.mplot3d import Axes3D
+	from matplotlib import cm
+	from matplotlib.ticker import LinearLocator, FormatStrFormatter
+	import matplotlib.pyplot as plt
+
+	# Get a meshgrid of the x and y values
+	fig = plt.figure()
+	ax = fig.gca(projection='3d')
+	maxval = 5
+	minval = -5
+	step = 0.2
+	X = np.arange(minval, maxval, step)
+	Y = np.arange(minval, maxval, step)
+	X, Y = np.meshgrid(X, Y)
+	X = np.reshape(X, (X.shape[0] * X.shape[1], 1))
+	Y = np.reshape(Y, (Y.shape[0] * Y.shape[1], 1))
+	x1 = np.tile(x1, [X.shape[0] * X.shape[1], 1])
+	x2 = np.tile(x2, [X.shape[0] * X.shape[1], 1])
+	T = np.zeros((X.shape[0] * X.shape[1], 1))
+	for row in range(T.shape[0]):
+		T[row,:] = get_time(x1[row,:], x2[row,:], np.array([X[row,:], Y[row,:]]))
+
+	size = ((maxval-minval)/step, (maxval-minval)/step)
+	X = np.reshape(X, size)
+	Y = np.reshape(Y, size)
+	T = np.reshape(T, size)
+	surf = ax.plot_surface(X, Y, T, rstride=1, cstride=1, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+	ax.zaxis.set_major_locator(LinearLocator(10))
+	ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+
+	fig.colorbar(surf, shrink=0.5, aspect=5)
+
+	ax.plot(results[:,0], results[:,1], results[:,2], 
+        label = 'Path',             # label of the curve
+        color = 'DarkMagenta',      # colour of the curve
+        linewidth = 3.2,            # thickness of the line
+        linestyle = '--'            # available styles - -- -. :
+        )
+
+	ax.contour(X, Y, T, zdir='z', offset=level_set, cmap=cm.coolwarm)
+
+	plt.show()
+
+# 
+# Plot the contour and the levelset
+# 
+# @param x1 Start state
+# @param x2 End state
+# @param results Samples along the path
+# @param level_set Levelset of the cost function
+# 
+def plot_surface_with_path(x1, x2, results, level_set):
+	# Assert that the dimension of the state is 2 for plotting surface
+	assert(x1.size == 2  and x2.size == 2)
+
+	# Import plotting stuff
+	from mpl_toolkits.mplot3d import Axes3D
+	from matplotlib import cm
+	from matplotlib.ticker import LinearLocator, FormatStrFormatter
+	import matplotlib.pyplot as plt
+
+	# Get a meshgrid of the x and y values
+	fig = plt.figure()
+	ax = fig.gca(projection='3d')
+	maxval = 5
+	minval = -5
+	step = 0.2
+	X = np.arange(minval, maxval, step)
+	Y = np.arange(minval, maxval, step)
+	X, Y = np.meshgrid(X, Y)
+	X = np.reshape(X, (X.shape[0] * X.shape[1], 1))
+	Y = np.reshape(Y, (Y.shape[0] * Y.shape[1], 1))
+	x1 = np.tile(x1, [X.shape[0] * X.shape[1], 1])
+	x2 = np.tile(x2, [X.shape[0] * X.shape[1], 1])
+	T = np.zeros((X.shape[0] * X.shape[1], 1))
+	for row in range(T.shape[0]):
+		T[row,:] = get_time(x1[row,:], x2[row,:], np.array([X[row,:], Y[row,:]]))
+
+	size = ((maxval-minval)/step, (maxval-minval)/step)
+	X = np.reshape(X, size)
+	Y = np.reshape(Y, size)
+	T = np.reshape(T, size)
+	
+	ax.contour(X, Y, T, zdir='z', offset=level_set, cmap=cm.coolwarm)
+
+	ax.scatter(results[:,0], results[:,1], level_set, c='r', marker='o')
+
+	plt.show()
 
 # Main function plots the surface
 def main():
