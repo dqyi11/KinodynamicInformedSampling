@@ -144,10 +144,16 @@ def grad_descent(fun, epochs, x1, x2, x, alpha, level_set):
 		else: results = np.concatenate((results, np.array([[x[0], x[1], z]])), axis=0)
 
 		if(z <= level_set):
+			# Take one more variable step toward the gradient and then be done
+			# Sample alpha from Gaussian
+			grad = gradient(fun, x, x1, x2, h)
+			x = x - alpha*grad
+			if(results.size == 0): results = np.array([[x[0], x[1], z]])
+			else: results = np.concatenate((results, np.array([[x[0], x[1], z]])), axis=0)
 			break
 
-		grad = gradient(fun, x, x1, x2, h);
-		x = x - alpha*grad;
+		grad = gradient(fun, x, x1, x2, h)
+		x = x - alpha*grad
 
 	return results
 
@@ -248,8 +254,6 @@ def plot_surface_with_path(x1, x2, results, level_set):
         linestyle = '--'            # available styles - -- -. :
         )
 
-	ax.contour(X, Y, T, zdir='z', offset=level_set, cmap=cm.coolwarm)
-
 	plt.show()
 
 # 
@@ -260,7 +264,7 @@ def plot_surface_with_path(x1, x2, results, level_set):
 # @param results Samples along the path
 # @param level_set Levelset of the cost function
 # 
-def plot_surface_with_path(x1, x2, results, level_set):
+def plot_contour_with_points(x1, x2, results, level_set):
 	# Assert that the dimension of the state is 2 for plotting surface
 	assert(x1.size == 2  and x2.size == 2)
 
@@ -272,7 +276,7 @@ def plot_surface_with_path(x1, x2, results, level_set):
 
 	# Get a meshgrid of the x and y values
 	fig = plt.figure()
-	ax = fig.gca(projection='3d')
+	ax = fig.gca()
 	maxval = 5
 	minval = -5
 	step = 0.2
@@ -288,13 +292,18 @@ def plot_surface_with_path(x1, x2, results, level_set):
 		T[row,:] = get_time(x1[row,:], x2[row,:], np.array([X[row,:], Y[row,:]]))
 
 	size = ((maxval-minval)/step, (maxval-minval)/step)
+	vals = np.concatenate((X,Y,T), axis=1)
 	X = np.reshape(X, size)
 	Y = np.reshape(Y, size)
 	T = np.reshape(T, size)
 	
-	ax.contour(X, Y, T, zdir='z', offset=level_set, cmap=cm.coolwarm)
-
-	ax.scatter(results[:,0], results[:,1], level_set, c='r', marker='o')
+	points = vals[vals[:, 2] < level_set]
+	# ax.contour(X, Y, T, zdir='z', offset=level_set, cmap=cm.coolwarm)
+	from scipy.spatial import ConvexHull
+	hull = ConvexHull(points)
+	for simplex in hull.simplices:
+		plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+	ax.scatter(results[:,0], results[:,1], c='r', marker='o')
 
 	plt.show()
 
