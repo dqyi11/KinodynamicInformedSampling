@@ -62,8 +62,9 @@ level_set = 5
 minval = -10.0
 maxval = 10.0
 # Grad descent params
-alpha = 0.05 # Gradient descent learning rate
+alpha = 0.05
 epochs = 1000
+
 # Sample z from the level set
 qz_init = np.array([])
 for i in range(no_to_sample):
@@ -75,50 +76,15 @@ for i in range(no_to_sample):
 	else:
 		qz_init = np.concatenate((qz_init, np.array([results[-1,:-1]])))
 
-	# print("End: {}".format(results[-1,:]))
-	# di.plot_surface_with_path(q1, q2, results, level_set)
-
 di.plot_contour_with_points(q1, q2, qz_init, level_set)
 
 # Model for the latent space (here it is just the joint space) - Must be Empirical 
-# qz = Empirical(params=tf.Variable(tf.random_normal(shape=[no_to_sample, no_dimensions])))
 qz = Empirical(params=tf.Variable(qz_init, dtype=tf.float32))
-
-# # Model for the parameter space (Uniform)
-# # x = Empirical(params=tf.Variable(tf.random_uniform(shape=[1, no_dimensions],\
-# # 												   minval=minval,
-# # 												   maxval=maxval)))
 
 # Model of the distribution
 model = PlanningPosterior()
 
 # Run inference on the model
 inference = ed.HMC({'z' : qz}, model_wrapper=model)
-t1 = datetime.now()
-inference.initialize(step_size=0.01, n_steps=1)
-t2 = datetime.now()
-inference.run()
-t3 = datetime.now()
-
-tdelta = t2 - t1 
-tdelta2 = t3 - t2
-
-print("Time For Initialization: {} | Time to Run Inference: {}".format(tdelta, tdelta2))
-
-# Print 100 values and their time
-results = np.array([])
-
-for i in range(no_to_sample):
-	sample = qz.value().eval()
-	T = di.get_time(q1, q2, sample)
-
-	sample = np.reshape(sample, (1, no_dimensions))
-	if results.size == 0:
-		results = np.array(sample)
-	else:
-		results = np.concatenate((results, sample))
-
-	print("Sample: {} | Time: {}".format(qz.value().eval(), T))
-
-# Print the surf
-di.plot_contour_with_points(q1, q2, results, level_set)
+inference.initialize()
+inference.build_update()
