@@ -10,11 +10,10 @@ add_executable(get_samples ${PROJECT_SOURCE_DIR}/src/get_samples.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Find Eigen
-#find_package(Eigen3 REQUIRED)
 include_directories(${PROJECT_SOURCE_DIR}/lib/eigen-eigen-f562a193118d)
-#link_directories(${EIGEN3_LIBRARY_DIRS})
-#add_definitions(${EIGEN3_DEFINITIONS})
 
+# Find Stan
+include_directories(${PROJECT_SOURCE_DIR}/lib/stan)
 
 # Add library for problem definition class
 add_library(problemDefinitionLib
@@ -33,6 +32,7 @@ add_library(samplerLib
 target_link_libraries(samplerLib
 					  problemDefinitionLib
 					  ${EIGEN3_LIBRARIES}
+					  ${STAN_LIBRARIES}
 					 )
 
 # Link libraries for main file

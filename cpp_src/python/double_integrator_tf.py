@@ -97,6 +97,56 @@ def get_time(x1, x2, xi):
 	# Return maximum time
 	return max(Ts)
 
+# 
+# Plots the probability surface
+# 
+def plot_prob(x1, x2, model):
+	# Assert that the dimension of the state is 2 for plotting surface
+	assert(x1.size == 2  and x2.size == 2)
+
+	# Import plotting stuff
+	from mpl_toolkits.mplot3d import Axes3D
+	from matplotlib import cm
+	from matplotlib.ticker import LinearLocator, FormatStrFormatter
+	import matplotlib.pyplot as plt
+
+	# Get a meshgrid of the x and y values
+	fig = plt.figure()
+	ax = fig.gca(projection='3d')
+	X = np.arange(-2, 2, 0.1)
+	Y = np.arange(-2, 2, 0.1)
+	X, Y = np.meshgrid(X, Y)
+	X = np.reshape(X, (X.shape[0] * X.shape[1], 1))
+	Y = np.reshape(Y, (Y.shape[0] * Y.shape[1], 1))
+	q1 = np.tile(x1, [X.shape[0] * X.shape[1], 1])
+	q2 = np.tile(x2, [X.shape[0] * X.shape[1], 1])
+	T = np.zeros((X.shape[0] * X.shape[1], 1))
+	in_space = {}
+
+	with tf.Session() as sess:
+		# Initialize all variables
+		init = tf.initialize_all_variables()
+		sess.run(init)
+
+		for row in range(T.shape[0]):
+			next_q = np.array([X[row,:], Y[row,:]])
+			next_q = np.reshape(next_q, (2,))
+			prob = sess.run(model.prob, feed_dict={model.q: next_q})
+			T[row,:] = prob
+
+	X = np.reshape(X, (40,40))
+	Y = np.reshape(Y, (40,40))
+	T = np.reshape(T, (40,40))
+	surf = ax.plot_surface(X, Y, T, rstride=1, cstride=1, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+	ax.zaxis.set_major_locator(LinearLocator(10))
+	ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+
+	fig.colorbar(surf, shrink=0.5, aspect=5)
+
+	plt.show()
+
 # Main function plots the surface
 def main():
 	print("Nothing in main function.")

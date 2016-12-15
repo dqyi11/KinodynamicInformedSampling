@@ -3,6 +3,7 @@
 
 CMakeFiles/get_samples.dir/src/get_samples.cpp.o: src/get_samples.cpp
 CMakeFiles/get_samples.dir/src/get_samples.cpp.o: include/ProblemDefinition/ProblemDefinition.h
+CMakeFiles/get_samples.dir/src/get_samples.cpp.o: include/Sampler/RejectionSampler.h
 CMakeFiles/get_samples.dir/src/get_samples.cpp.o: include/Sampler/Sampler.h
 CMakeFiles/get_samples.dir/src/get_samples.cpp.o: lib/eigen-eigen-f562a193118d/Eigen/Cholesky
 CMakeFiles/get_samples.dir/src/get_samples.cpp.o: lib/eigen-eigen-f562a193118d/Eigen/Core

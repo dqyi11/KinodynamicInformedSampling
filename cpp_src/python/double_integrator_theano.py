@@ -3,6 +3,8 @@
 # 
 
 import numpy as np 
+from theano.ifelse import ifelse
+import theano.tensor as T
 
 # Maximum accelleration
 a_max = 1
@@ -14,10 +16,8 @@ a_max = 1
 # @return Sign of the function
 # 
 def sign1(x):
-    if(x >= 0):
-    	return 1 
-    else:
-    	return -1
+
+	return ifelse(T.ge(x, 0), 1, -1)
 
 # 
 # Returns the minimum time between 2 points ([x1,y1] and [x2,y2]) in the state space
@@ -144,13 +144,12 @@ def grad_descent(fun, epochs, x1, x2, x, alpha, level_set):
 		else: results = np.concatenate((results, np.array([[x[0], x[1], z]])), axis=0)
 
 		if(z <= level_set):
-			for i in range(3):
-				# Take one more variable step toward the gradient and then be done
-				# Sample alpha from Gaussian
-				grad = gradient(fun, x, x1, x2, h)
-				x = x - alpha*grad
-				if(results.size == 0): results = np.array([[x[0], x[1], z]])
-				else: results = np.concatenate((results, np.array([[x[0], x[1], z]])), axis=0)
+			# Take one more variable step toward the gradient and then be done
+			# Sample alpha from Gaussian
+			grad = gradient(fun, x, x1, x2, h)
+			x = x - alpha*grad
+			if(results.size == 0): results = np.array([[x[0], x[1], z]])
+			else: results = np.concatenate((results, np.array([[x[0], x[1], z]])), axis=0)
 			break
 
 		grad = gradient(fun, x, x1, x2, h)

@@ -4,6 +4,7 @@
 CMakeFiles/get_samples.dir/src/get_samples.cpp.o
  /home/cole/Dropbox/sidd_work/cpp_src/src/get_samples.cpp
  include/ProblemDefinition/ProblemDefinition.h
+ include/Sampler/RejectionSampler.h
  include/Sampler/Sampler.h
  lib/eigen-eigen-f562a193118d/Eigen/Cholesky
  lib/eigen-eigen-f562a193118d/Eigen/Core
