@@ -1,0 +1,6 @@
+data = dlmread('test.log');
+for i = 1:2:(size(data,2)-1)
+    figure; hold on;
+    plot(data(:,i),data(:,i+1),'.');
+    xlabel('');
+end
