@@ -45,7 +45,7 @@ public:
 	/// @param alpha Learning rate
 	/// @return Path to the level set
 	///
-	virtual MatrixXd grad_descent(const double& alpha = 0.5) const;
+	virtual MatrixXd grad_descent(const double& alpha = 0.01) const;
 
 	///
 	/// Get the energy of the state from the cost function

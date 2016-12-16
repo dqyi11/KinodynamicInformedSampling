@@ -3,13 +3,16 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
+
 // Eigen
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
 
-// #include "ProblemDefinition/ProblemDefinition.h"
+// Internal Libraries
 #include "Sampler/RejectionSampler.h"
 #include "Dimt/Dimt.h"
+#include <Sampler/RejectionSampler.h>
+#include <Sampler/MonteCarloSamplers.h>
 
 // 
 // From stackoverflow: 
@@ -89,18 +92,25 @@ int main(int argc, char * argv[])
 	std::tie(save, filename) = get_filename(argc, argv);
 
 	// Create a problem definition
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<double> dis(-10, 10);
+
 	int num_dim = 4;
 	VectorXd start_state(num_dim);
-	start_state << 0, 0, 0, 0;
+	// start_state << 0, 0, 0, 0;
+	start_state << dis(gen), dis(gen), dis(gen), dis(gen);
 	VectorXd goal_state(num_dim);
-	goal_state << 1, 1, 1, 1;
+	// goal_state << 1, 1, 1, 1;
+	goal_state << dis(gen), dis(gen), dis(gen), dis(gen);
 	VectorXd state_min(num_dim);
 	state_min << -10, -10, -10, -10;
 	VectorXd state_max(num_dim);
 	state_max << 10, 10, 10, 10;
-	double level_set = 5;
 	double a_max = 1;
-  Dimt dimt(a_max);
+  	Dimt dimt(a_max);
+  	double level_set = 1.2 * dimt.get_min_time(start_state, goal_state);
+  	std::cout << "Level set: " << level_set << std::endl;
 
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
 		[dimt, start_state, goal_state](const VectorXd& state)
@@ -110,27 +120,38 @@ int main(int argc, char * argv[])
 		});
 
 	// Initialize the sampler
-	RejectionSampler s = RejectionSampler(prob);
-	std::cout << "Created the sampler" << std::endl;
+	// HMC parameters
+	double alpha = 0.5; double L = 200; double epsilon = 0.01; double sigma = 0.5;  int max_steps = 20;
+	HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
+	RejectionSampler rej_s = RejectionSampler(prob);
+	std::cout << "Created the samplers!" << std::endl;
 
 	// Sampler
-	MatrixXd samples = s.sample(no_samples, time);
-
-	std::cout << "Got the samples" << std::endl;
+	std::cout << "Running HMC Sampling..." << std::endl;
+	MatrixXd hmc_samples = hmc_s.sample(no_samples, time);
+	std::cout << "Running Rejection Sampling..." << std::endl;
+	MatrixXd rej_samples = rej_s.sample(no_samples, time);
 
 	if(save)
 	{
-		std::ofstream file(filename);
-		if (file.is_open())
+		std::ofstream hmc_file(filename + "_hmc.log");
+		if (hmc_file.is_open())
 		{
-			for(int i = 0; i < samples.rows(); i++)
+			for(int i = 0; i < hmc_samples.rows(); i++)
 			{
-				file << samples.row(i) << std::endl;	
+				hmc_file << hmc_samples.row(i) << std::endl;	
 			}
 		}
-		file.close();
+		hmc_file.close();
+		std::ofstream rej_file(filename + "_rej.log");
+		if (rej_file.is_open())
+		{
+			for(int i = 0; i < rej_samples.rows(); i++)
+			{
+				rej_file << rej_samples.row(i) << std::endl;	
+			}
+		}
+		rej_file.close();
 		std::cout << "Saved samples and costs to " << filename << std::endl;
 	}
-
-	// print 
 }

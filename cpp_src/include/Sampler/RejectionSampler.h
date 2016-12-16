@@ -27,26 +27,27 @@ public:
 		std::tie(max_vals, min_vals) = problem().state_limits();
 		double max = max_vals(0); double min = min_vals(0);
 
-	    // Run until you get the correct number of samples
-	    int curr_no_samples = 0;
-	    MatrixXd samples(no_samples, problem().start_state().size() + 1);
+		// Run until you get the correct number of samples
+		int curr_no_samples = 0;
+		MatrixXd samples(no_samples, problem().start_state().size() + 1);
 
-	    // If you want to time the sampling
-	    high_resolution_clock::time_point t1;
-	    if(time) t1 = high_resolution_clock::now();
+		// If you want to time the sampling
+		high_resolution_clock::time_point t1;
+		if(time) t1 = high_resolution_clock::now();
 
-	    while(curr_no_samples < no_samples)
-	    {
-	    	VectorXd sample = get_random_sample(max, min, problem().start_state().size());
+		while(curr_no_samples < no_samples)
+		{
+			VectorXd sample = get_random_sample(max, min, problem().start_state().size());
 
-	    	if(problem().is_in_level_set(sample))
-	    	{
-	    		VectorXd newsample(problem().start_state().size() + 1);
-	    		newsample << sample, problem().get_cost(sample);
-	    		samples.row(curr_no_samples) = newsample;
-	    		curr_no_samples++;
-	    	}
-	    }
+			if(problem().is_in_level_set(sample))
+			{
+				VectorXd newsample(problem().start_state().size() + 1);
+				newsample << sample, problem().get_cost(sample);
+				samples.row(curr_no_samples) = newsample;
+				curr_no_samples++;
+				std::cout << curr_no_samples << std::endl;
+			}
+		}
 
 	    // If you want to time the sampling and display it
 	    if(time)

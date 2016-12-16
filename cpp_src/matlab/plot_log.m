@@ -1,7 +1,10 @@
-data = dlmread('test.log');
-for i = 1:2:(size(data,2)-1)
+hmc = dlmread('test_hmc.log');
+rej = dlmread('test_rej.log');
+
+for i = 1:2:(size(hmc,2)-1)
     figure; hold on;
-    plot(data(:,i),data(:,i+1),'.');
+    plot(hmc(:,i),hmc(:,i+1),'b.');
+    plot(rej(:,i),rej(:,i+1),'r.');
     xlabel(strcat('q',num2str((i+1)/2)));
     ylabel(strcat('q',num2str((i+1)/2),'_d_o_t'));
 end

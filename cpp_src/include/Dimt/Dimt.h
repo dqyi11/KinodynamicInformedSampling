@@ -47,12 +47,34 @@ public:
 			std::string error_msg = "Invalid Arguments to get_min_time";
 			throw std::invalid_argument(error_msg);
 		}
-    VectorXd Ts(int(x1.size()/2));
-    for(int i = 0; i<x1.size(); i=i+2)
-    {
-      Ts(i/2) = get_min_time_1dof(x1(i), x1(i+1), x2(i), x2(i+1), xi(i), xi(i+1));
-    }
-    return Ts.maxCoeff();
+	    VectorXd Ts(int(x1.size()/2));
+	    for(int i = 0; i<x1.size(); i=i+2)
+	    {
+	      Ts(i/2) = get_min_time_1dof(x1(i), x1(i+1), x2(i), x2(i+1), xi(i), xi(i+1));
+	    }
+	    return Ts.maxCoeff();
+	}
+
+	// This function calculates the maximum time given a set number of joints
+	// x = [x_1, x_1_dot,...,x_n,x_n_dot]
+	// @param x1 Initial state
+	// @param x2 Final state
+	// @return T Maximum time
+	double get_min_time(const VectorXd x1, const VectorXd x2) const 
+	{	
+		// Assert that the start, goal, and x1 are valid size (same and != 0)
+		// TODO: Implement this check !!
+		// if(!is_valid_states(x1, x2))
+		// {
+		// 	std::string error_msg = "Invalid Arguments to get_min_time";
+		// 	throw std::invalid_argument(error_msg);
+		// }
+	    VectorXd Ts(int(x1.size()/2));
+	    for(int i = 0; i<x1.size(); i=i+2)
+	    {
+	      Ts(i/2) = get_min_time_1dof(x1(i), x1(i+1), x2(i), x2(i+1));
+	    }
+	    return Ts.maxCoeff();
 	}
 
 	// returns the minimum time between 3 points ([x1,y1] -> [xi,yi] -> [x2,y2]) in the state space

@@ -178,7 +178,11 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 ///
 MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 {
+	bool verbose = false;
+	std::cout << "Number of samples: " << no_samples << std::endl;
+	if(verbose) std::cout << "Surfing" << std::endl;
 	MatrixXd ski = HMCSampler::grad_descent();
+	if(verbose) std::cout << "Got Through Gradient Descent" << std::endl;
 
 	// Last row of the ski is the start of the HMC algorithm
 	VectorXd q = ski.row(ski.rows()-1);
@@ -187,63 +191,91 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 	MatrixXd samples(1, problem().space_dimension() + 1);
 	samples << q.transpose(), problem().get_cost(q);
 
-	double accepted = 0.0;
-	double rejected = 0.0;
+	int accepted = 0;
+	int rejected = 0;
 	// If you want to time the sampling
 	high_resolution_clock::time_point t1;
 	if(time) t1 = high_resolution_clock::now();
 	while(accepted < no_samples)
 	{
-		// Sample the momentum and set up the past and current state and momentum
-		VectorXd q_last = q;
-		VectorXd p = MonteCarloSampler::sample_normal(0, sigma());
-		VectorXd p_last = p;
+		if(verbose) std::cout << "New start!" << std::endl;
+		MatrixXd ski = HMCSampler::grad_descent();
+		if(verbose) std::cout << "Got Through Gradient Descent in loop" << std::endl;
 
-		// Make a half step for momentum at the beginning
-		VectorXd grad = problem().get_grad(q);
-		// Ensure that the gradient isn't two large
-		if(grad.maxCoeff() > 1e2) 
+		// Last row of the ski is the start of the HMC algorithm
+		VectorXd q = ski.row(ski.rows()-1);
+
+		int curr_rejections = 0;
+		int curr_step = 0;
+		while(curr_rejections < 10 and accepted < no_samples and curr_step < steps())
 		{
-			std::cout << "WARNING: Gradient too high" << std::endl;
-			return samples;
-		}
+			// Sample the momentum and set up the past and current state and momentum
+			VectorXd q_last = q;
+			VectorXd p = MonteCarloSampler::sample_normal(0, sigma());
+			VectorXd p_last = p;
 
-		p = p - epsilon() * grad / 2;
+			if(verbose) std::cout << "Sampled the momentum" << std::endl;
 
-		// Alternate Full steps for q and p
-		for(int i = 0; i < L(); i++)
-		{
-			q = q + epsilon() * p;
-			if(i != L()) p = p - epsilon() * grad;
-		}
+			// Make a half step for momentum at the beginning
+			VectorXd grad = problem().get_grad(q);
+			if(verbose) std::cout << "Got the gradient" << std::endl;
 
-		// Make a half step for momentum at the end
-		p = p - epsilon() * grad / 2;
+			// Ensure that the gradient isn't two large
+			if(grad.maxCoeff() > 1e2) 
+			{
+				if(verbose) std::cout << "WARNING: Gradient too high" << std::endl;
+				break;
+			}
 
-		// Negate the momentum at the end of the traj to make proposal
-		// symmetric
-		p = -p;
+			p = p - epsilon() * grad / 2;
 
-		// Evaluate potential and kinetic energies at start and end of traj
-		double U_last = get_energy(q_last);
-		double K_last = p_last.norm() / 2;        
-		double U_proposed = get_energy(q);
-		double K_proposed = p_last.norm() / 2;
+			// Alternate Full steps for q and p
+			for(int i = 0; i < L(); i++)
+			{
+				q = q + epsilon() * p;
+				if(i != L()) p = p - epsilon() * grad;
+			}
 
-		// Accept or reject the state at the end of trajectory
-		double alpha = std::min(1.0, std::exp(U_last-U_proposed+K_last-K_proposed));
-		if (rand_uni() <= alpha)
-		{
-			VectorXd newsample(problem().start_state().size() + 1);
-	    	newsample << q, problem().get_cost(q);
-			samples = concatenate_matrix_and_vector(samples, newsample);
-			accepted += 1.0;
-		}
-		else
-		{
-			std::cout << "Rejected!" << std::endl;
-			q = q_last;
-			rejected += 1.0;
+			if(verbose) std::cout << "Integrated Along momentum" << std::endl;
+
+
+			// Make a half step for momentum at the end
+			p = p - epsilon() * grad / 2;
+
+			// Negate the momentum at the end of the traj to make proposal
+			// symmetric
+			p = -p;
+
+			// Evaluate potential and kinetic energies at start and end of traj
+			double U_last = get_energy(q_last);
+			double K_last = p_last.norm() / 2;        
+			double U_proposed = get_energy(q);
+			double K_proposed = p_last.norm() / 2;
+
+			if(verbose) std::cout << "Got energies" << std::endl;
+
+
+			// Accept or reject the state at the end of trajectory
+			double alpha = std::min(1.0, std::exp(U_last-U_proposed+K_last-K_proposed));
+			if (rand_uni() <= alpha)
+			{
+				VectorXd newsample(problem().start_state().size() + 1);
+		    	newsample << q, problem().get_cost(q);
+				samples = concatenate_matrix_and_vector(samples, newsample);
+				accepted++;
+			}
+			else
+			{
+				q = q_last;
+				rejected++;
+				curr_rejections++;
+				// std::cout << "Current Rejections: " << curr_rejections << std::endl;
+			}
+
+			curr_step++;
+			if(verbose) std::cout << "Decided on rejection / acceptance" << std::endl;
+			if(verbose) std::cout << "Number Accepted: " << accepted << std::endl;
+
 		}
 	}
 
@@ -261,6 +293,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 		else 
 			std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
 	}
-	std::cout << "Percentage Accepted: " << accepted / (rejected+accepted) << std::endl; 
+	std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
+
 	return samples;
 }
