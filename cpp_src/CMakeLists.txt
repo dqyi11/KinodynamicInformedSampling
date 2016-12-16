@@ -12,9 +12,6 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Find Eigen
 include_directories(${PROJECT_SOURCE_DIR}/lib/eigen-eigen-f562a193118d)
 
-# Find Stan
-include_directories(${PROJECT_SOURCE_DIR}/lib/stan)
-
 # Add library for problem definition class
 add_library(problemDefinitionLib
 			SHARED
@@ -32,7 +29,6 @@ add_library(samplerLib
 target_link_libraries(samplerLib
 					  problemDefinitionLib
 					  ${EIGEN3_LIBRARIES}
-					  ${STAN_LIBRARIES}
 					 )
 
 # Link libraries for main file

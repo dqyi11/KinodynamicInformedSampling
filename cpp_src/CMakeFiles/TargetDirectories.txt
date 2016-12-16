@@ -1,3 +1,0 @@
-/home/cole/Dropbox/sidd_work/cpp_src/CMakeFiles/get_samples.dir
-/home/cole/Dropbox/sidd_work/cpp_src/CMakeFiles/problemDefinitionLib.dir
-/home/cole/Dropbox/sidd_work/cpp_src/CMakeFiles/samplerLib.dir
