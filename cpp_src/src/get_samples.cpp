@@ -76,6 +76,20 @@ std::tuple<bool, std::string> get_filename(int argc, char * argv[])
 		return std::make_tuple(false, "none");
 }
 
+std::vector<double> get_random_vector(const double& max, const double& min, const int& num_dim)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<double> dis(min, max);
+
+	std::vector<double> vec;
+
+	for(int i = 0; i < num_dim; i++)
+	{
+		vec.push_back(dis(gen));
+	}
+}
+
 int main(int argc, char * argv[])
 {
 	// 
@@ -92,23 +106,28 @@ int main(int argc, char * argv[])
 	std::tie(save, filename) = get_filename(argc, argv);
 
 	// Create a problem definition
+	int num_dim = 12;
+	double maxval = 25; double minval = -25;
+	VectorXd start_state(num_dim);
+	VectorXd goal_state(num_dim);
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> dis(-10, 10);
+	std::uniform_real_distribution<double> dis(-5, 5);
+	for(int i = 0; i < num_dim; i++)
+	{
+		start_state(i) = dis(gen);
+		goal_state(i) = dis(gen);
+	}
 
-	int num_dim = 6;
-	VectorXd start_state(num_dim);
-	// start_state << 0, 0, 0, 0;
-	start_state << dis(gen), dis(gen), dis(gen), dis(gen), dis(gen), dis(gen);
-	VectorXd goal_state(num_dim);
-	// goal_state << 1, 1, 1, 1;
-	goal_state << dis(gen), dis(gen), dis(gen), dis(gen), dis(gen), dis(gen);
 	VectorXd state_min(num_dim);
-	state_min << -10, -10, -10, -10, -10, -10;
+	state_min << VectorXd::Constant(num_dim, minval);
+
 	VectorXd state_max(num_dim);
-	state_max << 10, 10, 10, 10, 10, 10;
+	state_max << VectorXd::Constant(num_dim, maxval);
+
 	double a_max = 1;
   	Dimt dimt(a_max);
+
   	double level_set = 1.2 * dimt.get_min_time(start_state, goal_state);
   	std::cout << "Level set: " << level_set << std::endl;
 

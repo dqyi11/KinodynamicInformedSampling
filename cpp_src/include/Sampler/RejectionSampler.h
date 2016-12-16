@@ -45,7 +45,7 @@ public:
 				newsample << sample, problem().get_cost(sample);
 				samples.row(curr_no_samples) = newsample;
 				curr_no_samples++;
-				std::cout << curr_no_samples << std::endl;
+				// std::cout << curr_no_samples << std::endl;
 			}
 		}
 
