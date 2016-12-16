@@ -96,17 +96,17 @@ int main(int argc, char * argv[])
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<double> dis(-10, 10);
 
-	int num_dim = 4;
+	int num_dim = 6;
 	VectorXd start_state(num_dim);
 	// start_state << 0, 0, 0, 0;
-	start_state << dis(gen), dis(gen), dis(gen), dis(gen);
+	start_state << dis(gen), dis(gen), dis(gen), dis(gen), dis(gen), dis(gen);
 	VectorXd goal_state(num_dim);
 	// goal_state << 1, 1, 1, 1;
-	goal_state << dis(gen), dis(gen), dis(gen), dis(gen);
+	goal_state << dis(gen), dis(gen), dis(gen), dis(gen), dis(gen), dis(gen);
 	VectorXd state_min(num_dim);
-	state_min << -10, -10, -10, -10;
+	state_min << -10, -10, -10, -10, -10, -10;
 	VectorXd state_max(num_dim);
-	state_max << 10, 10, 10, 10;
+	state_max << 10, 10, 10, 10, 10, 10;
 	double a_max = 1;
   	Dimt dimt(a_max);
   	double level_set = 1.2 * dimt.get_min_time(start_state, goal_state);
