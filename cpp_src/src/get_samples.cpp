@@ -3,13 +3,13 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
-
 // Eigen
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
 
-// #include <ProblemDefinition/ProblemDefinition.h>
-#include <Sampler/RejectionSampler.h>
+// #include "ProblemDefinition/ProblemDefinition.h"
+#include "Sampler/RejectionSampler.h"
+#include "Dimt/Dimt.h"
 
 // 
 // From stackoverflow: 
@@ -89,20 +89,24 @@ int main(int argc, char * argv[])
 	std::tie(save, filename) = get_filename(argc, argv);
 
 	// Create a problem definition
-	int num_dim = 3;
+	int num_dim = 4;
 	VectorXd start_state(num_dim);
-	start_state << 0, 0, 0;
+	start_state << 0, 0, 0, 0;
 	VectorXd goal_state(num_dim);
-	goal_state << 0, 1, 0;
+	goal_state << 1, 1, 1, 1;
 	VectorXd state_min(num_dim);
-	state_min << -10, -10, -10;
+	state_min << -10, -10, -10, -10;
 	VectorXd state_max(num_dim);
-	state_max << 10, 10, 10;
-	double level_set = 2;
+	state_max << 10, 10, 10, 10;
+	double level_set = 5;
+	double a_max = 1;
+  Dimt dimt(a_max);
+
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
-		[start_state, goal_state](const VectorXd& state)
+		[dimt, start_state, goal_state](const VectorXd& state)
 		{
-			return (start_state - state).norm() + (goal_state - state).norm();
+			// return (start_state - state).norm() + (goal_state - state).norm();
+			return dimt.get_min_time(start_state, goal_state, state);
 		});
 
 	// Initialize the sampler
