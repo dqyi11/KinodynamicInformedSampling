@@ -99,6 +99,11 @@ public:
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
 	/// @param problem Problem definition
+	/// @param alpha Learning rate for gradient descent
+	/// @param L Distance of integration for HMC step
+	/// @param epsilon Integration constant for HMC
+	/// @param sigma Sampling the momentum as a normal distribution
+	/// @param steps Number of steps to run HMC for each chain
 	///
 	HMCSampler(const ProblemDefinition& problem, const double& alpha,
 			   const double& L, const double& epsilon, const double& sigma,
@@ -123,7 +128,7 @@ public:
 	double sigma() const { return sigma_; }
 
 	///
-	/// Get steps - Number of steps to run HMC
+	/// Get steps - Number of steps to run HMC for each chain
 	///
 	double steps() const { return steps_; }
 
@@ -147,5 +152,48 @@ private:
 	double sigma_;
 
 	// Number of steps to run HMC
+	double steps_;
+};
+
+class MCMCSampler: public MonteCarloSampler
+{
+public:
+	/// 
+	/// Constructor for HMC Sampler (calls super class constructor)
+	///
+	/// @param problem Problem definition
+	/// @param alpha Learning rate for gradient descent
+	/// @param sigma Sigma for sampling the step
+	/// @param steps Number of steps to run MCMC for each chain
+	///
+	MCMCSampler(const ProblemDefinition& prob, const double& alpha,
+				const double& sigma, const double& steps)
+	: MonteCarloSampler(prob, alpha), sigma_(sigma), steps_(steps)
+	{ }
+
+	///
+	/// Get a series of samples for the problem space
+	///
+	/// @param no_samples Number of samples to get
+	/// @param time Boolean that determines if the time to run the proccess is displayed 
+	/// @return A series of samples of shape (number of samples, sample dimension)
+	///
+	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
+
+	///
+	/// Get Sigma for sampling the step
+	///
+	double sigma() const { return sigma_; }
+
+	///
+	/// Get number of steps to run for each MCMC chaine
+	///
+	double steps() const { return steps_; } 
+
+private:
+	// Sigma for sampling the step
+	double sigma_;
+
+	// Number of steps to run MCMC for each chain
 	double steps_;
 };
