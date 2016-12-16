@@ -46,7 +46,6 @@ inline double rand_uni()
 double MonteCarloSampler::get_energy(const VectorXd& curr_state) const
 {
     double cost = problem().get_cost(curr_state);
-
     return tanh(cost) + 100 * sigmoid(cost - problem().level_set());
 }
 
@@ -136,10 +135,6 @@ MatrixXd MonteCarloSampler::grad_descent(const double& alpha) const
 		start = start - alpha * grad;
 
 		// Concatenate to results matrix
-		// MatrixXd new_results(results.rows()+1, results.cols());
-		// new_results << results,
-		// 			   start.transpose();
-		// results = new_results;
 		results = concatenate_matrix_and_vector(results, start);
 
 		cost = problem().get_cost(start);
@@ -185,20 +180,19 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 {
 	MatrixXd ski = HMCSampler::grad_descent();
 
-	std::cout << "Got the gradient descent" << std::endl;
-
 	// Last row of the ski is the start of the HMC algorithm
 	VectorXd q = ski.row(ski.rows()-1);
-
-	std::cout << "G0t last row of the gradient" << std::endl;
 
 	// Store the samples
 	MatrixXd samples(1, problem().space_dimension() + 1);
 	samples << q.transpose(), problem().get_cost(q);
 
-	std::cout << "Added the sample" << std::endl;
-
-	for(int step = 0; step < no_samples; step++)
+	double accepted = 0.0;
+	double rejected = 0.0;
+	// If you want to time the sampling
+	high_resolution_clock::time_point t1;
+	if(time) t1 = high_resolution_clock::now();
+	while(accepted < no_samples)
 	{
 		// Sample the momentum and set up the past and current state and momentum
 		VectorXd q_last = q;
@@ -208,20 +202,23 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 		// Make a half step for momentum at the beginning
 		VectorXd grad = problem().get_grad(q);
 		// Ensure that the gradient isn't two large
-		if(grad.maxCoeff() > 1e2) std::cout << "Gradient too high" << std::endl; return samples;
-		p -= epsilon() * grad / 2;
+		if(grad.maxCoeff() > 1e2) 
+		{
+			std::cout << "WARNING: Gradient too high" << std::endl;
+			return samples;
+		}
+
+		p = p - epsilon() * grad / 2;
 
 		// Alternate Full steps for q and p
-		double dist = 0.0;
-		while(dist < L())
+		for(int i = 0; i < L(); i++)
 		{
-			q += epsilon() * p;
-			if(dist != L()) p = p - epsilon() * grad;
-			dist += epsilon();
+			q = q + epsilon() * p;
+			if(i != L()) p = p - epsilon() * grad;
 		}
 
 		// Make a half step for momentum at the end
-		p -= epsilon() * grad / 2;
+		p = p - epsilon() * grad / 2;
 
 		// Negate the momentum at the end of the traj to make proposal
 		// symmetric
@@ -237,16 +234,33 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 		double alpha = std::min(1.0, std::exp(U_last-U_proposed+K_last-K_proposed));
 		if (rand_uni() <= alpha)
 		{
-			std::cout << "Accepted" << std::endl;
 			VectorXd newsample(problem().start_state().size() + 1);
 	    	newsample << q, problem().get_cost(q);
 			samples = concatenate_matrix_and_vector(samples, newsample);
+			accepted += 1.0;
 		}
 		else
 		{
+			std::cout << "Rejected!" << std::endl;
 			q = q_last;
+			rejected += 1.0;
 		}
 	}
 
+	// If you want to time the sampling and display it
+	if(time)
+	{
+		high_resolution_clock::time_point t2 = high_resolution_clock::now();
+		auto duration_s = duration_cast<seconds>( t2 - t1 ).count();
+		auto duration_ms = duration_cast<milliseconds>( t2 - t1 ).count();
+		auto duration_us = duration_cast<microseconds>( t2 - t1 ).count();
+		if (duration_s != 0)
+			std::cout << "Total Sampling Time: " << duration_s << "s" << std::endl;
+		else if (duration_ms != 0)
+			std::cout << "Total Sampling Time: " << duration_ms << "ms" << std::endl;
+		else 
+			std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
+	}
+	std::cout << "Percentage Accepted: " << accepted / (rejected+accepted) << std::endl; 
 	return samples;
 }
