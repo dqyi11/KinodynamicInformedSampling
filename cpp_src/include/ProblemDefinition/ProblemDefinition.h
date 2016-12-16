@@ -1,4 +1,6 @@
 // Standard Library
+#pragma once
+
 #include <functional>
 #include <stdexcept>      // std::invalid_argument
 #include <tuple>
