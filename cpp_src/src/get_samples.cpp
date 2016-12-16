@@ -109,7 +109,7 @@ int main(int argc, char * argv[])
 	state_max << 10, 10, 10, 10, 10, 10;
 	double a_max = 1;
   	Dimt dimt(a_max);
-  	double level_set = 1.2 * dimt.get_min_time(start_state, goal_state);
+  	double level_set = 1.1 * dimt.get_min_time(start_state, goal_state);
   	std::cout << "Level set: " << level_set << std::endl;
 
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
