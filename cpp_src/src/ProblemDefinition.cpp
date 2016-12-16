@@ -1,7 +1,7 @@
 #include <ProblemDefinition/ProblemDefinition.h>
 #include <algorithm>    // std::max
 
-VectorXd ProblemDefinition::get_grad(VectorXd curr_state) 
+VectorXd ProblemDefinition::get_grad(const VectorXd& curr_state) const 
 {
 	// Assert that the matrix is not empty
 	assert(curr_state.size() != 0 or curr_state.size() != 0);
@@ -22,7 +22,7 @@ VectorXd ProblemDefinition::get_grad(VectorXd curr_state)
 	return grad;
 }
 
-bool ProblemDefinition::is_valid_constructor()
+bool ProblemDefinition::is_valid_constructor() const
 {
 	return (start_state_.size() == goal_state_.size() and state_min_.size() == start_state_.size() and
 			state_max_.size() == start_state_.size()) and

@@ -25,6 +25,7 @@ target_link_libraries(problemDefinitionLib
 add_library(samplerLib
 			SHARED
 			 src/Sampler.cpp
+			 src/MonteCarloSamplers.cpp
 			)
 target_link_libraries(samplerLib
 					  problemDefinitionLib

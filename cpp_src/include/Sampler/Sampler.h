@@ -29,12 +29,12 @@ public:
 	/// @param time Boolean that determines if the time to run the proccess is displayed 
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
-	virtual MatrixXd sample(int no_samples, bool time) = 0;
+	virtual MatrixXd sample(const int& no_samples, const bool& time) const = 0;
 
 	///
 	/// Get the problem definition for the problem
 	/// 
 	/// @return The problem definition
 	///
-	ProblemDefinition problem() { return problem_; }
+	ProblemDefinition problem() const { return problem_; }
 };

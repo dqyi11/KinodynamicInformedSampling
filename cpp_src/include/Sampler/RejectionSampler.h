@@ -1,6 +1,6 @@
-// Standard Libraries
 #pragma once
 
+// Standard Library Functions
 #include <iostream>
 #include <chrono>
 using namespace std::chrono;
@@ -20,7 +20,7 @@ public:
 	{ }
 
 	// Only function that you must implement
-	MatrixXd sample(int no_samples, bool time) override
+	MatrixXd sample(const int& no_samples, const bool& time) const override
 	{
 		// Get the limits of the space
 		VectorXd max_vals, min_vals;
@@ -68,7 +68,7 @@ public:
 
 private:
 	// Can implement as many private functions as you want to help do the sampling
-	VectorXd get_random_sample(double max, double min, int size)
+	VectorXd get_random_sample(double max, double min, int size) const
 	{
 		// Set up the random number generator
 		std::random_device rd;
