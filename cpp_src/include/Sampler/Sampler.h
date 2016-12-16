@@ -1,4 +1,6 @@
 // Problem Definition
+#pragma once
+
 #include <ProblemDefinition/ProblemDefinition.h>
 
 using Eigen::MatrixXd;

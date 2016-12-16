@@ -1,4 +1,6 @@
 // Standard Libraries
+#pragma once
+
 #include <iostream>
 #include <chrono>
 using namespace std::chrono;
