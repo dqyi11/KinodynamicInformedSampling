@@ -10,7 +10,7 @@ add_executable(get_samples ${PROJECT_SOURCE_DIR}/src/get_samples.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Find Eigen
-include_directories(${PROJECT_SOURCE_DIR}/lib/eigen-eigen-f562a193118d)
+include_directories(${PROJECT_SOURCE_DIR}/include/eigen-eigen-f562a193118d)
 
 # Add library for problem definition class
 add_library(problemDefinitionLib
