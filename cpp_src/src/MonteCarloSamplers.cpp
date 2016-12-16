@@ -44,9 +44,19 @@ inline double rand_uni()
 /// @return Energy of the function
 ///
 double MonteCarloSampler::get_energy(const VectorXd& curr_state) const
-{
+{ 
     double cost = problem().get_cost(curr_state);
-    return tanh(cost) + 100 * sigmoid(cost - problem().level_set());
+    // double E_grad = tanh(cost);
+    double E_grad = log(1+log(1+cost));
+    double E_informed = 100 * sigmoid(cost - problem().level_set());
+    double E_region = 0;
+    std::tuple<VectorXd, VectorXd> limits = problem().state_limits();
+    for(int i=0; i < curr_state.size(); i++)
+    {
+    	E_region += 100 * sigmoid(std::get<0>(limits)(i) - curr_state(i)); // Lower Limits
+    	E_region += 100 * sigmoid(curr_state(i) - std::get<1>(limits)(i)); // Higher Limits
+  	}
+    return  E_region + E_grad + E_region;
 }
 
 ///
