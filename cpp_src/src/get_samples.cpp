@@ -141,7 +141,7 @@ int main(int argc, char * argv[])
 	// HMC parameters
 	// double alpha = 0.5; double L = 200; double epsilon = 0.01; double sigma = 0.5;  int max_steps = 20;
 	// HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
-	double sigma = 1; int max_steps = 20; double alpha = 0.5;
+	double sigma = 0.5; int max_steps = 20; double alpha = 1;
 	MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
 	RejectionSampler rej_s = RejectionSampler(prob);
 	std::cout << "Created the samplers!" << std::endl;
@@ -151,8 +151,8 @@ int main(int argc, char * argv[])
 	// MatrixXd hmc_samples = hmc_s.sample(no_samples, time);
 	std::cout << "Running MCMC Sampling..." << std::endl;
 	MatrixXd hmc_samples = mcmc_s.sample(no_samples, time);
-	std::cout << "Running Rejection Sampling..." << std::endl;
-	MatrixXd rej_samples = rej_s.sample(no_samples, time);
+	// std::cout << "Running Rejection Sampling..." << std::endl;
+	// MatrixXd rej_samples = rej_s.sample(no_samples, time);
 
 	if(save)
 	{
@@ -166,15 +166,15 @@ int main(int argc, char * argv[])
 			}
 		}
 		hmc_file.close();
-		std::ofstream rej_file(filename + "_rej.log");
-		if (rej_file.is_open())
-		{
-			for(int i = 0; i < rej_samples.rows(); i++)
-			{
-				rej_file << rej_samples.row(i) << std::endl;	
-			}
-		}
-		rej_file.close();
+		// std::ofstream rej_file(filename + "_rej.log");
+		// if (rej_file.is_open())
+		// {
+		// 	for(int i = 0; i < rej_samples.rows(); i++)
+		// 	{
+		// 		rej_file << rej_samples.row(i) << std::endl;	
+		// 	}
+		// }
+		// rej_file.close();
 		std::cout << "Saved samples and costs to " << filename << std::endl;
 	}
 }
