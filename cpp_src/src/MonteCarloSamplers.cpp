@@ -285,6 +285,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			curr_step++;
 			if(verbose) std::cout << "Decided on rejection / acceptance" << std::endl;
 			if(verbose) std::cout << "Number Accepted: " << accepted << std::endl;
+			std::cout << "Number Accepted: " << accepted << std::endl;
 
 		}
 	}
