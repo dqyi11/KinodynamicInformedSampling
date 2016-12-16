@@ -121,20 +121,25 @@ int main(int argc, char * argv[])
 
 	// Initialize the sampler
 	// HMC parameters
-	double alpha = 0.5; double L = 200; double epsilon = 0.01; double sigma = 0.5;  int max_steps = 20;
-	HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
+	// double alpha = 0.5; double L = 200; double epsilon = 0.01; double sigma = 0.5;  int max_steps = 20;
+	// HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
+	double sigma = 1; int max_steps = 20; double alpha = 0.5;
+	MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
 	RejectionSampler rej_s = RejectionSampler(prob);
 	std::cout << "Created the samplers!" << std::endl;
 
 	// Sampler
-	std::cout << "Running HMC Sampling..." << std::endl;
-	MatrixXd hmc_samples = hmc_s.sample(no_samples, time);
+	// std::cout << "Running HMC Sampling..." << std::endl;
+	// MatrixXd hmc_samples = hmc_s.sample(no_samples, time);
+	std::cout << "Running MCMC Sampling..." << std::endl;
+	MatrixXd hmc_samples = mcmc_s.sample(no_samples, time);
 	std::cout << "Running Rejection Sampling..." << std::endl;
 	MatrixXd rej_samples = rej_s.sample(no_samples, time);
 
 	if(save)
 	{
-		std::ofstream hmc_file(filename + "_hmc.log");
+		// std::ofstream hmc_file(filename + "_hmc.log");
+		std::ofstream hmc_file(filename + "_mcmc.log");
 		if (hmc_file.is_open())
 		{
 			for(int i = 0; i < hmc_samples.rows(); i++)
