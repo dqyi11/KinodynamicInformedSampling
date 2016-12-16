@@ -89,7 +89,7 @@ public:
 	/// @param curr_state Current state to get the cost for
 	/// @return Cost at that state 
 	///
-	double get_cost(VectorXd curr_state) { return this->cost_(curr_state); }
+	virtual double get_cost(VectorXd curr_state) { return this->cost_(curr_state); }
 
 	///
 	/// Helper function to help determine if constructor is invalid
@@ -110,7 +110,7 @@ public:
 	/// Get the gradient of the cost function at a specific state
 	///
 	/// @param curr_state Current state to get the cost for
-	/// @param Gradient of the function at the current state (same dimension as current state)
+	/// @return Gradient of the function at the current state (same dimension as current state)
 	///
 	virtual VectorXd get_grad(VectorXd curr_state);
 };
