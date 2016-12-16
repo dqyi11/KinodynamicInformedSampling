@@ -13,7 +13,7 @@
 /// @param c Controls shape of sigmoid
 /// @return Output of sigmoid function
 /// 
-inline double sigmoid(const double& x, const double& a = 20, const double& c = 0)
+inline double sigmoid(const double& x, const double& a = 200, const double& c = 0)
 {
 	return 1 / (1 + exp(-a * (x - c)));
 }
@@ -56,7 +56,7 @@ double MonteCarloSampler::get_energy(const VectorXd& curr_state) const
     	E_region += 100 * sigmoid(std::get<0>(limits)(i) - curr_state(i)); // Lower Limits
     	E_region += 100 * sigmoid(curr_state(i) - std::get<1>(limits)(i)); // Higher Limits
   	}
-    return  E_region + E_grad + E_region;
+    return  E_region + E_grad + E_informed;
 }
 
 ///
@@ -321,7 +321,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 ///
 MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 {
-	bool verbose = true;
+	bool verbose = false;
 	std::cout << "Number of samples: " << no_samples << std::endl;
 	if(verbose) std::cout << "Surfing" << std::endl;
 	MatrixXd ski = MCMCSampler::grad_descent(alpha());
@@ -343,7 +343,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 	{
 		if(samples.rows() > 1)
 		{
-			if(verbose) std::cout << "New start!" << std::endl;
+			std::cout << "New start!" << std::endl;
 			MatrixXd ski = MCMCSampler::grad_descent();
 			if(verbose) std::cout << "Got Through Gradient Descent in loop" << std::endl;
 
@@ -359,6 +359,12 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			double prob_proposed = get_prob(q_proposed);
 			double prob_before = get_prob(q);
 
+			// std::cout << "Prob Proposed: " << prob_proposed << 
+			// 			" | Cost Proposed: " << problem().get_cost(q_proposed) <<
+			// 			" | Energy Proposed: " << get_energy(q_proposed) <<
+			// 			" | Prob Before: " << prob_before << 
+			// 			" | Cost Before: " << problem().get_cost(q) <<
+			// 			" | Energy Before: " << get_energy(q) << std::endl;
 			if(prob_proposed / prob_before >= rand_uni())
 			{
 				VectorXd newsample(problem().start_state().size() + 1);
