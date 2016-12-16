@@ -131,12 +131,9 @@ MatrixXd concatenate_matrix_and_vector(const MatrixXd& matrix, const VectorXd& v
 /// @param alpha Learning rate
 /// @return Path to the level set
 ///
-MatrixXd MonteCarloSampler::grad_descent(const double& alpha) const
+VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 {
 	VectorXd start = MonteCarloSampler::get_random_sample();
-	MatrixXd results(1, problem().space_dimension());
-	results.row(results.rows()-1) = start;
-
 	double cost = problem().get_cost(start);
 
 	while(cost > problem().level_set())
@@ -144,13 +141,10 @@ MatrixXd MonteCarloSampler::grad_descent(const double& alpha) const
 		VectorXd grad = problem().get_grad(start);
 		start = start - alpha * grad;
 
-		// Concatenate to results matrix
-		results = concatenate_matrix_and_vector(results, start);
-
 		cost = problem().get_cost(start);
 	}
 
-	return results;
+	return start;
 }
 
 ///
@@ -191,11 +185,8 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 	bool verbose = false;
 	std::cout << "Number of samples: " << no_samples << std::endl;
 	if(verbose) std::cout << "Surfing" << std::endl;
-	MatrixXd ski = HMCSampler::grad_descent();
+	VectorXd q = HMCSampler::grad_descent();
 	if(verbose) std::cout << "Got Through Gradient Descent" << std::endl;
-
-	// Last row of the ski is the start of the HMC algorithm
-	VectorXd q = ski.row(ski.rows()-1);
 
 	// Store the samples
 	MatrixXd samples(1, problem().space_dimension() + 1);
@@ -209,11 +200,8 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 	while(accepted < no_samples)
 	{
 		if(verbose) std::cout << "New start!" << std::endl;
-		MatrixXd ski = HMCSampler::grad_descent();
+		VectorXd q = HMCSampler::grad_descent();
 		if(verbose) std::cout << "Got Through Gradient Descent in loop" << std::endl;
-
-		// Last row of the ski is the start of the HMC algorithm
-		VectorXd q = ski.row(ski.rows()-1);
 
 		int curr_rejections = 0;
 		int curr_step = 0;
@@ -324,11 +312,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 	bool verbose = false;
 	std::cout << "Number of samples: " << no_samples << std::endl;
 	if(verbose) std::cout << "Surfing" << std::endl;
-	MatrixXd ski = MCMCSampler::grad_descent(alpha());
+	VectorXd q = MCMCSampler::grad_descent(alpha());
 	if(verbose) std::cout << "Got Through Gradient Descent" << std::endl;
-
-	// Last row of the ski is the start of the HMC algorithm
-	VectorXd q = ski.row(ski.rows()-1);
 
 	// Store the samples
 	MatrixXd samples(1, problem().space_dimension() + 1);
@@ -344,11 +329,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 		if(samples.rows() > 1)
 		{
 			std::cout << "New start!" << std::endl;
-			MatrixXd ski = MCMCSampler::grad_descent();
+			VectorXd q = MCMCSampler::grad_descent(alpha());
 			if(verbose) std::cout << "Got Through Gradient Descent in loop" << std::endl;
-
-			// Last row of the ski is the start of the HMC algorithm
-			q = ski.row(ski.rows()-1);
 		}
 
 		int curr_rejections = 0;
@@ -359,12 +341,6 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			double prob_proposed = get_prob(q_proposed);
 			double prob_before = get_prob(q);
 
-			// std::cout << "Prob Proposed: " << prob_proposed << 
-			// 			" | Cost Proposed: " << problem().get_cost(q_proposed) <<
-			// 			" | Energy Proposed: " << get_energy(q_proposed) <<
-			// 			" | Prob Before: " << prob_before << 
-			// 			" | Cost Before: " << problem().get_cost(q) <<
-			// 			" | Energy Before: " << get_energy(q) << std::endl;
 			if(prob_proposed / prob_before >= rand_uni())
 			{
 				VectorXd newsample(problem().start_state().size() + 1);
@@ -379,6 +355,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			}
 			curr_step++;
 		}
+
+		std::cout << "Number of accepted: " << accepted << std::endl;
 	}
 
 	std::cout << "Number of accepted: " << accepted << std::endl;
