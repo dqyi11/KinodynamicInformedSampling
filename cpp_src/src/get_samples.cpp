@@ -127,7 +127,6 @@ int main(int argc, char * argv[])
 
 	double a_max = 1;
   	Dimt dimt(a_max);
-
   	double level_set = 1.2 * dimt.get_min_time(start_state, goal_state);
   	std::cout << "Level set: " << level_set << std::endl;
 

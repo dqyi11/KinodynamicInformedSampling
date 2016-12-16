@@ -1,7 +1,7 @@
 clear; clc; close all;
 hmc = dlmread('test1_hmc.log');
 rej = dlmread('test1_rej.log');
-
+addpath('../../research/');
 for i = 1:2:(size(hmc,2)-1)
     figure; hold on;
     plot(hmc(:,i),hmc(:,i+1),'b.');
