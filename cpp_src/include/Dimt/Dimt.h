@@ -10,12 +10,8 @@ public:
 	///
 	/// Constructor 
 	///
-	/// @param start_state Start state of the plan
-	/// @param goal_state Goal state of the plan
-	/// @param state_min Minimum value of each state
-	/// @param state_max Maximum value of each state
-	/// @param level_set Levelset of the cost function that you want to sample from
-	/// @param cost Function that determines the cost as a double given a VectorXd state
+	/// @param a_max Max Acceleration
+	/// @param prob Problem Definition
 	/// 
 	Dimt(double a_max) : a_max_(a_max)
 	{

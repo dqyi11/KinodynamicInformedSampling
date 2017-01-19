@@ -10,8 +10,13 @@ add_executable(get_samples ${PROJECT_SOURCE_DIR}/src/get_samples.cpp)
 add_executable(unit_test ${PROJECT_SOURCE_DIR}/src/Test.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# Find Eigen
+# Find Eigen OMPL and Boost
 include_directories(${PROJECT_SOURCE_DIR}/include/eigen-eigen-f562a193118d)
+find_library (OMPL_LIBRARY 
+	NAMES ompl
+	# PATHS "/opt/ros/indigo/lib/x86_64-linux-gnu/"
+	HINTS "/usr/lib")
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 
 # Add library for problem definition class
 add_library(problemDefinitionLib
@@ -56,3 +61,7 @@ target_link_libraries(unit_test
 					  problemDefinitionLib
 					  ${EIGEN3_LIBRARIES}
 					  )
+
+# Ompl Planner 
+add_executable (kdp_pointmass2d src/kdp_pointmass2d.cpp)
+target_link_libraries (kdp_pointmass2d ${OMPL_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})

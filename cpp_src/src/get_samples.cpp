@@ -126,7 +126,6 @@ int main(int argc, char * argv[])
 	bool run_mcmc = (args[3] == 1) ? true : false;
 	bool run_rej = (args[4] == 1) ? true : false;
 
-
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
 
