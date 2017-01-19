@@ -26,7 +26,9 @@ bool isStateValid(const ob::State *state)
 void planWithSimpleSetup(void)
 {
 	// construct the state space we are planning in
-  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(2));
+  double a_max = 1;
+  Dimt dimt(a_max);
+  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, 2));
 	ob::RealVectorBounds bounds(2);
 	bounds.setLow(-10);
 	bounds.setHigh(10);
@@ -60,7 +62,7 @@ void planWithSimpleSetup(void)
   planner->setup();
 
   // Run planner
-  ob::PlannerStatus solved = planner->solve(1.0);
+  ob::PlannerStatus solved = planner->solve(5.0);
   if (solved)
   {
   	std::cout << "Found solution:" << std::endl;
