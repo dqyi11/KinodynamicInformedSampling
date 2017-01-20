@@ -5,6 +5,9 @@
 #include <limits>
 #include <algorithm>
 
+// Verbose constant
+const bool VERBOSE = false;
+
 ///
 /// Sigmoid function
 /// 
@@ -136,12 +139,22 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 	VectorXd start = MonteCarloSampler::get_random_sample();
 	double cost = problem().get_cost(start);
 
+	int steps = 0;
 	while(cost > problem().level_set())
 	{
 		VectorXd grad = problem().get_grad(start);
 		start = start - alpha * grad;
 
 		cost = problem().get_cost(start);
+
+		steps++;
+
+		// If the number of steps reaches some threshold, start over
+		const double thresh = 50;
+		if(steps > thresh)
+		{
+			return grad_descent();
+		}
 	}
 
 	return start;
@@ -182,11 +195,10 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 ///
 MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 {
-	bool verbose = false;
 	std::cout << "Number of samples: " << no_samples << std::endl;
-	if(verbose) std::cout << "Surfing" << std::endl;
+	if(VERBOSE) std::cout << "Surfing" << std::endl;
 	VectorXd q = HMCSampler::grad_descent();
-	if(verbose) std::cout << "Got Through Gradient Descent" << std::endl;
+	if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
 
 	// Store the samples
 	MatrixXd samples(1, problem().space_dimension() + 1);
@@ -199,9 +211,9 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 	if(time) t1 = high_resolution_clock::now();
 	while(accepted < no_samples)
 	{
-		if(verbose) std::cout << "New start!" << std::endl;
+		if(VERBOSE) std::cout << "New start!" << std::endl;
 		VectorXd q = HMCSampler::grad_descent();
-		if(verbose) std::cout << "Got Through Gradient Descent in loop" << std::endl;
+		if(VERBOSE) std::cout << "Got Through Gradient Descent in loop" << std::endl;
 
 		int curr_rejections = 0;
 		int curr_step = 0;
@@ -212,16 +224,16 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			VectorXd p = MonteCarloSampler::sample_normal(0, sigma());
 			VectorXd p_last = p;
 
-			if(verbose) std::cout << "Sampled the momentum" << std::endl;
+			if(VERBOSE) std::cout << "Sampled the momentum" << std::endl;
 
 			// Make a half step for momentum at the beginning
 			VectorXd grad = problem().get_grad(q);
-			if(verbose) std::cout << "Got the gradient" << std::endl;
+			if(VERBOSE) std::cout << "Got the gradient" << std::endl;
 
 			// Ensure that the gradient isn't two large
 			if(grad.maxCoeff() > 1e2) 
 			{
-				if(verbose) std::cout << "WARNING: Gradient too high" << std::endl;
+				if(VERBOSE) std::cout << "WARNING: Gradient too high" << std::endl;
 				break;
 			}
 
@@ -234,7 +246,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 				if(i != L()) p = p - epsilon() * grad;
 			}
 
-			if(verbose) std::cout << "Integrated Along momentum" << std::endl;
+			if(VERBOSE) std::cout << "Integrated Along momentum" << std::endl;
 
 
 			// Make a half step for momentum at the end
@@ -250,7 +262,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			double U_proposed = get_energy(q);
 			double K_proposed = p_last.norm() / 2;
 
-			if(verbose) std::cout << "Got energies" << std::endl;
+			if(VERBOSE) std::cout << "Got energies" << std::endl;
 
 
 			// Accept or reject the state at the end of trajectory
@@ -271,8 +283,8 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			}
 
 			curr_step++;
-			if(verbose) std::cout << "Decided on rejection / acceptance" << std::endl;
-			if(verbose) std::cout << "Number Accepted: " << accepted << std::endl;
+			if(VERBOSE) std::cout << "Decided on rejection / acceptance" << std::endl;
+			if(VERBOSE) std::cout << "Number Accepted: " << accepted << std::endl;
 			std::cout << "Number Accepted: " << accepted << std::endl;
 
 		}
@@ -310,11 +322,10 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 ///
 MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 {
-	bool verbose = false;
 	std::cout << "Number of samples: " << no_samples << std::endl;
-	if(verbose) std::cout << "Surfing" << std::endl;
+	if(VERBOSE) std::cout << "Surfing" << std::endl;
 	VectorXd q = MCMCSampler::grad_descent(alpha());
-	if(verbose) std::cout << "Got Through Gradient Descent" << std::endl;
+	if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
 
 	// Store the samples
 	MatrixXd samples(1, problem().space_dimension() + 1);
@@ -331,7 +342,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 		{
 			std::cout << "New start!" << std::endl;
 			VectorXd q = MCMCSampler::grad_descent(alpha());
-			if(verbose) std::cout << "Got Through Gradient Descent in loop" << std::endl;
+			if(VERBOSE) std::cout << "Got Through Gradient Descent in loop" << std::endl;
 		}
 
 		int curr_rejections = 0;
@@ -353,6 +364,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			else 
 			{ 
 				rejected++; curr_rejections++;
+				if(VERBOSE) std::cout << "Rejected!" << std::endl;
 			}
 			curr_step++;
 		}

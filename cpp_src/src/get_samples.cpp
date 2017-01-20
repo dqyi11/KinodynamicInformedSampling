@@ -178,7 +178,7 @@ int main(int argc, char * argv[])
 		double sigma = 1; int max_steps = 20; double alpha = 0.5;
 		MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
 		std::cout << "Running MCMC Sampling..." << std::endl;
-		hmc_samples = mcmc_s.sample(no_samples, time);
+		mcmc_samples = mcmc_s.sample(no_samples, time);
 	}
 	MatrixXd rej_samples;
 	if(run_rej)

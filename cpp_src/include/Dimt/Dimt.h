@@ -5,10 +5,14 @@
 #include <utility> // std::pair
 #include <limits> // std::numeric_limits::infinity()
 #include <algorithm> // std::max and std::min
+#include <vector> // std::vector 
 
 // Eigen
 #include <Eigen/Dense>
 using Eigen::VectorXd;
+
+// VERBOSE constant
+const bool VERBOSE = false;
 
 class Dimt
 {
@@ -61,20 +65,70 @@ public:
 	// @return T Maximum time
 	double get_min_time(const VectorXd x1, const VectorXd x2) const 
 	{	
-		// Assert that the start, goal, and x1 are valid size (same and != 0)
-		// TODO: Implement this check !!
-		// if(!is_valid_states(x1, x2))
-		// {
-		// 	std::string error_msg = "Invalid Arguments to get_min_time";
-		// 	throw std::invalid_argument(error_msg);
-		// }
-		VectorXd Ts(int(x1.size()/2));
-		for(int i = 0; i < x1.size(); i = i + 2)
+		int joint = 0;
+
+		double min_time = -1;
+		double slow_dof = -1;
+
+		// Create the vectors to hold the infeasible times and
+		// allocate space
+		std::vector<std::pair<double,double>> infeasible;
+		infeasible.reserve(x1.size() * 2);
+
+		if(VERBOSE) std::cout << "Getting min time." << std::endl;
+		while(joint < x1.size())
 		{
-			Ts(i/2) = get_min_time_1dof(x1(i), x1(i+1), x2(i), x2(i+1));
-			// std::cout << "T" << i << ": " << Ts(i/2) << std::endl;
+			const double time = get_min_time_1dof(x1(joint), x1(joint+1), x2(joint), x2(joint+1));
+
+			if(time < min_time)
+			{
+				infeasible[joint] = 
+					get_infeasible_time_interval(x1(joint), x1(joint+1), x2(joint), x2(joint+1));
+			}
+			else
+			{
+				min_time = time;
+				if(slow_dof != -1)
+				{
+					infeasible[slow_dof] =
+						get_infeasible_time_interval(x1(slow_dof), x1(slow_dof+1), 
+													 x2(slow_dof), x2(slow_dof+1));
+
+				}
+				slow_dof = joint;	
+			}
+
+			if(VERBOSE) std::cout << "Checking previous joints" << std::endl;
+			int j = 0;
+			while(j <= joint)
+			{
+				if(j != slow_dof)
+				{
+					if(min_time >= infeasible[j].first and min_time <= infeasible[j].second)
+					{
+						min_time = infeasible[j].second;
+						slow_dof = j;
+
+						j = 0;
+						if(slow_dof != -1)
+						{
+							infeasible[slow_dof] = 
+								get_infeasible_time_interval(x1(slow_dof), x1(slow_dof+1), 
+														 x2(slow_dof), x2(slow_dof+1));
+							slow_dof = -1;
+						}
+					}
+				}
+				j++;
+			}
+			if(VERBOSE) std::cout << "Checked previous joints" << std::endl;
+			joint += 2;	
 		}
-		return Ts.maxCoeff();
+
+		if(VERBOSE) std::cout << "Finished getting min time" << std::endl;
+
+		return min_time;
+
 	}
 
 	// returns the minimum time between 3 points ([x1,y1] -> [xi,yi] -> [x2,y2]) in the state space
@@ -84,7 +138,6 @@ public:
 	{
 		double T1 = get_min_time_1dof(x1, v1, xi, vi);
 		double T2 = get_min_time_1dof(xi, vi, x2, v2);
-		// std::cout << "T1: " << T1 << " | T2: " << T2 << std::endl;
 		if(T1 < 0 || T2 < 0) return -1;
 		return T1 + T2;
 	}
@@ -108,23 +161,6 @@ public:
 		else return -1;
 		return (v2-v1)/a2 + 2*ta1;
 	}
-
-	///
-	/// Function to determine if the minimum time problem violates the infeasible
-	/// time regions of any of the joints
-	///
-	/// @param joint_vector Vector of all of the joints
-	/// @param slowest_dof DOF that has the slowest time
-	/// @param min_time Slowest time of the joints
-	/// @return Tuple (is_violation, new_min_time) that represents where the first element tells if there
-	/// is a violation or not and the second element gives the new minimum time
-	///
-  	std::pair<bool, double> check_infeasible_time(const VectorXd& joint_vector, 
-  												  const int& slowest_dof,
-  												  const double min_time) const
-  	{
-
-  	}
 
 	/// 
 	/// Function to get the infeasible time_interval for one DOF
@@ -153,8 +189,8 @@ public:
 		// is not in the correct region
 		if(v1 * v2 <= 0.0 or a1 * v1 < 0.0) 
 		{
-			return std::pair<double, double>(std::numeric_limits<double>::infinity(),
-											 std::numeric_limits<double>::infinity());
+			return std::make_pair(std::numeric_limits<double>::infinity(),
+								  std::numeric_limits<double>::infinity());
 		}
 
 		// Again determine if there is an infeasible time interval
@@ -164,8 +200,8 @@ public:
 		if(std::abs(zeroDistance) < std::abs(distance))
 		{
 			// No infeasible time interval, because it is not in the correct region
-			return std::pair<double, double>(std::numeric_limits<double>::infinity(),
-											 std::numeric_limits<double>::infinity());
+			return std::make_pair(std::numeric_limits<double>::infinity(),
+								  std::numeric_limits<double>::infinity());
 		}
 
 		// If it is in the right region, return the infesible time interval
@@ -173,8 +209,8 @@ public:
 		const double c = (v2 * v2 - v1 * v1) / (2 * a2) - (x2 - x1);
 		const double q = -0.5 * (b + sign(b) * std::sqrt(b * b - 4 * a * c));
 		const double ta1_a = q/a; const double ta1_b = c/q;
-		return std::pair<double, double>(std::min(ta1_a, ta1_b), 
-										 std::max(ta1_a, ta1_b));
+		return std::make_pair(std::min(ta1_a, ta1_b), 
+							  std::max(ta1_a, ta1_b));
 	}
 
 private:
