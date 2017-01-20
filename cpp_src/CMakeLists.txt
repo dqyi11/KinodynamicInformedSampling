@@ -32,6 +32,7 @@ add_library(samplerLib
 			SHARED
 			 src/Sampler.cpp
 			 src/MonteCarloSamplers.cpp
+			 src/RejectionSampler.cpp
 			)
 target_link_libraries(samplerLib
 					  problemDefinitionLib
