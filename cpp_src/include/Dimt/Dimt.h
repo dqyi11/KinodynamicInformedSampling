@@ -50,15 +50,8 @@ public:
 			std::string error_msg = "Invalid Arguments to get_min_time";
 			throw std::invalid_argument(error_msg);
 		}
-	    VectorXd Ts(int(x1.size()/2));
-	    for(int i = 0; i<x1.size(); i=i+2)
-	    {
-	    	Ts(i/2) = get_min_time_1dof(x1(i), x1(i+1), x2(i), x2(i+1), xi(i), xi(i+1));
-	    }
 
-	    // std::cout << "Time Before: " << Ts.maxCoeff() << std::endl;
-	    // std::cout << "Time Other way: " << get_min_time(x1, xi) + get_min_time(xi, x2) << std::endl;
-	    return Ts.maxCoeff();
+		return get_min_time(x1, xi) + get_min_time(xi, x2);
 	}
 
 	// This function calculates the maximum time given a set number of joints
