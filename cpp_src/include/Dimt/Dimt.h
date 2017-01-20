@@ -72,6 +72,7 @@ public:
 		for(int i = 0; i < x1.size(); i = i + 2)
 		{
 			Ts(i/2) = get_min_time_1dof(x1(i), x1(i+1), x2(i), x2(i+1));
+			// std::cout << "T" << i << ": " << Ts(i/2) << std::endl;
 		}
 		return Ts.maxCoeff();
 	}
@@ -83,6 +84,7 @@ public:
 	{
 		double T1 = get_min_time_1dof(x1, v1, xi, vi);
 		double T2 = get_min_time_1dof(xi, vi, x2, v2);
+		// std::cout << "T1: " << T1 << " | T2: " << T2 << std::endl;
 		if(T1 < 0 || T2 < 0) return -1;
 		return T1 + T2;
 	}
@@ -147,9 +149,10 @@ public:
 		const double a2 = sigma*a_max_;  
 		const double a1 = -a2;
 
+		// Check to see if there is no infeasible time interval because it 
+		// is not in the correct region
 		if(v1 * v2 <= 0.0 or a1 * v1 < 0.0) 
 		{
-			// No infeasible time interval, because it is not in the correct region
 			return std::pair<double, double>(std::numeric_limits<double>::infinity(),
 											 std::numeric_limits<double>::infinity());
 		}
