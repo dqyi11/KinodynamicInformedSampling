@@ -12,4 +12,11 @@ Building Code with G++ (not recomended):
 Building with cmake:
 - goto build folder
 * cmake ..
-* make 
+* make
+
+How to use OMPL from Source
+1. Download the source code: http://ompl.kavrakilab.org/installation.html
+2. Run the script inside the directory: ./install-ompl-ubuntu.sh --python
+3. In the OMPL folder with the CMake files:
+	cmake -DCMAKE_INSTALL_PREFIX=/usr/lib
+	make install 
