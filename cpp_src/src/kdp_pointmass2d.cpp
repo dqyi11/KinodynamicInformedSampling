@@ -1,6 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include "DimtStateSpace.h"
+#include "Dimt/DoubleIntegrator.h"
+#include "Dimt/Dimt.h"
+#include "Dimt/Params.h"
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
@@ -20,15 +23,25 @@ bool isStateValid(const ob::State *state)
   // if (x>-1 && x<1 && y>-4 && y<4)
   //   return false;
   // else
-	  return true;
+	return true;
 }
 
 void planWithSimpleSetup(void)
 {
-	// construct the state space we are planning in
+  // Initializations
   double a_max = 1;
+  int dimensions = 2*1;
+  int dof = dimensions/2;
   Dimt dimt(a_max);
-  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, 2));
+  DoubleIntegrator<PARAM_DOF>::Vector maxAccelerations, maxVelocities;
+  for (unsigned int i = 0; i < dof; ++i)
+  {
+    maxVelocities[i] = 10;
+    maxAccelerations[i] = a_max;
+  }
+  DoubleIntegrator<PARAM_DOF> double_integrator(maxAccelerations, maxVelocities);
+  // construct the state space we are planning in
+  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, 2));
 	ob::RealVectorBounds bounds(2);
 	bounds.setLow(-10);
 	bounds.setHigh(10);
@@ -61,7 +74,7 @@ void planWithSimpleSetup(void)
   planner->setProblemDefinition(pdef);
   planner->setup();
 
-  // Run planner
+// Run planner
   ob::PlannerStatus solved = planner->solve(5.0);
   if (solved)
   {

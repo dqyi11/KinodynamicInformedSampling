@@ -49,6 +49,11 @@ class DoubleIntegrator {
 public:
 	typedef Eigen::Matrix<double, 2 * dof, 1> StateVector;
 	typedef Eigen::Matrix<double, dof, 1> Vector;
+	Vector maxAccelerations_;
+	Vector maxVelocities_;
+	
+	DoubleIntegrator(Vector maxAccelerations, Vector maxVelocities) : 
+			maxAccelerations_(maxAccelerations), maxVelocities_(maxVelocities){}
 
 	class Trajectory1D {
 		// 3 segments of constant acceleration: position/velocity[i] := position/velocity at time[i]
@@ -384,10 +389,8 @@ public:
 		return infeasibleInterval;
 	}
 
-	static double getMinTime(const StateVector &state1, const StateVector &state2,
-	                         const Vector &maxAccelerations,
-	                         const Vector &maxVelocities =  std::numeric_limits<double>::infinity() * Vector::Ones(),
-	                         double maxTime = std::numeric_limits<double>::infinity())
+	double getMinTime(const StateVector &state1, const StateVector &state2,
+	                         double maxTime = std::numeric_limits<double>::infinity()) const
 	{
 		const Vector distances = state2.template head<dof>() - state1.template head<dof>();
 		double minTime = 0.0;
@@ -396,26 +399,25 @@ public:
 		Vector firstAccelerations;
 		
 		for(unsigned int i = 0; i < dof && minTime < maxTime; ++i) {
-			const double time = getMinTime1D(state1[dof+i], state2[dof+i], distances[i], maxAccelerations[i], maxVelocities[i], maxTime, firstAccelerations[i]);
-			adjustForInfeasibleIntervals(i, time, maxTime, state1.template tail<dof>(), state2.template tail<dof>(), distances, firstAccelerations, maxAccelerations, maxVelocities,
+			const double time = getMinTime1D(state1[dof+i], state2[dof+i], distances[i], maxAccelerations_[i], maxVelocities_[i], maxTime, firstAccelerations[i]);
+			adjustForInfeasibleIntervals(i, time, maxTime, state1.template tail<dof>(), state2.template tail<dof>(), distances, firstAccelerations, maxAccelerations_, maxVelocities_,
 			                             minTime, infeasibleIntervals, limitDof);
 		}
-
 		assert(minTime < std::numeric_limits<double>::infinity());
 		return minTime;
 	}
 
-	static Trajectory getTrajectory(const StateVector &state1, const StateVector &state2, double time, const Vector &maxVelocities)
+	Trajectory getTrajectory(const StateVector &state1, const StateVector &state2, double time) const
 	{
 		Trajectory trajectory;
 		for(unsigned int i = 0; i < dof; i++)
-			trajectory[i] = getMinAcceleration(state1[i], state1[dof + i], state2[i], state2[dof + i], time, maxVelocities[i]);
+			trajectory[i] = getMinAcceleration(state1[i], state1[dof + i], state2[i], state2[dof + i], time, maxVelocities_[i]);
 		return trajectory;
 	}
 
-	static Trajectory getTrajectory(const StateVector &state1, const StateVector &state2, const Vector &maxAccelerations, const Vector &maxVelocities)
+	Trajectory getTrajectory(const StateVector &state1, const StateVector &state2) const
 	{
-		const double time = getMinTime(state1, state2, maxAccelerations, maxVelocities);
-		return getTrajectory(state1, state2, time, maxVelocities);
+		const double time = getMinTime(state1, state2);
+		return getTrajectory(state1, state2, time);
 	}
 };
