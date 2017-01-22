@@ -124,4 +124,11 @@ public:
 	/// @return Gradient of the function at the current state (same dimension as current state)
 	///
 	virtual VectorXd get_grad(const VectorXd& curr_state) const;
+
+	///
+	/// Update the levelset
+	///
+	/// @param level_set New level set
+	///
+	void update_level_set(const double& level_set) { level_set_ = level_set; }
 };
