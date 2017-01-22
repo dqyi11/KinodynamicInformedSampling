@@ -49,6 +49,16 @@ target_link_libraries(dimtLib
 					 )
 set_target_properties(dimtLib PROPERTIES LINKER_LANGUAGE CXX)
 
+# Add library for OMPL wrappers
+add_library(omplwrapperLib
+			SHARED
+			 src/OmplSamplers.cpp
+			 src/MyOptimizationObjective.cpp
+			)
+target_link_libraries(omplwrapperLib
+					  ${OMPL_LIBRARIES}
+					  )
+					  
 # Link libraries for main file
 target_link_libraries(get_samples
 					  samplerLib
@@ -67,3 +77,13 @@ target_link_libraries(unit_test
 # Ompl Planner 
 add_executable (kdp_pointmass2d src/kdp_pointmass2d.cpp)
 target_link_libraries (kdp_pointmass2d ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+
+# Informed Sampling tester
+add_executable(informed_sampling_test src/informed_sampling_test.cpp)
+target_link_libraries(informed_sampling_test
+					  ${OMPL_LIBRARIES} 
+					  ${Boost_FILESYSTEM_LIBRARY} 
+					  ${Boost_SYSTEM_LIBRARY}
+					  samplerLib
+					  omplwrapperLib
+					  )
