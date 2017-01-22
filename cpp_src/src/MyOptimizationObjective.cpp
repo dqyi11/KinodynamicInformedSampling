@@ -10,6 +10,9 @@ using Eigen::VectorXd;
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/samplers/InformedStateSampler.h>
 
+// Internal Libraries
+#include <OmplWrappers/OmplSamplers.h>
+
 ///
 /// Function to convert a State to a VectorXd
 ///
@@ -63,5 +66,9 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::bas
 ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInformedStateSampler(
 	const ProblemDefinitionPtr probDefn, unsigned int maxNumberCalls) const
 {
-	return informed_sampler_;
+	return ompl::base::InformedSamplerPtr(
+		new ompl::base::MyInformedSampler(probDefn, 
+										  maxNumberCalls, 
+										  sampler_ptr_,
+										  batch_size_));
 }

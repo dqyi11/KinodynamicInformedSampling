@@ -11,6 +11,9 @@ using Eigen::VectorXd;
 // OMPL
 #include <ompl/base/OptimizationObjective.h>
 
+// Internal packages
+#include <Sampler/Sampler.h>
+
 using MotionCostFxn = std::function<double(VectorXd, VectorXd)>;
 using StateCostFxn = std::function<double(VectorXd)>;
 
@@ -32,7 +35,10 @@ namespace ompl
 			MotionCostFxn motion_cost_function_;
 
 			// Pointer to informed sampler
-			InformedSamplerPtr informed_sampler_;
+			std::shared_ptr<Sampler> sampler_ptr_;
+
+			// Number of samples to get in a batch
+			double batch_size_;
 
 		public:
 
@@ -45,11 +51,15 @@ namespace ompl
 			/// @param informed_sampler Informed sampler
 			///
 			MyOptimizationObjective(const SpaceInformationPtr& si,
+									const std::shared_ptr<Sampler>& sampler_ptr,
+									const double& batch_size,
 									const StateCostFxn& state_cost_function,
 									const MotionCostFxn& motion_cost_function)
 				: OptimizationObjective(si), 
 				  state_cost_function_(state_cost_function), 
-				  motion_cost_function_(motion_cost_function)
+				  motion_cost_function_(motion_cost_function),
+				  sampler_ptr_(sampler_ptr),
+				  batch_size_(batch_size)
 			{ }
 
 			///
@@ -69,13 +79,6 @@ namespace ompl
 			///
 			virtual Cost motionCost(const State *s1, const State *s2) const override;
 
-			///
-			/// Set informed sampler
-			///
-			/// @param informed_sampler
-			///
-			virtual void set_informed_sampler(const InformedSamplerPtr& informed_sampler) 
-				{ informed_sampler_ = informed_sampler; }
 
 			///
 			/// Function to get the informed sampler pointer
