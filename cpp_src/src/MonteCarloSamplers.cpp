@@ -195,9 +195,9 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 ///
 MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 {
-	std::cout << "Number of samples: " << no_samples << std::endl;
+	if(VERBOSE) std::cout << "Number of samples: " << no_samples << std::endl;
 	if(VERBOSE) std::cout << "Surfing" << std::endl;
-	VectorXd q = HMCSampler::grad_descent();
+	VectorXd q = HMCSampler::grad_descent(alpha());
 	if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
 
 	// Store the samples
@@ -212,7 +212,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 	while(accepted < no_samples)
 	{
 		if(VERBOSE) std::cout << "New start!" << std::endl;
-		VectorXd q = HMCSampler::grad_descent();
+		VectorXd q = HMCSampler::grad_descent(alpha());
 		if(VERBOSE) std::cout << "Got Through Gradient Descent in loop" << std::endl;
 
 		int curr_rejections = 0;
@@ -285,7 +285,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			curr_step++;
 			if(VERBOSE) std::cout << "Decided on rejection / acceptance" << std::endl;
 			if(VERBOSE) std::cout << "Number Accepted: " << accepted << std::endl;
-			std::cout << "Number Accepted: " << accepted << std::endl;
+			if(VERBOSE) std::cout << "Number Accepted: " << accepted << std::endl;
 
 		}
 	}
@@ -304,7 +304,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 		else 
 			std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
 	}
-	std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
+	if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
 
 	return samples;
 }
@@ -322,7 +322,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 ///
 MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 {
-	std::cout << "Number of samples: " << no_samples << std::endl;
+	if(VERBOSE) std::cout << "Number of samples: " << no_samples << std::endl;
 	if(VERBOSE) std::cout << "Surfing" << std::endl;
 	VectorXd q = MCMCSampler::grad_descent(alpha());
 	if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
@@ -340,7 +340,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 	{
 		if(samples.rows() > 1)
 		{
-			std::cout << "New start!" << std::endl;
+			if(VERBOSE) std::cout << "New start!" << std::endl;
 			VectorXd q = MCMCSampler::grad_descent(alpha());
 			if(VERBOSE) std::cout << "Got Through Gradient Descent in loop" << std::endl;
 		}
@@ -369,10 +369,10 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			curr_step++;
 		}
 
-		std::cout << "Number of accepted: " << accepted << std::endl;
+		if(VERBOSE) std::cout << "Number of accepted: " << accepted << std::endl;
 	}
 
-	std::cout << "Number of accepted: " << accepted << std::endl;
+	if(VERBOSE) std::cout << "Number of accepted: " << accepted << std::endl;
 	// If you want to time the sampling and display it
 	if(time)
 	{
@@ -387,7 +387,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 		else 
 			std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
 	}
-	std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
+	if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
 
 	return samples;
 }

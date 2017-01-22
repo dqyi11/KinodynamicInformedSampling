@@ -186,7 +186,7 @@ public:
 	double sigma() const { return sigma_; }
 
 	///
-	/// Get number of steps to run for each MCMC chaine
+	/// Get number of steps to run for each MCMC chain
 	///
 	double steps() const { return steps_; } 
 
