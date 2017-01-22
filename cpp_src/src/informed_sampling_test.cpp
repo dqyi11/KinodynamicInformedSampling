@@ -68,10 +68,12 @@ ProblemDefinition create_prob_definition(const VectorXd& start_state,
 
 ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
 											  const VectorXd& start_state,
-											  const VectorXd& goal_state)
-											  // const ob::InformedSamplerPtr& inf_sampler)
+											  const VectorXd& goal_state,
+											  const std::shared_ptr<Sampler> sampler,
+											  const double& batch_size)
 {
-	return ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si,
+	return 
+	ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
 		[start_state, goal_state](const VectorXd& state)
 		{
 			return (start_state - state).norm() + (goal_state - state).norm();
@@ -193,7 +195,10 @@ int main(int argc, char const *argv[])
 	if(verbose) std::cout << "Set the start and goal" << std::endl;
 
 	// Set up the optimization objective
-	auto opt = get_geom_opt_obj(si, start_state, goal_state);
+	double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
+	auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+	auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
+	opt->setCostThreshold(ob::Cost(1.51));
 
 	if(verbose) std::cout << "Set up the optimizing objective" << std::endl;
 
@@ -201,9 +206,6 @@ int main(int argc, char const *argv[])
 
 	if(verbose) std::cout << "Set up the problem definition" << std::endl;
 
-	// Set up the sampler and the sampler wrapper
-	double sigma = 1; int max_steps = 20; double alpha = 0.5;
-	auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
 	auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
 	std::cout << "Running RRT* with mcmc Sampler..." << std::endl;
 
@@ -221,6 +223,8 @@ int main(int argc, char const *argv[])
 	// attempt to solve the planning problem within one second of
 	// planning time
 	ob::PlannerStatus solved = optimizingPlanner->solve(1.0);
+
+	if(verbose) std::cout << "Solved!" << std::endl;
 
 	if(solved)
 	{
