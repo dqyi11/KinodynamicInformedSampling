@@ -16,7 +16,7 @@ public:
 	/// 
 	/// @param problem Problem definition
 	///
-	Sampler(ProblemDefinition problem)
+	Sampler(const ProblemDefinition& problem)
 		: problem_(problem)
 	{
 
@@ -37,4 +37,11 @@ public:
 	/// @return The problem definition
 	///
 	ProblemDefinition problem() const { return problem_; }
+
+	///
+	/// Update the level set of the problem definition
+	///
+	/// @param level_set The new level_set
+	///
+	void update_level_set(const double& level_set) { problem_.update_level_set(level_set); }
 };
