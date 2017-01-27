@@ -35,6 +35,7 @@
  *     Planning for Robot Manipulators with Acceleration Limits. IEEE/RSJ
  *     International Conference on Intelligent Robots and Systems (IROS), 2014.
  */
+// TODO: Compare with original code to catch non-architectural changes
 
 #pragma once
 
