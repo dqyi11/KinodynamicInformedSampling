@@ -38,6 +38,8 @@ namespace ompl
 			  	eig_from[i] = s1[i];
 			  	eig_to[i] = s2[i];
 			  }
+			 	double time = double_integrator_.getMinTime(eig_from, eig_to);
+			 	return time;
 			}
 
 		  virtual void interpolate(const State *from, const State *to, const double t, State *state) const
@@ -59,6 +61,9 @@ namespace ompl
 			  {
 			  	rstate->values[i] = eig_state[i];
 			  }
+			  //TODO: Fix assert fail in steering function (using straight line for now)
+			  for (unsigned int i = 0 ; i < dimension_ ; ++i)
+			  	rstate->values[i] = rfrom->values[i] + (rto->values[i] - rfrom->values[i]) * t;
 		  }
 
 		  virtual bool isMetricSpace() const {return false;}

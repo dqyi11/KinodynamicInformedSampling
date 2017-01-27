@@ -13,12 +13,13 @@ namespace og = ompl::geometric;
 
 bool isStateValid(const ob::State *state)
 {
+  // TODO: Fix segfault
   // std::cout << "before" << std::endl;
-  const double* val = static_cast<const ob::RealVectorStateSpace::StateType*>(state)->values;
-  // std::cout << (*static_cast<const ob::RealVectorStateSpace::StateType*>(state))[0];
+  // const double* val = static_cast<const ob::RealVectorStateSpace::StateType*>(state)->values;
+  // std::cout << (static_cast<const ob::RealVectorStateSpace::StateType*>(state));
   // std::cout << "after" << std::endl;
-  double x = (double)val[0]; 
-  double y = (double)val[1];
+  // double x = (double)val[0]; 
+  // double y = (double)val[1];
   // std::cout << "after" << std::endl;
   // if (x>-1 && x<1 && y>-4 && y<4)
   //   return false;
@@ -29,20 +30,17 @@ bool isStateValid(const ob::State *state)
 void planWithSimpleSetup(void)
 {
   // Initializations
-  double a_max = 1;
-  int dimensions = 2*1;
-  int dof = dimensions/2;
-  Dimt dimt(a_max);
+  Dimt dimt(PARAM_A_MAX);
   DoubleIntegrator<PARAM_DOF>::Vector maxAccelerations, maxVelocities;
-  for (unsigned int i = 0; i < dof; ++i)
+  for (unsigned int i = 0; i < PARAM_DOF; ++i)
   {
     maxVelocities[i] = 10;
-    maxAccelerations[i] = a_max;
+    maxAccelerations[i] = PARAM_A_MAX;
   }
   DoubleIntegrator<PARAM_DOF> double_integrator(maxAccelerations, maxVelocities);
   // construct the state space we are planning in
-  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, 2));
-	ob::RealVectorBounds bounds(2);
+  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, PARAM_DIMENSIONS));
+	ob::RealVectorBounds bounds(PARAM_DIMENSIONS);
 	bounds.setLow(-10);
 	bounds.setHigh(10);
   space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
@@ -52,12 +50,12 @@ void planWithSimpleSetup(void)
   si->setup();
 // Set custom start and goal 
   ompl::base::State *start_s = space->allocState();
-  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = -5;
-  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] = -5;
+  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = 0;
+  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] = 0;
   ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
   ompl::base::State *goal_s = space->allocState();
-  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = 5;
-  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] = 5;
+  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = 1;
+  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] = 1;
   ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
 // Set random start and goal 
   // ob::ScopedState<> start(space);

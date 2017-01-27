@@ -154,7 +154,7 @@ public:
 		}
 	};
 
-private:
+// private:
 
 	static inline double sign(double d) {
 		return d >= 0.0 ? 1.0 : -1.0;
@@ -336,11 +336,14 @@ public:
 
 		assert(time >= 0.0);
 		assert(time != std::numeric_limits<double>::infinity());
-
+		// if(time == std::numeric_limits<double>::infinity())
+			// time = 100;
 		if(time < maxTime && std::abs(startVelocity + acceleration1 * time1) >= maxVelocity) {
 			time = getPLPTime(startVelocity, goalVelocity, distance, maxVelocity, acceleration1);
 		}
-
+		// if(time == std::numeric_limits<double>::infinity())
+			// time = 100;
+		// std::cout << "T1= " << time1 << " T2=" << time2 << " Total=" << time << std::endl;
 		return time;
 	}
 
