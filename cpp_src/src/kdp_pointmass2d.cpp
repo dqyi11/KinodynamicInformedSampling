@@ -11,21 +11,23 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-bool isStateValid(const ob::State *state)
+class ValidityChecker : public ob::StateValidityChecker
 {
-  // TODO: Fix segfault
-  // std::cout << "before" << std::endl;
-  // const double* val = static_cast<const ob::RealVectorStateSpace::StateType*>(state)->values;
-  // std::cout << (static_cast<const ob::RealVectorStateSpace::StateType*>(state));
-  // std::cout << "after" << std::endl;
-  // double x = (double)val[0]; 
-  // double y = (double)val[1];
-  // std::cout << "after" << std::endl;
-  // if (x>-1 && x<1 && y>-4 && y<4)
-  //   return false;
-  // else
-	return true;
-}
+public:
+    ValidityChecker(const ob::SpaceInformationPtr& si) :
+        ob::StateValidityChecker(si) {}
+    // rectangle obstacle
+    bool isValid(const ob::State* state) const
+    {
+        const ob::RealVectorStateSpace::StateType* state_rv =
+            state->as<ob::RealVectorStateSpace::StateType>();
+        for (int i=0; i<param.dimensions; i=i+2){
+          if(state_rv->values[i]<-1 || state_rv->values[i]>1)
+            return true;
+        }
+        return false;
+    }
+};
 
 void planWithSimpleSetup(void)
 {
@@ -45,7 +47,7 @@ void planWithSimpleSetup(void)
 	bounds.setHigh(10);
   space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
 	ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-  si->setStateValidityChecker(std::bind(&isStateValid, std::placeholders::_1));
+  si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
   si->setStateValidityCheckingResolution(0.03); // 3%
   si->setup();
 // Set custom start and goal 
