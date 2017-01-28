@@ -90,4 +90,4 @@ target_link_libraries(informed_sampling_test
 
 # Informed Pointmass
 add_executable (informed_pointmass src/informed_pointmass.cpp)
-target_link_libraries (informed_pointmass ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries (informed_pointmass ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} samplerLib omplwrapperLib)
