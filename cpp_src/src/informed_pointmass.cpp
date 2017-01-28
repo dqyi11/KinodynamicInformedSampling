@@ -76,6 +76,27 @@ ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
     }));
 }
 
+template <int dof>
+ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
+                                             const VectorXd& start_state,
+                                             const VectorXd& goal_state,
+                                             const std::shared_ptr<Sampler> sampler,
+                                             const double& batch_size,
+                                             const DoubleIntegrator<dof> &di)
+{
+  return 
+  ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
+    [start_state, goal_state, di](const VectorXd& state)
+    {
+      return di.getMinTime(start_state, state) + di.getMinTime(state, goal_state);
+    },
+    [di](const VectorXd& s1, const VectorXd& s2)
+    {
+      return di.getMinTime(s1, s2);
+    }));
+
+}
+
 void planWithSimpleSetup(void)
 {
   // Initializations
@@ -125,12 +146,14 @@ void planWithSimpleSetup(void)
   double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
   const double level_set = 100;
   auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
-    [start_state, goal_state](const VectorXd& state)
+    [start_state, goal_state, double_integrator](const VectorXd& state)
     {
-      return (start_state - state).norm() + (goal_state - state).norm();
+      return double_integrator.getMinTime(start_state, state) + 
+             double_integrator.getMinTime(state, goal_state);
     });
   auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-  auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
+  // auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
+  auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
   opt->setCostThreshold(ob::Cost(1.51));
   pdef->setOptimizationObjective(opt);
   auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
@@ -141,7 +164,7 @@ void planWithSimpleSetup(void)
   planner->setProblemDefinition(pdef);
   planner->setup();
   // Run planner
-  ob::PlannerStatus solved = planner->solve(5.0);
+  ob::PlannerStatus solved = planner->solve(1.0);
   if (solved)
   {
     std::cout << "Found solution:" << std::endl;
