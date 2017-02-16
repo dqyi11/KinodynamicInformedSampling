@@ -1,0 +1,29 @@
+CC'ing Brian (Hey Brian, Rohan is one of the cool MRSD students that has
+been working with Sidd on kinodynamic
+planning, and has come to many of the recent reading groups. He has been
+working on an OMPL planner
+and wanted to port that over to the HERB pipeline so I thought I'd get him
+in touch with you in case
+he needed some assistance).
+
+Hey Rohan,
+
+* This or_ompl  example should be a good reference for calling a HERB 
+OpenRave planner with an underlying OMPL planner
+-- https://github.com/personalrobotics/or_ompl/blob/master/scripts/example.py
+
+* This script from Chris Dellin's code is an example of an openrave plugin
+generator for an OMPL planner -
+-- https://github.com/personalrobotics/lemur/blob/master/or_lemur/catkin-env-hooks/20.or_lemur.sh.in
+
+* And this is what defines the behaviour of the plugin. If you make a
+separate OMPL package you will need to have one of these (and the above script) -
+-- https://github.com/personalrobotics/lemur/blob/master/or_lemur/src/plugin.cpp
+
+* However if your planner builds with OMPL, you can just edit the following file on your local
+copy of or_ompl -
+-- https://github.com/personalrobotics/or_ompl/blob/master/planners.yaml
+-- This will generate the plugin for your planner automatically.
+
+Hope that helps!
+Shushman
