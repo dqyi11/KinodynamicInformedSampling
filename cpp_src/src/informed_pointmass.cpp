@@ -54,8 +54,8 @@ ProblemDefinition create_prob_definition(const VectorXd& start_state,
   VectorXd state_max(dimension);
   state_max << VectorXd::Constant(dimension, maxval);
 
-  return ProblemDefinition(start_state, goal_state, state_min, 
-               state_max, level_set, costfxn);
+  return ProblemDefinition(start_state, goal_state, state_min,
+                           state_max, level_set, costfxn);
 }
 
 ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
@@ -64,7 +64,7 @@ ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
                         const std::shared_ptr<Sampler> sampler,
                         const double& batch_size)
 {
-  return 
+  return
   ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
     [start_state, goal_state](const VectorXd& state)
     {
@@ -84,88 +84,125 @@ ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
                                              const double& batch_size,
                                              const DoubleIntegrator<dof> &di)
 {
-  return 
+  return
   ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
     [start_state, goal_state, di](const VectorXd& state)
     {
+      std::cout << "Start state size: " << start_state.size() << std::endl;
+      std::cout << "Goal state size: " << goal_state.size() << std::endl;
+      std::cout << "State size: " << state.size() << std::endl;
       return di.getMinTime(start_state, state) + di.getMinTime(state, goal_state);
     },
     [di](const VectorXd& s1, const VectorXd& s2)
     {
+      std::cout << "Start: " << s1 << std::endl;
+      std::cout << "Goal: " << s2 << std::endl;
       return di.getMinTime(s1, s2);
     }));
-
 }
+
+bool MAIN_VERBOSE = true;
 
 void planWithSimpleSetup(void)
 {
-  // Initializations
-  Dimt dimt(param.a_max);
-  DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
-  for (unsigned int i = 0; i < param.dof; ++i)
+// Initializations
+Dimt dimt(param.a_max);
+DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
+for (unsigned int i = 0; i < param.dof; ++i)
+{
+  maxVelocities[i] = 10;
+  maxAccelerations[i] = param.a_max;
+}
+DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
+
+if(MAIN_VERBOSE) std::cout << "Created the double integrator model!" << std::endl;
+
+// Intiatilizations for sampler
+const int dimension = param.dimensions; const double minval = -10; const double maxval = 10;
+VectorXd start_state(dimension);
+VectorXd goal_state(dimension);
+
+if(MAIN_VERBOSE) std::cout << "Got the start and goal states!" << std::endl;
+
+// Construct the state space we are planning in
+ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
+ob::RealVectorBounds bounds(param.dimensions);
+bounds.setLow(-10);
+bounds.setHigh(10);
+space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
+ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
+si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
+si->setStateValidityCheckingResolution(0.03); // 3%
+si->setup();
+
+if(MAIN_VERBOSE) std::cout << "Set up the state space!" << std::endl;
+
+// Set custom start and goal
+ompl::base::State *start_s = space->allocState();
+ompl::base::State *goal_s = space->allocState();
+for (int i=0; i<param.dimensions; i++)
+{
+  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -5;
+  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 5;
+  start_state[i] = -5;
+  goal_state[i] = 5;
+}
+ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
+ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
+
+if(MAIN_VERBOSE) std::cout << "Got the vector start and goal state space ompl!" << std::endl;
+if(MAIN_VERBOSE) std::cout << start_s << std::endl << goal_s << std::endl;
+
+// Set random start and goal
+// ob::ScopedState<> start(space);
+// start.random();
+// ob::ScopedState<> goal(space);
+// goal.random();
+// Setup Problem Definition
+ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
+pdef->setStartAndGoalStates(start, goal);
+
+if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl;
+
+// Construct Sampler and Planner
+double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
+const double level_set = 100;
+auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
+  [start_state, goal_state, double_integrator](const VectorXd& state)
   {
-    maxVelocities[i] = 10;
-    maxAccelerations[i] = param.a_max;
-  }
-  DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
-  // Intiatilizations for sampler
-  const int dimension = param.dimensions; const double minval = -10; const double maxval = 10;
-  VectorXd start_state(dimension);
-  VectorXd goal_state(dimension);
-  // Construct the state space we are planning in
-  ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
-  ob::RealVectorBounds bounds(param.dimensions);
-  bounds.setLow(-10);
-  bounds.setHigh(10);
-  space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-  ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-  si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
-  si->setStateValidityCheckingResolution(0.03); // 3%
-  si->setup();
-  // Set custom start and goal 
-  ompl::base::State *start_s = space->allocState();
-  ompl::base::State *goal_s = space->allocState();
-  for (int i=0; i<param.dimensions; i++)
-  {
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -5;
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 5;  
-    start_state[i] = -5;
-    goal_state[i] = 5;
-  }
-  ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
-  ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
-  // Set random start and goal 
-  // ob::ScopedState<> start(space);
-  // start.random(); 
-  // ob::ScopedState<> goal(space);
-  // goal.random(); 
-  // Setup Problem Definition  
-  ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-  pdef->setStartAndGoalStates(start, goal);
-  // Construct Sampler and Planner
-  double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
-  const double level_set = 100;
-  auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
-    [start_state, goal_state, double_integrator](const VectorXd& state)
-    {
-      return double_integrator.getMinTime(start_state, state) + 
-             double_integrator.getMinTime(state, goal_state);
-    });
-  auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-  // auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
-  auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
-  opt->setCostThreshold(ob::Cost(1.51));
-  pdef->setOptimizationObjective(opt);
-  auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
-  // ob::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
-  // ob::PlannerPtr planner(new og::RRTstar(si));
-  ob::PlannerPtr planner(new og::InformedRRTstar(si));
-  // Set the problem instance for our planner to solve
-  planner->setProblemDefinition(pdef);
-  planner->setup();
-  // Run planner
-  ob::PlannerStatus solved = planner->solve(1.0);
-  if (solved)
+    return double_integrator.getMinTime(start_state, state) +
+           double_integrator.getMinTime(state, goal_state);
+  });
+auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+
+if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
+
+// auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
+auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
+opt->setCostThreshold(ob::Cost(1.51));
+pdef->setOptimizationObjective(opt);
+
+if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
+
+auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
+
+if(MAIN_VERBOSE) std::cout << "Created the informed ompl sampler!" << std::endl;
+
+// ob::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
+// ob::PlannerPtr planner(new og::RRTstar(si));
+ob::PlannerPtr planner(new og::InformedRRTstar(si));
+// Set the problem instance for our planner to solve
+planner->setProblemDefinition(pdef);
+planner->setup();
+
+if(MAIN_VERBOSE) std::cout << "Set up Informed RRT* planner!" << std::endl;
+
+// Run planner
+ob::PlannerStatus solved = planner->solve(1.0);
+
+if(MAIN_VERBOSE) std::cout << "Planner solved!" << std::endl;
+
+if (solved)
   {
     std::cout << "Found solution:" << std::endl;
     // get the goal representation from the problem definition (not the same as the goal state)

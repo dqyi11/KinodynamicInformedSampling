@@ -55,8 +55,8 @@ namespace ompl
 									const double& batch_size,
 									const StateCostFxn& state_cost_function,
 									const MotionCostFxn& motion_cost_function)
-				: OptimizationObjective(si), 
-				  state_cost_function_(state_cost_function), 
+				: OptimizationObjective(si),
+				  state_cost_function_(state_cost_function),
 				  motion_cost_function_(motion_cost_function),
 				  sampler_ptr_(sampler_ptr),
 				  batch_size_(batch_size)
@@ -79,15 +79,14 @@ namespace ompl
 			///
 			virtual Cost motionCost(const State *s1, const State *s2) const override;
 
-
 			///
 			/// Function to get the informed sampler pointer
 			///
 			/// @param probDefn Problem definition pointer (OMPL)
 			/// @param maxNumberCalls Maximum number of sampling calls
-			/// @return Infromed sampler 
+			/// @return Infromed sampler
 			///
-			virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn, 
+			virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn,
 																 unsigned int maxNumberCalls) const override;
 		};
 	}

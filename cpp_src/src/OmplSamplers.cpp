@@ -30,12 +30,18 @@ bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &m
 		sample_index_ = 0;
 	}
 
+	std::cout << "Got samples. About to give one!" << std::endl;
+
 	auto sample = batch_samples_.row(sample_index_);
+
+	std::cout << "Got one sample!" << std::endl;
 
 	for(int i = 0; i < sample.size(); i++)
 	{
 		statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = sample(i);
 	}
+
+	std::cout << "Converted sample!" << std::endl;
 
 	sample_index_++;
 
@@ -50,8 +56,8 @@ bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &m
 /// @param minCost Minimum cost of the informed subspace
 /// @return true if a sample is gotten false, if not
 ///
-bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, 
-												  const Cost &minCost, 
+bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr,
+												  const Cost &minCost,
 												  const Cost &maxCost)
 {
 	return sampleUniform(statePtr, maxCost);
