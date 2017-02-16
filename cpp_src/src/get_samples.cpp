@@ -14,8 +14,8 @@ using Eigen::MatrixXd;
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
 
-// 
-// From stackoverflow: 
+//
+// From stackoverflow:
 // http://stackoverflow.com/questions/865668/how-to-parse-command-line-arguments-in-c
 //
 #include <algorithm>
@@ -48,6 +48,7 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
 		std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
 		std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
 		std::cout << "\t -rej - Boolean (0,1)" << std::endl;
+        std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
 		std::cout << "\t -filename - Filename to save the samples to" << std::endl;
 		std::cout << "________________________________________________" << std::endl;
 		return std::make_tuple(false, std::vector<int>{});
@@ -57,41 +58,48 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
     	std::vector<int> args;
 
     	// Get the number of samples
-    	if(cmdOptionExists(argv, argv+argc, "-samples")) 
+    	if(cmdOptionExists(argv, argv+argc, "-samples"))
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-samples")));
     	else
     		args.push_back(100); // Default to 100 samples
-    	
+
     	// Get the boolean to determine if we should time
-    	if(cmdOptionExists(argv, argv+argc, "-time")) 
+    	if(cmdOptionExists(argv, argv+argc, "-time"))
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-time")));
     	else
     		args.push_back(0); // Default to not print time
-    	
-    	// Get the boolean to determine if we run hmc 
-			if(cmdOptionExists(argv, argv+argc, "-hmc")) 
+
+    	// Get the boolean to determine if we run hmc
+		if(cmdOptionExists(argv, argv+argc, "-hmc"))
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-hmc")));
     	else
     		args.push_back(1); // Default to run hmc
-    	
-    	// Get the boolean to determine if we run mcmc 
-			if(cmdOptionExists(argv, argv+argc, "-mcmc")) 
+
+    	// Get the boolean to determine if we run mcmc
+		if(cmdOptionExists(argv, argv+argc, "-mcmc"))
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-mcmc")));
     	else
-    		args.push_back(1); // Default to run mcmc 
-    	
+    		args.push_back(1); // Default to run mcmc
+
     	// Get the boolean to determine if we run rej
-			if(cmdOptionExists(argv, argv+argc, "-rej")) 
+		if(cmdOptionExists(argv, argv+argc, "-rej"))
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-rej")));
     	else
     		args.push_back(1); // Default to run rej
+
+        // Get the boolean to determine if we run geometric hierarchical rejection sampling
+        if(cmdOptionExists(argv, argv+argc, "-ghrej"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-ghrej")));
+        else
+            args.push_back(1); // Default to run rej
+
     	return std::make_tuple(true, args);
     }
 }
 
 std::tuple<bool, std::string> get_filename(int argc, char * argv[])
 {
-	if(cmdOptionExists(argv, argv+argc, "-filename")) 
+	if(cmdOptionExists(argv, argv+argc, "-filename"))
 		return std::make_tuple(true, std::string(getCmdOption(argv, argv+argc, "-filename")));
 	else
 		return std::make_tuple(false, "none");
@@ -113,9 +121,9 @@ std::vector<double> get_random_vector(const double& max, const double& min, cons
 
 int main(int argc, char * argv[])
 {
-	// 
+	//
 	// Example for how to use the above sampler
-	// 	
+	//
 	bool run; std::vector<int> args;
 	std::tie(run, args) = handle_arguments(argc, argv);
 	if(!run) return 0;
@@ -125,6 +133,7 @@ int main(int argc, char * argv[])
 	bool run_hmc = (args[2] == 1) ? true : false;
 	bool run_mcmc = (args[3] == 1) ? true : false;
 	bool run_rej = (args[4] == 1) ? true : false;
+    bool run_ghrej = (args[5] == 1) ? true : false;
 
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
@@ -169,7 +178,7 @@ int main(int argc, char * argv[])
 		double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
 		HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
 		std::cout << "Running HMC Sampling..." << std::endl;
-		hmc_samples = hmc_s.sample(no_samples, time);	
+		hmc_samples = hmc_s.sample(no_samples, time);
 	}
 
 	MatrixXd mcmc_samples;
@@ -180,6 +189,7 @@ int main(int argc, char * argv[])
 		std::cout << "Running MCMC Sampling..." << std::endl;
 		mcmc_samples = mcmc_s.sample(no_samples, time);
 	}
+
 	MatrixXd rej_samples;
 	if(run_rej)
 	{
@@ -187,6 +197,22 @@ int main(int argc, char * argv[])
 		std::cout << "Running Rejection Sampling..." << std::endl;
 		rej_samples = rej_s.sample(no_samples, time);
 	}
+
+    MatrixXd ghrej_samples;
+    if(run_ghrej)
+    {
+        ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
+                                                       state_max, level_set,
+        [dimt, start_state, goal_state](const VectorXd& state)
+        {
+            return (start_state - state).norm() + (goal_state - state).norm();
+        });
+
+        GeometricHierarchicalRejectionSampler ghrej_s =
+            GeometricHierarchicalRejectionSampler(geo_prob);
+        std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
+        ghrej_samples = ghrej_s.sample(no_samples, time);
+    }
 
 	if(save)
 	{
@@ -197,7 +223,7 @@ int main(int argc, char * argv[])
 			{
 				for(int i = 0; i < hmc_samples.rows(); i++)
 				{
-					hmc_file << hmc_samples.row(i) << std::endl;	
+					hmc_file << hmc_samples.row(i) << std::endl;
 				}
 			}
 			hmc_file.close();
@@ -209,7 +235,7 @@ int main(int argc, char * argv[])
 			{
 				for(int i = 0; i < mcmc_samples.rows(); i++)
 				{
-					mcmc_file << mcmc_samples.row(i) << std::endl;	
+					mcmc_file << mcmc_samples.row(i) << std::endl;
 				}
 			}
 			mcmc_file.close();
@@ -221,11 +247,24 @@ int main(int argc, char * argv[])
 			{
 				for(int i = 0; i < rej_samples.rows(); i++)
 				{
-					rej_file << rej_samples.row(i) << std::endl;	
+					rej_file << rej_samples.row(i) << std::endl;
 				}
 			}
 			rej_file.close();
 		}
+        if(run_ghrej)
+        {
+            std::ofstream ghrej_file(filename + "_ghrej.log");
+            if (ghrej_file.is_open())
+            {
+                for(int i = 0; i < ghrej_samples.rows(); i++)
+                {
+                    ghrej_file << ghrej_samples.row(i) << std::endl;
+                }
+            }
+            ghrej_file.close();
+        }
+
 		std::cout << "Saved samples and costs to " << filename << std::endl;
 	}
 }
