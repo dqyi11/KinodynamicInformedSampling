@@ -62,7 +62,7 @@ ProblemDefinition create_prob_definition(const VectorXd& start_state,
 	VectorXd state_max(dimension);
 	state_max << VectorXd::Constant(dimension, maxval);
 
-	return ProblemDefinition(start_state, goal_state, state_min, 
+	return ProblemDefinition(start_state, goal_state, state_min,
 							 state_max, level_set, costfxn);
 }
 
@@ -72,7 +72,7 @@ ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
 											  const std::shared_ptr<Sampler> sampler,
 											  const double& batch_size)
 {
-	return 
+	return
 	ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
 		[start_state, goal_state](const VectorXd& state)
 		{
@@ -197,7 +197,9 @@ int main(int argc, char const *argv[])
 	// Set up the optimization objective
 	double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
 	auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+	// auto hrs = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
 	auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
+	// auto opt = get_geom_opt_obj(si, start_state, goal_state, hrs, batch_size);
 	opt->setCostThreshold(ob::Cost(1.51));
 
 	if(verbose) std::cout << "Set up the optimizing objective" << std::endl;
@@ -207,6 +209,7 @@ int main(int argc, char const *argv[])
 	if(verbose) std::cout << "Set up the problem definition" << std::endl;
 
 	auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
+	// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, hrs, 20));
 	std::cout << "Running RRT* with mcmc Sampler..." << std::endl;
 
 	if(verbose) std::cout << "Set up the sampler" << std::endl;
