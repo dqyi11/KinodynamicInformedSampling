@@ -5,6 +5,7 @@
 #include <chrono>
 using namespace std::chrono;
 #include <tuple>
+#include <math.h>
 
 // Eigen namespace
 #include <Eigen/Dense>
@@ -53,6 +54,18 @@ public:
 	///
 	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
 
+private:
+	///
+	/// Get one sample using a recursive algorithm of heirarchical rejection sampling
+	///
+	/// @param start_index Start index of the hierarchical sample
+	/// @param end_index End index of the hierarchical sample
+	/// @param sample Reference to a sample that gets changed in place
+	/// @return (c_start, c_goal)
+	///
+	virtual std::tuple<double, double>
+		HRS(const int &start_index, const int &end_index, VectorXd &sample) const;
+
 	///
 	/// Calculates the cost of a leaf node
 	///
@@ -81,17 +94,13 @@ public:
 	///
 	virtual void sample_leaf(VectorXd &sample, const int dof) const = 0;
 
-private:
 	///
-	/// Get one sample using a recursive algorithm of heirarchical rejection sampling
+	/// Function to get the final cost from all of the dimensions
 	///
-	/// @param start_index Start index of the hierarchical sample
-	/// @param end_index End index of the hierarchical sample
-	/// @param sample Reference to a sample that gets changed in place
-	/// @return (c_start, c_goal)
+	/// @param cost Cost to get final form of
+	/// @return Final cost of the aggregation
 	///
-	virtual std::tuple<double, double>
-		HRS(const int &start_index, const int &end_index, VectorXd &sample) const;
+	virtual double get_cost(const double &cost) const { return cost; }
 };
 
 ///
@@ -109,6 +118,7 @@ public:
 		: HierarchicalRejectionSampler(problem)
 	{ }
 
+private:
 	///
 	/// Calculates the cost of a leaf node
 	///
@@ -136,4 +146,12 @@ public:
 	/// @return A random vector in the space
 	///
 	virtual void sample_leaf(VectorXd &sample, const int dof) const override;
+
+	///
+	/// Function to get the final cost from all of the dimensions
+	///
+	/// @param cost Cost to get final form of
+	/// @return Final cost of the aggregation
+	///
+	virtual double get_cost(const double &cost) const override { return std::sqrt(cost); }
 };

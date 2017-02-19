@@ -109,7 +109,7 @@ MatrixXd HierarchicalRejectionSampler::sample(const int& no_samples, const bool&
 	while(curr_no_samples < no_samples)
 	{
 		VectorXd sample(problem().start_state().size());
-		HRS(0, problem().start_state().size() + 1, sample);
+		HRS(0, problem().start_state().size() - 1, sample);
 
 		if(problem().is_in_level_set(sample))
 		{
@@ -155,7 +155,7 @@ HierarchicalRejectionSampler::HRS(const int &start_index, const int &end_index, 
 
 	if(start_index == end_index)
 	{
-		while(c_start + c_goal > problem().level_set())
+		while(get_cost(c_start) + get_cost(c_goal) > problem().level_set())
 		{
 			sample_leaf(sample, start_index);
 			c_start = calculate_leaf(problem().start_state(), sample, start_index);
@@ -164,11 +164,11 @@ HierarchicalRejectionSampler::HRS(const int &start_index, const int &end_index, 
 	}
 	else
 	{
-		int mid_index = std::floor(start_index + end_index / 2);
+		int mid_index = std::floor(start_index + end_index) / 2;
 		double c_dash_start = std::numeric_limits<double>::infinity();
 		double c_dash_goal = std::numeric_limits<double>::infinity();
 
-		while(c_start + c_goal > problem().level_set())
+		while(get_cost(c_start) + get_cost(c_goal) > problem().level_set())
 		{
 			std::tie(c_start, c_goal) = HRS(start_index, mid_index, sample);
 			std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, end_index, sample);
@@ -196,7 +196,7 @@ double GeometricHierarchicalRejectionSampler::calculate_leaf(const VectorXd &x1,
 															 const VectorXd &x2,
 															 const int &i) const
 {
-	return std::abs(x1[i] - x2[i]);
+	return std::pow(x1[i] - x2[i], 2);
 }
 
 ///
@@ -222,21 +222,14 @@ double GeometricHierarchicalRejectionSampler::combine_costs(const double &c1,
 void GeometricHierarchicalRejectionSampler::sample_leaf(VectorXd &sample,
 													    const int dof) const
 {
-	std::cout << "DOF: " << dof << " | Size: " << sample.size() << std::endl;
 	// Get the limits of the state
 	VectorXd max, min;
 	std::tie(min, max) = problem().state_limits();
-
-	std::cout << "Got limits" << std::endl;
 
 	// Set up the random number generator
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<> dis(min[dof], max[dof]);
 
-	std::cout << "Got random vals" << std::endl;
-
 	sample[dof] = dis(gen);
-
-	std::cout << "Got random stuff" << std::endl;
 }
