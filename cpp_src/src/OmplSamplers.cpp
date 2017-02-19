@@ -30,18 +30,18 @@ bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &m
 		sample_index_ = 0;
 	}
 
-	std::cout << "Got samples. About to give one!" << std::endl;
+	// std::cout << "Got samples. About to give one!" << std::endl;
 
 	auto sample = batch_samples_.row(sample_index_);
 
-	std::cout << "Got one sample!" << std::endl;
+	// std::cout << "Got one sample!" << std::endl;
 
 	for(int i = 0; i < sample.size(); i++)
 	{
-		statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = sample(i);
+		statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = sample(i);
 	}
 
-	std::cout << "Converted sample!" << std::endl;
+	// std::cout << "Converted sample!" << std::endl;
 
 	sample_index_++;
 
