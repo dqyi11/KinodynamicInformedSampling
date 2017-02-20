@@ -54,6 +54,7 @@ add_library(omplwrapperLib
 			SHARED
 			 src/OmplSamplers.cpp
 			 src/MyOptimizationObjective.cpp
+			 src/MyInformedRRTstar.cpp
 			)
 target_link_libraries(omplwrapperLib
 					  ${OMPL_LIBRARIES}
