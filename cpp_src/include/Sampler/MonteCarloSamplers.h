@@ -16,7 +16,7 @@ using Eigen::VectorXd;
 class MonteCarloSampler: public Sampler
 {
 public:
-	/// 
+	///
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
 	/// @param problem Problem definition
@@ -34,7 +34,7 @@ public:
 	/// Get a series of samples for the problem space
 	///
 	/// @param no_samples Number of samples to get
-	/// @param time Boolean that determines if the time to run the proccess is displayed 
+	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
 	virtual MatrixXd sample(const int& no_samples, const bool& time) const = 0;
@@ -90,12 +90,20 @@ public:
 private:
 	// Learning rate for gradient descent
 	double alpha_;
+
+protected:
+	///
+	/// Function to determine if any of the joint limits are violated
+	/// @param sample Sample to check
+	/// @return Boolean that is true if any are in violation
+	///
+	bool any_dimensions_in_violation(const VectorXd sample) const;
 };
 
 class HMCSampler: public MonteCarloSampler
 {
 public:
-	/// 
+	///
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
 	/// @param problem Problem definition
@@ -136,7 +144,7 @@ public:
 	/// Get a series of samples for the problem space
 	///
 	/// @param no_samples Number of samples to get
-	/// @param time Boolean that determines if the time to run the proccess is displayed 
+	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
 	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
@@ -158,7 +166,7 @@ private:
 class MCMCSampler: public MonteCarloSampler
 {
 public:
-	/// 
+	///
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
 	/// @param problem Problem definition
@@ -175,7 +183,7 @@ public:
 	/// Get a series of samples for the problem space
 	///
 	/// @param no_samples Number of samples to get
-	/// @param time Boolean that determines if the time to run the proccess is displayed 
+	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
 	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
@@ -188,7 +196,7 @@ public:
 	///
 	/// Get number of steps to run for each MCMC chain
 	///
-	double steps() const { return steps_; } 
+	double steps() const { return steps_; }
 
 private:
 	// Sigma for sampling the step

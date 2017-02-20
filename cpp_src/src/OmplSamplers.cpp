@@ -6,8 +6,26 @@
 // OMPL
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
-// DIMT stuff
+// Our stuff
 #include <Dimt/Params.h>
+
+///
+/// Helper functions
+///
+
+void print_out_states2(ompl::base::State *statePtr)
+{
+    double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
+
+    std::vector<double> val_vec(val, val + sizeof val / sizeof val[0]);
+
+    std::cout << "Printing sample of size: " << std::cout << val_vec.size() << " | Vec: [ ";
+    for(uint i = 0; i < param.dimensions; i++)
+    {
+        std::cout << val[i] << " ";
+    }
+    std::cout << " ]" << std::endl;
+}
 
 ///
 /// MyInformedSampler
@@ -22,9 +40,8 @@
 ///
 bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &maxCost)
 {
-	// auto state = statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values;
-	// std::vector<double> state_vector_before(state, state + sizeof state / sizeof state[0]);
-	// std::cout << "State vector size before: " << state_vector_before.size() << std::endl;
+	std::cout << "State inside of sampleUniform: ";
+	print_out_states2(statePtr);
 
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
@@ -37,25 +54,16 @@ bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &m
 		sample_index_ = 0;
 	}
 
-	// std::cout << "Got samples. About to give one!" << std::endl;
-
 	auto sample = batch_samples_.row(sample_index_);
 
-	std::cout << "Sample size: " << sample.size() << std::endl;
-
-	// std::cout << "Got one sample!" << std::endl;
 	double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
-	for(int i = 0; i < sample.size(); i++)
+	for(int i = 0; i < sample.size() - 1; i++)
 	{
 		val[i] = sample(i);
 	}
 
-	assert(si_->isValid(statePtr));
-	// state = statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values;
-	// std::vector<double> state_vector_after(state, state + sizeof state / sizeof state[0]);
-	// std::cout << "State vector size after: " << state_vector_after.size() << std::endl;
-
-	// std::cout << "Converted sample!" << std::endl;
+	std::cout << "State after getting a sample: ";
+	print_out_states2(statePtr);
 
 	sample_index_++;
 

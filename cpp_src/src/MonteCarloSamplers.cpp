@@ -10,12 +10,12 @@ const bool VERBOSE = false;
 
 ///
 /// Sigmoid function
-/// 
+///
 /// @param x Input
 /// @param a Controls shape of sigmoid
 /// @param c Controls shape of sigmoid
 /// @return Output of sigmoid function
-/// 
+///
 inline double sigmoid(const double& x, const double& a = 200, const double& c = 0)
 {
 	return 1 / (1 + exp(-a * (x - c)));
@@ -36,9 +36,32 @@ inline double rand_uni()
 	return dis(gen);
 }
 
-// 
+//
 // MonteCarloSampler
 //
+
+
+///
+/// Function to determine if any of the joint limits are violated
+/// @param sample Sample to check
+/// @return Boolean that is true if any are in violation
+///
+bool MonteCarloSampler::any_dimensions_in_violation(const VectorXd sample) const
+{
+	const std::tuple<VectorXd, VectorXd> limits = problem().state_limits();
+	const auto min_vals = std::get<0>(limits);
+	const auto max_vals = std::get<1>(limits);
+
+	for(uint i = 0; i < sample.size(); i++)
+	{
+		if(sample[i] > max_vals[i] or sample[i] < min_vals[i])
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
 
 ///
 /// Get the energy of the state from the cost function
@@ -47,11 +70,11 @@ inline double rand_uni()
 /// @return Energy of the function
 ///
 double MonteCarloSampler::get_energy(const VectorXd& curr_state) const
-{ 
-    double cost = problem().get_cost(curr_state);
+{
+    const double cost = problem().get_cost(curr_state);
     // double E_grad = tanh(cost);
-    double E_grad = log(1+log(1+cost));
-    double E_informed = 100 * sigmoid(cost - problem().level_set());
+    const double E_grad = log(1+log(1+cost));
+    const double E_informed = 100 * sigmoid(cost - problem().level_set());
     double E_region = 0;
     std::tuple<VectorXd, VectorXd> limits = problem().state_limits();
     for(int i=0; i < curr_state.size(); i++)
@@ -190,7 +213,7 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 /// Get a series of samples for the problem space
 ///
 /// @param no_samples Number of samples to get
-/// @param time Boolean that determines if the time to run the proccess is displayed 
+/// @param time Boolean that determines if the time to run the proccess is displayed
 /// @return A series of samples of shape (number of samples, sample dimension)
 ///
 MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
@@ -231,7 +254,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			if(VERBOSE) std::cout << "Got the gradient" << std::endl;
 
 			// Ensure that the gradient isn't two large
-			if(grad.maxCoeff() > 1e2) 
+			if(grad.maxCoeff() > 1e2)
 			{
 				if(VERBOSE) std::cout << "WARNING: Gradient too high" << std::endl;
 				break;
@@ -258,7 +281,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 
 			// Evaluate potential and kinetic energies at start and end of traj
 			double U_last = get_energy(q_last);
-			double K_last = p_last.norm() / 2;        
+			double K_last = p_last.norm() / 2;
 			double U_proposed = get_energy(q);
 			double K_proposed = p_last.norm() / 2;
 
@@ -301,7 +324,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 			std::cout << "Total Sampling Time: " << duration_s << "s" << std::endl;
 		else if (duration_ms != 0)
 			std::cout << "Total Sampling Time: " << duration_ms << "ms" << std::endl;
-		else 
+		else
 			std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
 	}
 	if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
@@ -317,7 +340,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, const bool& time) const
 /// Get a series of samples for the problem space
 ///
 /// @param no_samples Number of samples to get
-/// @param time Boolean that determines if the time to run the proccess is displayed 
+/// @param time Boolean that determines if the time to run the proccess is displayed
 /// @return A series of samples of shape (number of samples, sample dimension)
 ///
 MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
@@ -353,7 +376,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			double prob_proposed = get_prob(q_proposed);
 			double prob_before = get_prob(q);
 
-			if(prob_proposed / prob_before >= rand_uni())
+			if(prob_proposed / prob_before >= rand_uni() and
+			   !any_dimensions_in_violation(q_proposed))
 			{
 				VectorXd newsample(problem().start_state().size() + 1);
 		    	newsample << q_proposed, problem().get_cost(q_proposed);
@@ -361,8 +385,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 				accepted++;
 				q = q_proposed;
 			}
-			else 
-			{ 
+			else
+			{
 				rejected++; curr_rejections++;
 				if(VERBOSE) std::cout << "Rejected!" << std::endl;
 			}
@@ -384,7 +408,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			std::cout << "Total Sampling Time: " << duration_s << "s" << std::endl;
 		else if (duration_ms != 0)
 			std::cout << "Total Sampling Time: " << duration_ms << "ms" << std::endl;
-		else 
+		else
 			std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
 	}
 	if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;

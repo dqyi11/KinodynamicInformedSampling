@@ -13,6 +13,7 @@
 #include <Sampler/MonteCarloSamplers.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
+#include <OmplWrappers/MyInformedRRTstar.h>
 
 #include "DimtStateSpace.h"
 #include "Dimt/DoubleIntegrator.h"
@@ -102,8 +103,8 @@ ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
         },
         [di](const VectorXd& s1, const VectorXd& s2)
         {
-            std::cout << "Start: " << s1 << std::endl;
-            std::cout << "Goal: " << s2 << std::endl;
+            // std::cout << "Start: " << s1 << std::endl;
+            // std::cout << "Goal: " << s2 << std::endl;
             return di.getMinTime(s1, s2);
         }));
 }
@@ -174,19 +175,11 @@ void planWithSimpleSetup(void)
     ///
     ompl::base::State *start_s = space->allocState();
     ompl::base::State *goal_s = space->allocState();
-    // for (int i=0; i<param.dimensions; i++)
-    // {
-    //     start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-    //     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
-    // }
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = start_state[0];
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = goal_state[0];
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] = start_state[1];
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] = goal_state[1];
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = start_state[2];
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[3] = start_state[3];
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[3] = goal_state[3];
+    for (int i=0; i<param.dimensions; i++)
+    {
+        start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
+        goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+    }
 
     ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
     ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
@@ -225,6 +218,7 @@ void planWithSimpleSetup(void)
     ///
     /// Set up the planner
     ///
+    // ob::PlannerPtr planner(new MyInformedRRTstar(si));
     ob::PlannerPtr planner(new og::InformedRRTstar(si));
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);

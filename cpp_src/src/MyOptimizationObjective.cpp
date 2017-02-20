@@ -22,21 +22,16 @@ using Eigen::VectorXd;
 ///
 VectorXd get_eigen_vector(const ompl::base::State* s)
 {
-	auto state = s->as<ompl::base::RealVectorStateSpace::StateType>()->values;
+    double * val = static_cast<const ompl::base::RealVectorStateSpace::StateType*>(s)->values;
 
-	std::vector<double> state_vector(state, state + sizeof state / sizeof state[0]);
+    VectorXd v(param.dimensions);
 
-	// std::cout << "Created vector" << std::endl;
+    for(uint i = 0; i < param.dimensions; i++)
+    {
+    	v[i] = val[i];
+    }
 
-	// auto n = VectorXd::Map(state_vector.data(), state_vector.size());
-
-	// std::cout << "Remapped vector" << std::endl;
-
-	// return n;
-
-	// std::cout << "State Vector Size: " << state_vector.size() << std::endl;
-
-	return VectorXd::Map(state_vector.data(), state_vector.size());
+	return v;
 }
 
 ///

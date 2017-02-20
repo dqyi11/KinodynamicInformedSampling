@@ -1,17 +1,17 @@
-#pragma once 
+#pragma once
 
-// 
+//
 // Steps we need to take in order to implement this correclty
 //
-// 1. We need to implement the required functions for 
+// 1. We need to implement the required functions for
 //    InformedSampler(http://ompl.kavrakilab.org/InformedStateSampler_8h_source.html). Here
 //    is where the informed sampling needs to take place (and the majority of our code)
 // 2. We need to take this information and pass it to the the InformedStateSampler,
-//    which inherits from StateSampler and takes in and InformedSampler as 
+//    which inherits from StateSampler and takes in and InformedSampler as
 //    a constructor option.
 // 3. Get this information about the samplers into the SpaceInformationPtr
 // 4. Pass the SpaceInformationPtr to Informed RRT* and then done
-// 
+//
 
 // stdlib
 #include <iostream>
@@ -39,7 +39,7 @@ namespace ompl
 			// One of the Samplers we have created previously
 			std::shared_ptr<Sampler> sampler_;
 
-			// Holds the previous cost so that we know 
+			// Holds the previous cost so that we know
 			double prev_cost_ = -1;
 
 			// Holds the index of the sample we've gotten
@@ -61,9 +61,9 @@ namespace ompl
 			/// @param sample_batch_size How many samples to get each time a new
 			/// batch of samples is gotten
 			///
-			MyInformedSampler(const ProblemDefinitionPtr probDefn, 
-							  unsigned int maxNumberCalls, 
-							  const std::shared_ptr<Sampler>& sampler, 
+			MyInformedSampler(const ProblemDefinitionPtr probDefn,
+							  unsigned int maxNumberCalls,
+							  const std::shared_ptr<Sampler>& sampler,
 							  const int& sample_batch_size = 100)
 				: InformedSampler(probDefn, maxNumberCalls),
 				  sampler_(sampler),
