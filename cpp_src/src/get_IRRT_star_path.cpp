@@ -103,8 +103,9 @@ ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
         },
         [di](const VectorXd& s1, const VectorXd& s2)
         {
-            // std::cout << "Start: " << s1 << std::endl;
-            // std::cout << "Goal: " << s2 << std::endl;
+            std::cout << "Got min time: " << std::endl << std::endl;
+            std::cout << "Start: " << s1 << std::endl;
+            std::cout << "Goal: " << s2 << std::endl;
             return di.getMinTime(s1, s2);
         }));
 }

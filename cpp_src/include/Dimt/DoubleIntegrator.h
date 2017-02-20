@@ -52,8 +52,8 @@ public:
 	typedef Eigen::Matrix<double, dof, 1> Vector;
 	Vector maxAccelerations_;
 	Vector maxVelocities_;
-	
-	DoubleIntegrator(Vector maxAccelerations, Vector maxVelocities) : 
+
+	DoubleIntegrator(Vector maxAccelerations, Vector maxVelocities) :
 			maxAccelerations_(maxAccelerations), maxVelocities_(maxVelocities){}
 
 	class Trajectory1D {
@@ -87,7 +87,7 @@ public:
 			assert(velocity == velocity);
 			assert(position == position);
 		}
-		
+
 		void setStartAndGoal(double startPosition, double startVelocity, double goalPosition, double goalVelocity) {
 			positions[0] = startPosition;
 			velocities[0] = startVelocity;
@@ -187,7 +187,7 @@ public:
 
 		const double radicand = b*b - 4.0*a*c;
 		assert(radicand >= 0.0);
-		
+
 		// numerically stable solution to the quadratic equation
 		const double q = -0.5 * (b + sign(b) * sqrt(radicand));
 
@@ -219,6 +219,12 @@ public:
 
 	static double getPLPTime(double startVelocity, double goalVelocity, double distance, double maxVelocity, double acceleration1)
 	{
+		const bool check = std::abs(startVelocity) <= maxVelocity && std::abs(goalVelocity) <= maxVelocity;
+		if(!check)
+		{
+			std::cout << "Start velocity: " << startVelocity << " | Goal velocity: "
+				<< goalVelocity << " | Max velocity: " << maxVelocity << std::endl;
+		}
 		assert(std::abs(startVelocity) <= maxVelocity && std::abs(goalVelocity) <= maxVelocity);
 
 		const double boundaryVelocity = sign(acceleration1) * maxVelocity;
@@ -238,7 +244,7 @@ public:
 	{
 		Trajectory1D trajectory;
 		trajectory.setStartAndGoal(startPosition, startVelocity, goalPosition, goalVelocity);
-		
+
 		const double a = time * time;
 		const double b = 2.0 * (startVelocity + goalVelocity) * time - 4.0 * (goalPosition - startPosition);
 		const double c = -squared(goalVelocity - startVelocity);
@@ -325,7 +331,7 @@ public:
 		if(accelerationTime >= maxTime)
 			return accelerationTime;
 		const double accelerationDistance = 0.5 * (startVelocity + goalVelocity) * accelerationTime;
-		
+
 		// determine whether to accelerate at the upper or lower limit first
 		const double additionalDistance = distance - accelerationDistance;
 
@@ -396,12 +402,30 @@ public:
 	double getMinTime(const StateVector &state1, const StateVector &state2,
 	                         double maxTime = std::numeric_limits<double>::infinity()) const
 	{
+
+		std::cout << "Min time state1: [";
+	    for(uint i = 0; i < state1.rows(); i++)
+	    {
+	        std::cout << state1.row(i) << " ";
+	    }
+	    std::cout << "]" << std::endl;
+
+		std::cout << "Min time state2: [";
+	    for(uint i = 0; i < state2.rows(); i++)
+	    {
+	        std::cout << state2.row(i) << " ";
+	    }
+	    std::cout << "]" << std::endl;
+
+
+
+
 		const Vector distances = state2.template head<dof>() - state1.template head<dof>();
 		double minTime = 0.0;
 		int limitDof = -1; // DOF for which the min time but not the infeasible interval has been calculated yet
 		std::pair<double, double> infeasibleIntervals[dof];
 		Vector firstAccelerations;
-		
+
 		for(unsigned int i = 0; i < dof && minTime < maxTime; ++i) {
 			const double time = getMinTime1D(state1[dof+i], state2[dof+i], distances[i], maxAccelerations_[i], maxVelocities_[i], maxTime, firstAccelerations[i]);
 			adjustForInfeasibleIntervals(i, time, maxTime, state1.template tail<dof>(), state2.template tail<dof>(), distances, firstAccelerations, maxAccelerations_, maxVelocities_,
