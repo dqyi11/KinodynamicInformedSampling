@@ -6,6 +6,9 @@
 // OMPL
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
+// DIMT stuff
+#include <Dimt/Params.h>
+
 ///
 /// MyInformedSampler
 ///
@@ -19,6 +22,10 @@
 ///
 bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &maxCost)
 {
+	// auto state = statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values;
+	// std::vector<double> state_vector_before(state, state + sizeof state / sizeof state[0]);
+	// std::cout << "State vector size before: " << state_vector_before.size() << std::endl;
+
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
 	if(maxCost.value() != prev_cost_ or sample_index_ >= sample_batch_size_)
@@ -34,12 +41,19 @@ bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &m
 
 	auto sample = batch_samples_.row(sample_index_);
 
-	// std::cout << "Got one sample!" << std::endl;
+	std::cout << "Sample size: " << sample.size() << std::endl;
 
+	// std::cout << "Got one sample!" << std::endl;
+	double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
 	for(int i = 0; i < sample.size(); i++)
 	{
-		statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = sample(i);
+		val[i] = sample(i);
 	}
+
+	assert(si_->isValid(statePtr));
+	// state = statePtr->as<ompl::base::RealVectorStateSpace::StateType>()->values;
+	// std::vector<double> state_vector_after(state, state + sizeof state / sizeof state[0]);
+	// std::cout << "State vector size after: " << state_vector_after.size() << std::endl;
 
 	// std::cout << "Converted sample!" << std::endl;
 

@@ -160,14 +160,15 @@ int main(int argc, char * argv[])
 
 	double a_max = 1;
   	Dimt dimt(a_max);
-  	double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
+  	// double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
+    double level_set = 1.4 * (goal_state - start_state).norm();
   	std::cout << "Level set: " << level_set << std::endl;
 
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
 		[dimt, start_state, goal_state](const VectorXd& state)
 		{
-			// return (start_state - state).norm() + (goal_state - state).norm();
-			return dimt.get_min_time(start_state, goal_state, state);
+			return (start_state - state).norm() + (goal_state - state).norm();
+			// return dimt.get_min_time(start_state, goal_state, state);
 		});
 
 	// Initialize the sampler
@@ -184,7 +185,7 @@ int main(int argc, char * argv[])
 	MatrixXd mcmc_samples;
 	if (run_mcmc)
 	{
-		double sigma = 1; int max_steps = 20; double alpha = 0.5;
+		double sigma = 5; int max_steps = 20; double alpha = 0.5;
 		MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
 		std::cout << "Running MCMC Sampling..." << std::endl;
 		mcmc_samples = mcmc_s.sample(no_samples, time);

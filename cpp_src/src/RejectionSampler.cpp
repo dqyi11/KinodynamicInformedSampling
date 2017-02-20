@@ -40,7 +40,6 @@ MatrixXd RejectionSampler::sample(const int& no_samples, const bool& time) const
 			newsample << sample, problem().get_cost(sample);
 			samples.row(curr_no_samples) = newsample;
 			curr_no_samples++;
-			// std::cout << curr_no_samples << std::endl;
 		}
 	}
 

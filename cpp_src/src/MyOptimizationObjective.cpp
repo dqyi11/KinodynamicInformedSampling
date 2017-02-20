@@ -12,6 +12,7 @@ using Eigen::VectorXd;
 
 // Internal Libraries
 #include <OmplWrappers/OmplSamplers.h>
+#include <Dimt/Params.h>
 
 ///
 /// Function to convert a State to a VectorXd
@@ -25,15 +26,17 @@ VectorXd get_eigen_vector(const ompl::base::State* s)
 
 	std::vector<double> state_vector(state, state + sizeof state / sizeof state[0]);
 
-	std::cout << "Created vector" << std::endl;
+	// std::cout << "Created vector" << std::endl;
 
-	auto n = VectorXd::Map(state_vector.data(), state_vector.size());
+	// auto n = VectorXd::Map(state_vector.data(), state_vector.size());
 
-	std::cout << "Remapped vector" << std::endl;
+	// std::cout << "Remapped vector" << std::endl;
 
-	return n;
+	// return n;
 
-	// return VectorXd::Map(state_vector.data(), state_vector.size());
+	// std::cout << "State Vector Size: " << state_vector.size() << std::endl;
+
+	return VectorXd::Map(state_vector.data(), state_vector.size());
 }
 
 ///
