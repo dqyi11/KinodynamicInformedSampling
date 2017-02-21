@@ -73,6 +73,7 @@ bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const
 	// std::cout << "State inside of sampleUniform: ";
 	// print_out_states2(statePtr);
 	std::cout << "Cost: " << maxCost << std::endl;
+	std::cout << "Level set: " << sampler_->problem().level_set() << std::endl;
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
 	if(maxCost.value() != prev_cost_ or sample_index_ >= sample_batch_size_)

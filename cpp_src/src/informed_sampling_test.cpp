@@ -3,6 +3,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <limits>
 
 // Eigen
 #include <Eigen/Dense>
@@ -143,7 +144,7 @@ int main(int argc, char const *argv[])
 	std::cout << "Start: " << std::endl << start_state << std::endl;
 	std::cout << "Goal: " << std::endl << goal_state << std::endl;
 
-	const double level_set = (goal_state - start_state).norm();
+	const double level_set = std::numeric_limits<double>::infinity();
 	auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
 		[start_state, goal_state](const VectorXd& state)
 		{
@@ -227,7 +228,7 @@ int main(int argc, char const *argv[])
 
 	// attempt to solve the planning problem within one second of
 	// planning time
-	ob::PlannerStatus solved = optimizingPlanner->solve(1.0);
+	ob::PlannerStatus solved = optimizingPlanner->solve(10.0);
 
 	if(verbose) std::cout << "Solved!" << std::endl;
 

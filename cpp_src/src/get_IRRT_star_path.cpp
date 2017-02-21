@@ -23,6 +23,8 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+#include <limits>
+
 class ValidityChecker : public ob::StateValidityChecker
 {
 public:
@@ -146,7 +148,7 @@ void planWithSimpleSetup(void)
     ///
     /// Construct the problem definition
     ///
-    const double level_set = 1.4 * double_integrator.getMinTime(start_state, goal_state);
+    const double level_set = std::numeric_limits<double>::infinity();
     auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
         [start_state, goal_state, double_integrator](const VectorXd& state)
         {
