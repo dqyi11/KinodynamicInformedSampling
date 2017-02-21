@@ -33,16 +33,18 @@ public:
     // rectangle obstacles
     bool isValid(const ob::State* state) const
     {
-        const ob::RealVectorStateSpace::StateType* state_rv =
-            state->as<ob::RealVectorStateSpace::StateType>();
-        for (int i=0; i<param.dimensions; i=i+2)
-        {
-            if(state_rv->values[i]<-1 || state_rv->values[i]>1)
-            {
-                return true;
-            }
-        }
-        return false;
+        // const ob::RealVectorStateSpace::StateType* state_rv =
+        //     state->as<ob::RealVectorStateSpace::StateType>();
+        // for (int i=0; i<param.dimensions; i=i+2)
+        // {
+        //     if(state_rv->values[i]<-1 || state_rv->values[i]>1)
+        //     {
+        //         return true;
+        //     }
+        // }
+        // return false;
+
+        return true;
     }
 };
 
@@ -96,16 +98,16 @@ ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
     return ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
         [start_state, goal_state, di](const VectorXd& state)
         {
-            std::cout << "Start state size: " << start_state.size() << std::endl;
-            std::cout << "Goal state size: " << goal_state.size() << std::endl;
-            std::cout << "State size: " << state.size() << std::endl;
+            // std::cout << "Start state size: " << start_state.size() << std::endl;
+            // std::cout << "Goal state size: " << goal_state.size() << std::endl;
+            // std::cout << "State size: " << state.size() << std::endl;
             return di.getMinTime(start_state, state) + di.getMinTime(state, goal_state);
         },
         [di](const VectorXd& s1, const VectorXd& s2)
         {
-            std::cout << "Got min time: " << std::endl << std::endl;
-            std::cout << "Start: " << s1 << std::endl;
-            std::cout << "Goal: " << s2 << std::endl;
+            // std::cout << "Got min time: " << std::endl << std::endl;
+            // std::cout << "Start: " << s1 << std::endl;
+            // std::cout << "Goal: " << s2 << std::endl;
             return di.getMinTime(s1, s2);
         }));
 }
@@ -230,7 +232,7 @@ void planWithSimpleSetup(void)
     ///
     /// Run the planner and print
     ///
-    ob::PlannerStatus solved = planner->solve(1.0);
+    ob::PlannerStatus solved = planner->solve(5.0);
 
     if(MAIN_VERBOSE) std::cout << "Planner solved!" << std::endl;
 

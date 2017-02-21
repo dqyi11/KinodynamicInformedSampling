@@ -51,6 +51,32 @@ namespace ompl
 			// Samples in the batch
 			MatrixXd batch_samples_;
 
+			///
+			/// Function to sample a state uniformly from the entire space before you have
+			/// a solution
+			///
+			/// @param statePtr Pointer to the state to sample
+			///
+			virtual bool sample_full_space(State *statePtr);
+
+			///
+			/// Function to sample uniformly from the informed subset
+			///
+			/// @param statePtr Pointer to the state to sample
+			/// @param maxCost Best cost found so far
+			///
+			virtual bool sample_informed_space(State *statePtr, const Cost maxCost);
+
+			///
+			/// Function to get a random sample in the limits
+			///
+			/// @param max Max value for the dimension
+			/// @param min Min value for the dimension
+			/// @return Uniform sample in one of the dimensions between min and max
+			///
+			double get_random_dimension(const double& max, const double& min) const;
+
+
 		public:
 			///
 			/// Constructor

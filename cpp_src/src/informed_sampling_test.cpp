@@ -80,8 +80,8 @@ ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
 		},
 		[](const VectorXd& s1, const VectorXd& s2)
 		{
-			// std::cout << "Start Size: " << s1.size() << std::endl;
-   			// std::cout << "Goal Size: " << s2.size() << std::endl;
+			// std::cout << "Start Size: " << s1 << std::endl;
+   // 			std::cout << "Goal Size: " << s2 << std::endl;
 			return (s2 - s1).norm();
 		}));
 }

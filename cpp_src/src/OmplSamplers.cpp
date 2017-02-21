@@ -2,6 +2,7 @@
 
 // stdlib
 #include <vector>
+#include <limits>
 
 // OMPL
 #include <ompl/base/spaces/RealVectorStateSpace.h>
@@ -29,18 +30,49 @@ void print_out_states2(ompl::base::State *statePtr)
 /// MyInformedSampler
 ///
 
-///
-/// Sample uniformly from the informed space
-///
-/// @param statePtr Pointer of the state you're sampling
-/// @param maxCost Max cost of the informed subspace
-/// @return true if a sample is gotten false, if not
-///
-bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &maxCost)
+// Can implement as many private functions as you want to help do the sampling
+double ompl::base::MyInformedSampler::get_random_dimension(const double& max, const double& min) const
 {
-	std::cout << "State inside of sampleUniform: ";
-	print_out_states2(statePtr);
+	// Set up the random number generator
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dis(min, max);
 
+	return dis(gen);
+}
+
+///
+/// Function to sample a state uniformly from the entire space before you have
+/// a solution
+///
+/// @param statePtr Pointer to the state to sample
+///
+bool ompl::base::MyInformedSampler::sample_full_space(State *statePtr)
+{
+	// Get the limits of the space
+	VectorXd max_vals, min_vals;
+	std::tie(max_vals, min_vals) = sampler_->problem().state_limits();
+
+	double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
+	for(int i = 0; i < param.dimensions; i++)
+	{
+		val[i] = get_random_dimension(max_vals[i], min_vals[i]);
+	}
+
+	return true;
+}
+
+///
+/// Function to sample uniformly from the informed subset
+///
+/// @param statePtr Pointer to the state to sample
+/// @param maxCost Best cost found so far
+///
+bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const Cost maxCost)
+{
+	// std::cout << "State inside of sampleUniform: ";
+	// print_out_states2(statePtr);
+	std::cout << "Cost: " << maxCost << std::endl;
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
 	if(maxCost.value() != prev_cost_ or sample_index_ >= sample_batch_size_)
@@ -60,12 +92,31 @@ bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &m
 		val[i] = sample(i);
 	}
 
-	std::cout << "State after getting a sample: ";
-	print_out_states2(statePtr);
+	// std::cout << "State after getting a sample: ";
+	// print_out_states2(statePtr);
 
 	sample_index_++;
 
 	return true;
+}
+
+///
+/// Sample uniformly from the informed space
+///
+/// @param statePtr Pointer of the state you're sampling
+/// @param maxCost Max cost of the informed subspace
+/// @return true if a sample is gotten false, if not
+///
+bool ompl::base::MyInformedSampler::sampleUniform(State *statePtr, const Cost &maxCost)
+{
+	if(maxCost.value() == std::numeric_limits<double>::infinity())
+	{
+		return sample_full_space(statePtr);
+	}
+	else
+	{
+		return sample_informed_space(statePtr, maxCost);
+	}
 }
 
 ///

@@ -403,19 +403,19 @@ public:
 	                         double maxTime = std::numeric_limits<double>::infinity()) const
 	{
 
-		std::cout << "Min time state1: [";
-	    for(uint i = 0; i < state1.rows(); i++)
-	    {
-	        std::cout << state1.row(i) << " ";
-	    }
-	    std::cout << "]" << std::endl;
+		// std::cout << "Min time state1: [";
+	 //    for(uint i = 0; i < state1.rows(); i++)
+	 //    {
+	 //        std::cout << state1.row(i) << " ";
+	 //    }
+	 //    std::cout << "]" << std::endl;
 
-		std::cout << "Min time state2: [";
-	    for(uint i = 0; i < state2.rows(); i++)
-	    {
-	        std::cout << state2.row(i) << " ";
-	    }
-	    std::cout << "]" << std::endl;
+		// std::cout << "Min time state2: [";
+	 //    for(uint i = 0; i < state2.rows(); i++)
+	 //    {
+	 //        std::cout << state2.row(i) << " ";
+	 //    }
+	 //    std::cout << "]" << std::endl;
 
 
 
