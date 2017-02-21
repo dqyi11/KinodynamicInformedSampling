@@ -17,5 +17,10 @@ constexpr Params param_2dof = {
 	4, // dimensions
 	1.0 // a_max
 };
+constexpr Params param_3dof = {
+	3, // dof
+	6, // dimensions
+	1.0 // a_max
+};
 // constexpr Params param = param_2dof;
-constexpr Params param = param_1dof;
+constexpr Params param = param_3dof;

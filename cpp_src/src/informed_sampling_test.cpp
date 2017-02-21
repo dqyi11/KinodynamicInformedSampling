@@ -25,6 +25,7 @@ namespace og = ompl::geometric;
 #include <Sampler/MonteCarloSamplers.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
+#include "Dimt/Params.h"
 
 ///
 /// Helper functions
@@ -113,14 +114,16 @@ public:
     {
         // We know we're working with a RealVectorStateSpace in this
         // example, so we downcast state into the specific type.
-        const ob::RealVectorStateSpace::StateType* state2D =
+        const ob::RealVectorStateSpace::StateType* state_rv =
             state->as<ob::RealVectorStateSpace::StateType>();
         // Extract the robot's (x,y) position from its state
-        double x = state2D->values[0];
-        double y = state2D->values[1];
+        double sq_dist = 0; // squared distance from origin
+        for (int i=0; i<param.dimensions; i++)
+        	sq_dist += state_rv->values[i] * state_rv->values[i];
+
         // Distance formula between two points, offset by the circle's
         // radius
-        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)) - 0.25;
+        return sq_dist - 3*3;
     }
 };
 
@@ -132,11 +135,19 @@ int main(int argc, char const *argv[])
 	///
 	/// Set up the problem definition for geometric costs
 	///
-	const int dimension = 2; const double minval = -25; const double maxval = 25;
+	const int dimension = param.dimensions; const double minval = -10; const double maxval = 10;
+	ob::StateSpacePtr space(new ob::RealVectorStateSpace(param.dimensions));
+	ompl::base::State *start_s = space->allocState();
+	ompl::base::State *goal_s = space->allocState();
 	VectorXd start_state(dimension);
 	VectorXd goal_state(dimension);
-	start_state << 0.0, 0.0;
-	goal_state << 1.0, 1.0;
+	for (int i=0; i<param.dimensions; i++)
+	{
+	  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -5;
+	  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 5;
+	  start_state[i] = -5;
+	  goal_state[i] = 5;
+	}
 	// std::tie(start_state, goal_state) = get_random_start_and_goal(dimension,
 	// 															  minval,
 	// 															  maxval);
@@ -156,53 +167,30 @@ int main(int argc, char const *argv[])
 	///
 	/// Set up the OMPL boilerplate space code
 	///
-
-	// Construct the robot state space in which we're planning. We're
-	// planning in [0,1]x[0,1], a subset of R^2.
-	ob::StateSpacePtr space(new ob::RealVectorStateSpace(2));
-
-	// Set the bounds of space to be in [0,1].
-	space->as<ob::RealVectorStateSpace>()->setBounds(0.0, 1.0);
+	space->as<ob::RealVectorStateSpace>()->setBounds(minval, maxval);
 
 	if(verbose) std::cout << "Created the space." << std::endl;
 
 	// Construct a space information instance for this state space
 	ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-
 	// Set the object used to check which states in the space are valid
 	si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
 	si->setup();
-
 	if(verbose) std::cout << "Set up the space information" << std::endl;
-
-	// Set our robot's starting state to be the bottom-left corner of
-	// the environment, or (0,0).
-	ob::ScopedState<> start(space);
-	start->as<ob::RealVectorStateSpace::StateType>()->values[0] = 0.0;
-	start->as<ob::RealVectorStateSpace::StateType>()->values[1] = 0.0;
-
-	// Set our robot's goal state to be the top-right corner of the
-	// environment, or (1,1).
-	ob::ScopedState<> goal(space);
-	goal->as<ob::RealVectorStateSpace::StateType>()->values[0] = 1.0;
-	goal->as<ob::RealVectorStateSpace::StateType>()->values[1] = 1.0;
-
-	if(verbose) std::cout << "Got the start and goal" << std::endl;
 
 	// Create a problem instance
 	ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
 
 	// Set the start and goal states
-	pdef->setStartAndGoalStates(start, goal);
-
+	pdef->setStartAndGoalStates(start_s, goal_s);
 	if(verbose) std::cout << "Set the start and goal" << std::endl;
 
 	// Set up the optimization objective
 	double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
-	auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-	// auto hrs = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
-	auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
-	// auto opt = get_geom_opt_obj(si, start_state, goal_state, hrs, batch_size);
+	// auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+	auto hrs = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
+	// auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
+	auto opt = get_geom_opt_obj(si, start_state, goal_state, hrs, batch_size);
 	opt->setCostThreshold(ob::Cost(1.51));
 
 	if(verbose) std::cout << "Set up the optimizing objective" << std::endl;
@@ -211,8 +199,8 @@ int main(int argc, char const *argv[])
 
 	if(verbose) std::cout << "Set up the problem definition" << std::endl;
 
-	auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
-	// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, hrs, 20));
+	// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
+	auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, hrs, 20));
 	std::cout << "Running RRT* with mcmc Sampler..." << std::endl;
 
 	if(verbose) std::cout << "Set up the sampler" << std::endl;
@@ -228,7 +216,7 @@ int main(int argc, char const *argv[])
 
 	// attempt to solve the planning problem within one second of
 	// planning time
-	ob::PlannerStatus solved = optimizingPlanner->solve(10.0);
+	ob::PlannerStatus solved = optimizingPlanner->solve(10);
 
 	if(verbose) std::cout << "Solved!" << std::endl;
 
