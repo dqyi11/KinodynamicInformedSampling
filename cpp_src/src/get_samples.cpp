@@ -217,6 +217,7 @@ int main(int argc, char * argv[])
 
 	if(save)
 	{
+                std::cout << "START SAVING" << std::endl;
 		if(run_hmc)
 		{
 			std::ofstream hmc_file(filename + "_hmc.log");

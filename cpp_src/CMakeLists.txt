@@ -1,6 +1,7 @@
 # Set major information of the build
 cmake_minimum_required(VERSION 2.8.3)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_compile_options(-std=c++11)
 
 # Setup the project information
 project(GetKinoSamples)

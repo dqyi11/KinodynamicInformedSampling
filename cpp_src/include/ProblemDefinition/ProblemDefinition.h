@@ -126,6 +126,14 @@ public:
 	virtual VectorXd get_grad(const VectorXd& curr_state) const;
 
 	///
+	/// Get the Inverse Jacobian of the cost function at a specific state
+	///
+	/// @param curr_state Current state to get the cost for
+	/// @return Inverse Jacobian of the function at the current state (same dimension as current state)
+	///
+	virtual VectorXd get_inv_jacobian(const VectorXd& curr_state) const;
+
+	///
 	/// Update the levelset
 	///
 	/// @param level_set New level set
