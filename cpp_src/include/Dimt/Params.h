@@ -23,4 +23,4 @@ constexpr Params param_3dof = {
 	1.0 // a_max
 };
 // constexpr Params param = param_2dof;
-constexpr Params param = param_3dof;
+constexpr Params param = param_1dof;

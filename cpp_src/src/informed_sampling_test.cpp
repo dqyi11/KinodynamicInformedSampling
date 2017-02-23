@@ -1,3 +1,5 @@
+// NOTE: Set "constexpr Params param = param_1dof;" in Params.h for 2d Narrow Corridor
+
 // stdlib
 #include <iostream>
 #include <vector>
@@ -106,25 +108,38 @@ public:
     // circular obstacle
     bool isValid(const ob::State* state) const
     {
-        return this->clearance(state) > 0.0;
+// Narrow Corridor problem
+      const ob::RealVectorStateSpace::StateType* state_rv =
+          state->as<ob::RealVectorStateSpace::StateType>();
+      bool isInCollision = false;
+      for (int i=0; i<param.dimensions; i++)
+      {
+      	if (i==0)
+      		if(state_rv->values[i]<-0.3 ||  state_rv->values[i]>0.3)
+      			return true;
+      	else
+      		if(state_rv->values[i] < -5 ||  
+      			(state_rv->values[i] > -0.1 && state_rv->values[i] < 0.1) || 
+      			 state_rv->values[i] > 5)
+      			return true;
+      }
+      return false;
+// Circular Obstalce at Origin
+      // return this->clearance(state) > 0.0;
     }
     // Returns the distance from the given state's position to the
     // boundary of the circular obstacle.
     double clearance(const ob::State* state) const
     {
-        // We know we're working with a RealVectorStateSpace in this
-        // example, so we downcast state into the specific type.
-        const ob::RealVectorStateSpace::StateType* state_rv =
-            state->as<ob::RealVectorStateSpace::StateType>();
-        // Extract the robot's (x,y) position from its state
-        double sq_dist = 0; // squared distance from origin
-        for (int i=0; i<param.dimensions; i++)
-        	sq_dist += state_rv->values[i] * state_rv->values[i];
-
-        // Distance formula between two points, offset by the circle's
-        // radius
-        return sq_dist - 3*3;
-    }
+      // We know we're working with a RealVectorStateSpace in this
+      // example, so we downcast state into the specific type.
+      const ob::RealVectorStateSpace::StateType* state_rv =
+          state->as<ob::RealVectorStateSpace::StateType>();
+      double sq_dist = 0; // squared distance from origin
+      for (int i=0; i<param.dimensions; i++)
+      	sq_dist += state_rv->values[i] * state_rv->values[i];
+      return sq_dist - 3*3;
+   }
 };
 
 const bool verbose = true;
@@ -141,13 +156,18 @@ int main(int argc, char const *argv[])
 	ompl::base::State *goal_s = space->allocState();
 	VectorXd start_state(dimension);
 	VectorXd goal_state(dimension);
+	// Start and Goal Position For Narrow Corridor problem
 	for (int i=0; i<param.dimensions; i++)
 	{
-	  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -5;
-	  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 5;
-	  start_state[i] = -5;
-	  goal_state[i] = 5;
+	  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 0;
+	  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 0;
+	  start_state[i] = 0;
+	  goal_state[i] = 0;
 	}
+	start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = -1.5;
+  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = 1.5;
+  start_state[0] = -1.5;
+  goal_state[0] = 1.5;
 	// std::tie(start_state, goal_state) = get_random_start_and_goal(dimension,
 	// 															  minval,
 	// 															  maxval);
@@ -187,10 +207,9 @@ int main(int argc, char const *argv[])
 
 	// Set up the optimization objective
 	double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
-	// auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-	auto hrs = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
-	// auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
-	auto opt = get_geom_opt_obj(si, start_state, goal_state, hrs, batch_size);
+	auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+	// auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
+	auto opt = get_geom_opt_obj(si, start_state, goal_state, current_sampler, batch_size);
 	opt->setCostThreshold(ob::Cost(1.51));
 
 	if(verbose) std::cout << "Set up the optimizing objective" << std::endl;
@@ -199,8 +218,7 @@ int main(int argc, char const *argv[])
 
 	if(verbose) std::cout << "Set up the problem definition" << std::endl;
 
-	// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
-	auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, hrs, 20));
+	auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, current_sampler, 20));
 	std::cout << "Running RRT* with mcmc Sampler..." << std::endl;
 
 	if(verbose) std::cout << "Set up the sampler" << std::endl;
@@ -216,7 +234,7 @@ int main(int argc, char const *argv[])
 
 	// attempt to solve the planning problem within one second of
 	// planning time
-	ob::PlannerStatus solved = optimizingPlanner->solve(10);
+	ob::PlannerStatus solved = optimizingPlanner->solve(200);
 
 	if(verbose) std::cout << "Solved!" << std::endl;
 
