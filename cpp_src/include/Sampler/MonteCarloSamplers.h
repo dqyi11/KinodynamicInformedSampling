@@ -48,6 +48,14 @@ public:
 	virtual VectorXd grad_descent(const double& alpha = 0.01) const;
 
 	///
+	/// Surf down the cost function to get to the levelset
+	///
+	/// @param start Starting state
+	/// @return Path to the level set
+	///
+        virtual VectorXd newton_raphson(const VectorXd& start) const;
+	
+        ///
 	/// Get the energy of the state from the cost function
 	///
 	/// @param curr_state Current state to get the energy for
@@ -149,6 +157,8 @@ public:
 	///
 	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
 
+        virtual VectorXd sample_memorized() const;
+
 private:
 	// Distance of integration for HMC step
 	double L_;
@@ -161,6 +171,9 @@ private:
 
 	// Number of steps to run HMC
 	double steps_;
+
+        // Last sample
+        VectorXd last_sample_;
 };
 
 class MCMCSampler: public MonteCarloSampler

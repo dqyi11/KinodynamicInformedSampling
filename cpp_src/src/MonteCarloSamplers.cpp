@@ -5,7 +5,6 @@
 #include <limits>
 #include <algorithm>
 
-
 // Verbose constant
 const bool VERBOSE = false;
 
@@ -164,28 +163,56 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 	double cost = problem().get_cost(start);
 
 	int steps = 0;
-        while(cost > problem().level_set())
-        {
-                double last_cost = cost;
-                VectorXd inv_jacobian = problem().get_inv_jacobian(start);
-                //std::cout << "inv jacobian " << inv_jacobian << std::endl;
-                start = start - inv_jacobian * cost; 
+	while(cost > problem().level_set())
+	{
+		VectorXd grad = problem().get_grad(start);
+		start = start - alpha * grad;
+
 		cost = problem().get_cost(start);
+
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
 		const double thresh = 50;
-		if( abs(last_cost - cost) < 0.0001 )
-                //if(steps > thresh)
+		if(steps > thresh)
 		{
-                        //std::cout << "RESTART GRAD DESCENT" << std::endl;
-			//return grad_descent();
-	                start = MonteCarloSampler::get_random_sample();
-	                cost = problem().get_cost(start);
+			return grad_descent();
 		}
 	}
 
 	return start;
+}
+
+///
+/// Surf down the cost function to get to the levelset
+///
+/// @param start Vector to start
+/// @return A state in the level set
+///
+VectorXd MonteCarloSampler::newton_raphson(const VectorXd& start) const
+{
+        VectorXd end = start;
+	double cost = problem().get_cost(end);
+
+	int steps = 0;
+        while(cost > problem().level_set())
+        {
+                double last_cost = cost;
+                VectorXd inv_jacobian = problem().get_inv_jacobian(end);
+                end = end - inv_jacobian * cost; 
+		cost = problem().get_cost(end);
+		steps++;
+
+		// If the number of steps reaches some threshold, start over
+                const double trap_threshold = 0.0001;
+		if( abs(last_cost - cost) < trap_threshold )
+		{
+	                end = MonteCarloSampler::get_random_sample();
+	                cost = problem().get_cost(end);
+		}
+	}
+
+	return end;
 }
 
 ///
@@ -208,6 +235,11 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 	}
 
 	return sample;
+}
+        
+VectorXd HMCSampler::sample_memorized() const
+{
+
 }
 
 //
