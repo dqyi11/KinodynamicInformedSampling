@@ -164,24 +164,24 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 	double cost = problem().get_cost(start);
 
 	int steps = 0;
-        while(cost > problem().level_set())
-        {
-                double last_cost = cost;
-                VectorXd inv_jacobian = problem().get_inv_jacobian(start);
-                //std::cout << "inv jacobian " << inv_jacobian << std::endl;
-                start = start - inv_jacobian * cost; 
+    while(cost > problem().level_set())
+    {
+        double last_cost = cost;
+        VectorXd inv_jacobian = problem().get_inv_jacobian(start);
+        //std::cout << "inv jacobian " << inv_jacobian << std::endl;
+        start = start - inv_jacobian * cost;
 		cost = problem().get_cost(start);
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
 		const double thresh = 50;
 		if( abs(last_cost - cost) < 0.0001 )
-                //if(steps > thresh)
+        //if(steps > thresh)
 		{
-                        //std::cout << "RESTART GRAD DESCENT" << std::endl;
+			//std::cout << "RESTART GRAD DESCENT" << std::endl;
 			//return grad_descent();
-	                start = MonteCarloSampler::get_random_sample();
-	                cost = problem().get_cost(start);
+			start = MonteCarloSampler::get_random_sample();
+			cost = problem().get_cost(start);
 		}
 	}
 

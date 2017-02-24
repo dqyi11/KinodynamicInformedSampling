@@ -200,8 +200,6 @@ void planWithSimpleSetup(void)
     pdef->setStartAndGoalStates(start, goal);
 
     if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl;
-    if(MAIN_VERBOSE) std::cout << "Start State Size: " << start_state_vector.size() << std::endl;
-    if(MAIN_VERBOSE) std::cout << "Goal State Size: " << goal_state_vector.size() << std::endl;
 
     ///
     /// Construct Sampler
@@ -215,7 +213,7 @@ void planWithSimpleSetup(void)
     /// Get Optimization Objective
     ///
     auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
-    opt->setCostThreshold(ob::Cost(1.51));
+    opt->setCostThreshold(ob::Cost(1.00));
     pdef->setOptimizationObjective(opt);
 
     if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
@@ -234,7 +232,7 @@ void planWithSimpleSetup(void)
     ///
     /// Run the planner and print
     ///
-    ob::PlannerStatus solved = planner->solve(5.0);
+    ob::PlannerStatus solved = planner->solve(15.0);
 
     if(MAIN_VERBOSE) std::cout << "Planner solved!" << std::endl;
 
