@@ -174,12 +174,15 @@ int main(int argc, char * argv[])
 	// Initialize the sampler
 	// HMC parameters
 	MatrixXd hmc_samples;
+	MatrixXd hmc_samples2;
 	if (run_hmc)
 	{
 		double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
 		HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
 		std::cout << "Running HMC Sampling..." << std::endl;
 		hmc_samples = hmc_s.sample(no_samples, time);
+		std::cout << "Running HMC2 Sampling..." << std::endl;
+                hmc_samples2 = hmc_s.sample_batch_memorized(no_samples, time);
 	}
 
 	MatrixXd mcmc_samples;
@@ -229,6 +232,15 @@ int main(int argc, char * argv[])
 				}
 			}
 			hmc_file.close();
+			std::ofstream hmc2_file(filename + "_hmc2.log");
+			if (hmc2_file.is_open())
+			{
+				for(int i = 0; i < hmc_samples2.rows(); i++)
+				{
+					hmc2_file << hmc_samples2.row(i) << std::endl;
+				}
+			}
+			hmc2_file.close();
 		}
 		if(run_mcmc)
 		{
