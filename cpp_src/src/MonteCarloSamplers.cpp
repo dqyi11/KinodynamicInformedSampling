@@ -5,8 +5,22 @@
 #include <limits>
 #include <algorithm>
 
+///
+/// Helper functions
+///
+
+void print_out_states3(const VectorXd &state)
+{
+	std::cout << "[ ";
+	for(uint i = 0; i < state.size(); i++)
+	{
+		std::cout << state[i] << " ";
+	}
+	std::cout << " ]" << std::endl;
+}
+
 // Verbose constant
-const bool VERBOSE = false;
+const bool VERBOSE = true;
 
 ///
 /// Sigmoid function
@@ -151,6 +165,43 @@ MatrixXd concatenate_matrix_and_vector(const MatrixXd& matrix, const VectorXd& v
 	return new_results;
 }
 
+// ///
+// /// Surf down the cost function to get to the levelset
+// ///
+// /// @param alpha Learning rate
+// /// @return Path to the level set
+// ///
+// VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
+// {
+// 	VectorXd start = MonteCarloSampler::get_random_sample();
+// 	double cost = problem().get_cost(start);
+
+// 	int steps = 0;
+//     while(cost > problem().level_set())
+//     {
+//         double last_cost = cost;
+//         VectorXd inv_jacobian = problem().get_inv_jacobian(start);
+//         //std::cout << "inv jacobian " << inv_jacobian << std::endl;
+//         start = start - inv_jacobian * cost;
+// 		cost = problem().get_cost(start);
+// 		std::cout << cost << std::endl;
+// 		steps++;
+
+// 		// If the number of steps reaches some threshold, start over
+// 		const double thresh = 50;
+// 		if( abs(last_cost - cost) < 0.0001 )
+//         //if(steps > thresh)
+// 		{
+// 			//std::cout << "RESTART GRAD DESCENT" << std::endl;
+// 			//return grad_descent();
+// 			start = MonteCarloSampler::get_random_sample();
+// 			cost = problem().get_cost(start);
+// 		}
+// 	}
+
+// 	return start;
+// }
+
 ///
 /// Surf down the cost function to get to the levelset
 ///
@@ -170,17 +221,16 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 
 		cost = problem().get_cost(start);
 
+		if(VERBOSE) std::cout << cost << std::endl;
+
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
-		const double thresh = 50;
-		if( abs(last_cost - cost) < 0.0001 )
-        //if(steps > thresh)
+		const double thresh = 20;
+		if(steps > thresh)
 		{
-			//std::cout << "RESTART GRAD DESCENT" << std::endl;
-			//return grad_descent();
-			start = MonteCarloSampler::get_random_sample();
-			cost = problem().get_cost(start);
+			std::cout << "Restarting!" << std::endl;
+			return grad_descent(alpha);
 		}
 	}
 
@@ -343,7 +393,7 @@ VectorXd HMCSampler::sample_memorized()
 		q = q_last;
 	}
 
-        VectorXd newsample(problem().start_state().size() + 1);
+    VectorXd newsample(problem().start_state().size() + 1);
 	newsample << q, problem().get_cost(q);
 
         last_sample_ = newsample;

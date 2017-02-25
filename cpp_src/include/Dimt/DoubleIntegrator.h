@@ -219,13 +219,13 @@ public:
 
 	static double getPLPTime(double startVelocity, double goalVelocity, double distance, double maxVelocity, double acceleration1)
 	{
-		const bool check = std::abs(startVelocity) <= maxVelocity && std::abs(goalVelocity) <= maxVelocity;
-		if(!check)
-		{
-			std::cout << "Start velocity: " << startVelocity << " | Goal velocity: "
-				<< goalVelocity << " | Max velocity: " << maxVelocity << std::endl;
-		}
-		assert(std::abs(startVelocity) <= maxVelocity && std::abs(goalVelocity) <= maxVelocity);
+		// const bool check = std::abs(startVelocity) <= maxVelocity && std::abs(goalVelocity) <= maxVelocity;
+		// if(!check)
+		// {
+		// 	std::cout << "Start velocity: " << startVelocity << " | Goal velocity: "
+		// 		<< goalVelocity << " | Max velocity: " << maxVelocity << std::endl;
+		// }
+		// assert(std::abs(startVelocity) <= maxVelocity && std::abs(goalVelocity) <= maxVelocity);
 
 		const double boundaryVelocity = sign(acceleration1) * maxVelocity;
 		const double timeToBoundary1 = (boundaryVelocity - startVelocity) / acceleration1;

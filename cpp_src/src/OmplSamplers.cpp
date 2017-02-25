@@ -83,24 +83,24 @@ bool ompl::base::MyInformedSampler::sample_full_space(State *statePtr)
 ///
 bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const Cost maxCost)
 {
-	std::cout << "State inside of sampleUniform: ";
-	print_out_states2(statePtr);
-	std::cout << "Cost: " << maxCost << std::endl;
-	std::cout << "Level set: " << sampler_->problem().level_set() << std::endl;
+	// std::cout << "State inside of sampleUniform: ";
+	// print_out_states2(statePtr);
+
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
 	if(maxCost.value() != prev_cost_ or sample_index_ >= sample_batch_size_)
 	{
-		std::cout << "Get new samples!" << std::endl;
+		std::cout << "Cost: " << maxCost;
+		std::cout << " | Level set: " << sampler_->problem().level_set() << std::endl;
 
 		if(maxCost.value() != prev_cost_) sampler_->update_level_set(maxCost.value());
 
 		batch_samples_ = sampler_->sample(sample_batch_size_, false);
 
-		for(uint i = 0; i < batch_samples_.rows(); i++)
-		{
-			print_out_states2(batch_samples_.row(i));
-		}
+		// for(uint i = 0; i < batch_samples_.rows(); i++)
+		// {
+		// 	print_out_states2(batch_samples_.row(i));
+		// }
 
 		sample_index_ = 0;
 	}
@@ -113,8 +113,8 @@ bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const
 		val[i] = sample(i);
 	}
 
-	std::cout << "State after getting a sample: ";
-	print_out_states2(statePtr);
+	// std::cout << "State after getting a sample: ";
+	// print_out_states2(statePtr);
 
 	sample_index_++;
 

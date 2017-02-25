@@ -139,8 +139,8 @@ void planWithSimpleSetup(void)
     const int dimension = param.dimensions; const double minval = -10; const double maxval = 10;
     VectorXd start_state(dimension);
     VectorXd goal_state(dimension);
-    start_state << -5.0, -5.0, -5.0, -5.0;
-    goal_state << 5.0, 5.0, 5.0, 5.0;
+    start_state << 0.0, 0.0;
+    goal_state << 5.0, 5.0;
 
     if(MAIN_VERBOSE) std::cout << "Start: " << std::endl << start_state << std::endl;
     if(MAIN_VERBOSE) std::cout << "Goal: " << std::endl << goal_state << std::endl;
@@ -204,7 +204,7 @@ void planWithSimpleSetup(void)
     ///
     /// Construct Sampler
     ///
-    double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
+    double sigma = 1; int max_steps = 20; double alpha = 0.1; double batch_size = 20;
     auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
 
     if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
