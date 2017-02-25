@@ -171,8 +171,10 @@ HierarchicalRejectionSampler::HRS(const int &start_index, const int &end_index, 
 		{
 			std::tie(c_start, c_goal) = HRS(start_index, mid_index, sample);
 			std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, end_index, sample);
-			c_start = combine_costs(c_start, c_dash_start);
-			c_goal = combine_costs(c_goal, c_dash_goal);
+			c_start = combine_costs(problem().start_state(), sample, start_index, mid_index,
+                                    end_index, c_start, c_dash_start);
+			c_goal = combine_costs(sample, problem().goal_state(), start_index, mid_index,
+                                   end_index, c_goal, c_dash_goal);
 		}
 	}
 
@@ -201,12 +203,22 @@ double GeometricHierarchicalRejectionSampler::calculate_leaf(const VectorXd &x1,
 ///
 /// Combines the cost of two states
 ///
+/// @param x1 First state
+/// @param x2 Second state
+/// @param i Index of the degree of freedom for first state
+/// @param m Mid degree of freedom
+/// @param j Index of  the degree of freedom of the second state
 /// @param c1 Cost one
 /// @param c2 Cost two
 /// @return Combination of the costs
 ///
-double GeometricHierarchicalRejectionSampler::combine_costs(const double &c1,
-															const double &c2) const
+double GeometricHierarchicalRejectionSampler::combine_costs(const VectorXd &x1,
+                                                            const VectorXd &x2,
+                                                            const int i,
+                                                            const int m,
+                                                            const int j,
+                                                            const double &c1,
+                                                            const double &c2) const
 {
 	return c1 + c2;
 }

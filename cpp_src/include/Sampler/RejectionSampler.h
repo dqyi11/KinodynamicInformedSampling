@@ -76,14 +76,25 @@ private:
 	///
 	virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) const = 0;
 
-	///
-	/// Combines the cost of two states
-	///
-	/// @param c1 Cost one
-	/// @param c2 Cost two
-	/// @return Combination of the costs
-	///
-	virtual double combine_costs(const double &c1, const double &c2) const = 0;
+    ///
+    /// Combines the cost of two states
+    ///
+    /// @param x1 First state
+    /// @param x2 Second state
+    /// @param i Index of the degree of freedom for first state
+    /// @param m Mid degree of freedom
+    /// @param j Index of  the degree of freedom of the second state
+    /// @param c1 Cost one
+    /// @param c2 Cost two
+    /// @return Combination of the costs
+    ///
+    virtual double combine_costs(const VectorXd &x1,
+                                 const VectorXd &x2,
+                                 const int i,
+                                 const int m,
+                                 const int j,
+                                 const double &c1,
+                                 const double &c2) const = 0;
 
 	///
 	/// How to sample a leaf (ex: geometric is one dimension and kino is 2)
@@ -129,14 +140,25 @@ private:
 	///
 	virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) const override;
 
-	///
-	/// Combines the cost of two states
-	///
-	/// @param c1 Cost one
-	/// @param c2 Cost two
-	/// @return Combination of the costs
-	///
-	virtual double combine_costs(const double &c1, const double &c2) const override;
+    ///
+    /// Combines the cost of two states
+    ///
+    /// @param x1 First state
+    /// @param x2 Second state
+    /// @param i Index of the degree of freedom for first state
+    /// @param m Mid degree of freedom
+    /// @param j Index of  the degree of freedom of the second state
+    /// @param c1 Cost one
+    /// @param c2 Cost two
+    /// @return Combination of the costs
+    ///
+    virtual double combine_costs(const VectorXd &x1,
+                                 const VectorXd &x2,
+                                 const int i,
+                                 const int m,
+                                 const int j,
+                                 const double &c1,
+                                 const double &c2) const override;
 
 	///
 	/// How to sample a leaf (ex: geometric is one dimension and kino is 2)
