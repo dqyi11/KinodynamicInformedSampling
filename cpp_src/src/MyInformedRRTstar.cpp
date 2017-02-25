@@ -50,12 +50,13 @@ void print_out_states(ompl::base::State *statePtr)
 MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si)
     : InformedRRTstar(si)
 {
-
+    setTreePruning(false);
+    // maxDistance_ = 10.0;
 }
 
 base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondition &ptc)
 {
-    std::cout << "Using Correct Informed RRT*" << std::endl;
+    // std::cout << "Using Correct Informed RRT*" << std::endl;
     checkValidity();
     base::Goal                  *goal   = pdef_->getGoal().get();
     base::GoalSampleableRegion  *goal_s = dynamic_cast<base::GoalSampleableRegion*>(goal);
@@ -142,18 +143,17 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             goal_s->sampleGoal(rstate);
         else
         {
-            std::cout << "BBBBBB" << std::endl;
             // Attempt to generate a sample, if we fail (e.g., too many rejection attempts), skip the remainder of this loop and return to try again
-            std::cout << "Printing state before: ";
-            print_out_states(rstate);
+            // std::cout << "Printing state before: ";
+            // print_out_states(rstate);
             if (!sampleUniform(rstate))
             {
                 continue;
             }
             else
             {
-                std::cout << "Printing state after: ";
-                print_out_states(rstate);
+                // std::cout << "Printing state after: ";
+                // print_out_states(rstate);
             }
         }
 
