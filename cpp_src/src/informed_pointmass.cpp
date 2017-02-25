@@ -13,6 +13,7 @@
 #include <Sampler/MonteCarloSamplers.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
+#include <OmplWrappers/MyInformedRRTstar.h>
 
 #include "DimtStateSpace.h"
 #include "Dimt/DoubleIntegrator.h"
@@ -21,6 +22,8 @@
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
+
+#include <limits>
 
 class ValidityChecker : public ob::StateValidityChecker
 {
@@ -95,8 +98,8 @@ ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
     },
     [di](const VectorXd& s1, const VectorXd& s2)
     {
-      std::cout << "Start: " << s1 << std::endl;
-      std::cout << "Goal: " << s2 << std::endl;
+      // std::cout << "Start: " << s1 << std::endl;
+      // std::cout << "Goal: " << s2 << std::endl;
       return di.getMinTime(s1, s2);
     }));
 }
@@ -165,32 +168,41 @@ pdef->setStartAndGoalStates(start, goal);
 if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl;
 
 // Construct Sampler and Planner
-double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
-const double level_set = 100;
+double sigma = 5; int max_steps = 20; double alpha = 1.0; double batch_size = 100;
+// const double level_set = 100;
+const double level_set = std::numeric_limits<double>::infinity();
 auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
   [start_state, goal_state, double_integrator](const VectorXd& state)
   {
     return double_integrator.getMinTime(start_state, state) +
            double_integrator.getMinTime(state, goal_state);
   });
+
+// Set up the sampler
 auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+auto rej_s = std::make_shared<RejectionSampler>(prob);
 
 if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
 
 // auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
-auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
+// auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
+auto opt = get_dimt_opt_ob(si, start_state, goal_state, rej_s, batch_size, double_integrator);
+
 opt->setCostThreshold(ob::Cost(1.51));
 pdef->setOptimizationObjective(opt);
 
 if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
 
-auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, 20));
+// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, batch_size));
+auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, rej_s, batch_size));
 
 if(MAIN_VERBOSE) std::cout << "Created the informed ompl sampler!" << std::endl;
 
 // ob::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
 // ob::PlannerPtr planner(new og::RRTstar(si));
-ob::PlannerPtr planner(new og::InformedRRTstar(si));
+// ob::PlannerPtr planner(new og::InformedRRTstar(si));
+ob::PlannerPtr planner(new MyInformedRRTstar(si));
+
 // Set the problem instance for our planner to solve
 planner->setProblemDefinition(pdef);
 planner->setup();
@@ -198,7 +210,7 @@ planner->setup();
 if(MAIN_VERBOSE) std::cout << "Set up Informed RRT* planner!" << std::endl;
 
 // Run planner
-ob::PlannerStatus solved = planner->solve(1.0);
+ob::PlannerStatus solved = planner->solve(100.0);
 
 if(MAIN_VERBOSE) std::cout << "Planner solved!" << std::endl;
 
