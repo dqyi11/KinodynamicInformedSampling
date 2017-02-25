@@ -17,6 +17,11 @@ using Eigen::VectorXd;
 /// Helper functions
 ///
 
+bool same_cost(double a, double b)
+{
+    return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
+}
+
 void print_out_states2(ompl::base::State *statePtr)
 {
     double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
@@ -83,15 +88,15 @@ bool ompl::base::MyInformedSampler::sample_full_space(State *statePtr)
 ///
 bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const Cost maxCost)
 {
-	// std::cout << "State inside of sampleUniform: ";
-	// print_out_states2(statePtr);
-
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
-	if(maxCost.value() != prev_cost_ or sample_index_ >= sample_batch_size_)
+    if(!same_cost(maxCost.value(), prev_cost_) or sample_index_ >= sample_batch_size_)
 	{
-		std::cout << "Cost: " << maxCost;
-		std::cout << " | Level set: " << sampler_->problem().level_set() << std::endl;
+        std::cout << "Cost: " << maxCost.value();
+        // std::cout << " | Sample Index: " << sample_index_;
+        std::cout << " | Prev cost: " << prev_cost_;
+        // std::cout << " | Sample batch size: " << sample_batch_size_;
+        std::cout << " | Level set: " << sampler_->problem().level_set() << std::endl;
 
 		if(maxCost.value() != prev_cost_) sampler_->update_level_set(maxCost.value());
 
@@ -102,6 +107,7 @@ bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const
 		// 	print_out_states2(batch_samples_.row(i));
 		// }
 
+        prev_cost_ = maxCost.value();
 		sample_index_ = 0;
 	}
 

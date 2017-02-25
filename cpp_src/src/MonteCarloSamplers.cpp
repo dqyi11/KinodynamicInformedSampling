@@ -20,7 +20,7 @@ void print_out_states3(const VectorXd &state)
 }
 
 // Verbose constant
-const bool VERBOSE = true;
+const bool VERBOSE = false;
 
 ///
 /// Sigmoid function
@@ -53,7 +53,6 @@ inline double rand_uni()
 //
 // MonteCarloSampler
 //
-
 
 ///
 /// Function to determine if any of the joint limits are violated
@@ -229,7 +228,7 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 		const double thresh = 20;
 		if(steps > thresh)
 		{
-			std::cout << "Restarting!" << std::endl;
+			if(VERBOSE) std::cout << "Restarting!" << std::endl;
 			return grad_descent(alpha);
 		}
 	}
@@ -245,24 +244,24 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 ///
 VectorXd MonteCarloSampler::newton_raphson(const VectorXd& start) const
 {
-        VectorXd end = start;
+    VectorXd end = start;
 	double cost = problem().get_cost(end);
 
 	int steps = 0;
-        while(cost > problem().level_set())
-        {
-                double last_cost = cost;
-                VectorXd inv_jacobian = problem().get_inv_jacobian(end);
-                end = end - inv_jacobian * cost;
+    while(cost > problem().level_set())
+    {
+        double last_cost = cost;
+        VectorXd inv_jacobian = problem().get_inv_jacobian(end);
+        end = end - inv_jacobian * cost;
 		cost = problem().get_cost(end);
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
-                const double trap_threshold = 0.0001;
+        const double trap_threshold = 0.0001;
 		if( last_cost - cost < trap_threshold )
 		{
-	                end = MonteCarloSampler::get_random_sample();
-	                cost = problem().get_cost(end);
+            end = MonteCarloSampler::get_random_sample();
+            cost = problem().get_cost(end);
 		}
 	}
 
@@ -396,11 +395,12 @@ VectorXd HMCSampler::sample_memorized()
     VectorXd newsample(problem().start_state().size() + 1);
 	newsample << q, problem().get_cost(q);
 
-        last_sample_ = newsample;
-        if (current_step_ >= steps())
-        {
-        	current_step_ = -1;
-        }
+    last_sample_ = newsample;
+    if (current_step_ >= steps())
+    {
+	   current_step_ = -1;
+    }
+
 	return newsample;
 }
 
