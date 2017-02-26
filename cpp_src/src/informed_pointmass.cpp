@@ -168,7 +168,7 @@ pdef->setStartAndGoalStates(start, goal);
 if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl;
 
 // Construct Sampler and Planner
-double sigma = 5; int max_steps = 20; double alpha = 1.0; double batch_size = 100;
+double sigma = 1; int max_steps = 100; double alpha = 1.0; double batch_size = 1000;
 // const double level_set = 100;
 const double level_set = std::numeric_limits<double>::infinity();
 auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
@@ -185,16 +185,16 @@ auto rej_s = std::make_shared<RejectionSampler>(prob);
 if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
 
 // auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
-// auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
-auto opt = get_dimt_opt_ob(si, start_state, goal_state, rej_s, batch_size, double_integrator);
+auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
+// auto opt = get_dimt_opt_ob(si, start_state, goal_state, rej_s, batch_size, double_integrator);
 
 opt->setCostThreshold(ob::Cost(1.51));
 pdef->setOptimizationObjective(opt);
 
 if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
 
-// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, batch_size));
-auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, rej_s, batch_size));
+auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, batch_size));
+// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, rej_s, batch_size));
 
 if(MAIN_VERBOSE) std::cout << "Created the informed ompl sampler!" << std::endl;
 

@@ -204,7 +204,7 @@ void planWithSimpleSetup(void)
     ///
     /// Construct Sampler
     ///
-    double sigma = 1; int max_steps = 20; double alpha = 0.1; double batch_size = 20;
+    double sigma = 5; int max_steps = 20; double alpha = 0.1; double batch_size = 20;
     auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
 
     if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;

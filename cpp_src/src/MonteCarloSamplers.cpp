@@ -183,7 +183,6 @@ MatrixXd concatenate_matrix_and_vector(const MatrixXd& matrix, const VectorXd& v
 //         //std::cout << "inv jacobian " << inv_jacobian << std::endl;
 //         start = start - inv_jacobian * cost;
 // 		cost = problem().get_cost(start);
-// 		std::cout << cost << std::endl;
 // 		steps++;
 
 // 		// If the number of steps reaches some threshold, start over
@@ -575,8 +574,9 @@ MatrixXd MCMCSampler::sample(const int& no_samples, const bool& time) const
 			double prob_proposed = get_prob(q_proposed);
 			double prob_before = get_prob(q);
 
-			if(prob_proposed / prob_before >= rand_uni() and
-			   !any_dimensions_in_violation(q_proposed))
+			// if(prob_proposed / prob_before >= rand_uni() and
+			//    // !any_dimensions_in_violation(q_proposed))
+            if(prob_proposed / prob_before >= rand_uni())
 			{
 				VectorXd newsample(problem().start_state().size() + 1);
 		    	newsample << q_proposed, problem().get_cost(q_proposed);

@@ -28,6 +28,8 @@ using namespace ompl::geometric;
 /// Helper functions
 ///
 
+bool RRT_VERBOSE = false;
+
 void print_out_states(ompl::base::State *statePtr)
 {
     double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
@@ -51,6 +53,8 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si)
     : InformedRRTstar(si)
 {
     setTreePruning(false);
+    useRejectionSampling_ = false;
+    useNewStateRejection_ = false;
     // maxDistance_ = 10.0;
 }
 
@@ -152,8 +156,8 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             }
             else
             {
-                // std::cout << "Printing state after: ";
-                // print_out_states(rstate);
+                if(RRT_VERBOSE) std::cout << "Printing state after: ";
+                if(RRT_VERBOSE) print_out_states(rstate);
             }
         }
 
@@ -252,6 +256,8 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             }
             else // if not delayCC
             {
+                if(RRT_VERBOSE) std::cout << "Not valid state" << std::endl;
+
                 motion->incCost = opt_->motionCost(nmotion->state, motion->state);
                 motion->cost = opt_->combineCosts(nmotion->cost, motion->incCost);
                 // find which one we connect the new state to
