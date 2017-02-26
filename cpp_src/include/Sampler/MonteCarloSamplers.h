@@ -54,8 +54,8 @@ public:
 	/// @return Path to the level set
 	///
         virtual VectorXd newton_raphson(const VectorXd& start) const;
-	
-        ///
+
+    ///
 	/// Get the energy of the state from the cost function
 	///
 	/// @param curr_state Current state to get the energy for
@@ -98,6 +98,8 @@ public:
 private:
 	// Learning rate for gradient descent
 	double alpha_;
+
+	//
 
 protected:
 	///

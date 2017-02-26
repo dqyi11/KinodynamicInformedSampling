@@ -7,12 +7,20 @@
 // OMPL
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
+// Eigen
+using Eigen::VectorXd;
+
 // Our stuff
 #include <Dimt/Params.h>
 
 ///
 /// Helper functions
 ///
+
+bool same_cost(double a, double b)
+{
+    return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
+}
 
 void print_out_states2(ompl::base::State *statePtr)
 {
@@ -24,6 +32,16 @@ void print_out_states2(ompl::base::State *statePtr)
         std::cout << val[i] << " ";
     }
     std::cout << "]" << std::endl;
+}
+
+void print_out_states2(const VectorXd &state)
+{
+	std::cout << "[ ";
+	for(uint i = 0; i < state.size(); i++)
+	{
+		std::cout << state[i] << " ";
+	}
+	std::cout << " ]" << std::endl;
 }
 
 ///
@@ -70,18 +88,26 @@ bool ompl::base::MyInformedSampler::sample_full_space(State *statePtr)
 ///
 bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const Cost maxCost)
 {
-	// std::cout << "State inside of sampleUniform: ";
-	// print_out_states2(statePtr);
-	std::cout << "Cost: " << maxCost << std::endl;
-	std::cout << "Level set: " << sampler_->problem().level_set() << std::endl;
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
-	if(maxCost.value() != prev_cost_ or sample_index_ >= sample_batch_size_)
+    if(!same_cost(maxCost.value(), prev_cost_) or sample_index_ >= sample_batch_size_)
 	{
+        std::cout << "Cost: " << maxCost.value();
+        // std::cout << " | Sample Index: " << sample_index_;
+        std::cout << " | Prev cost: " << prev_cost_;
+        // std::cout << " | Sample batch size: " << sample_batch_size_;
+        std::cout << " | Level set: " << sampler_->problem().level_set() << std::endl;
+
 		if(maxCost.value() != prev_cost_) sampler_->update_level_set(maxCost.value());
 
 		batch_samples_ = sampler_->sample(sample_batch_size_, false);
 
+		// for(uint i = 0; i < batch_samples_.rows(); i++)
+		// {
+		// 	print_out_states2(batch_samples_.row(i));
+		// }
+
+        prev_cost_ = maxCost.value();
 		sample_index_ = 0;
 	}
 

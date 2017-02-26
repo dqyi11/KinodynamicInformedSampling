@@ -139,8 +139,8 @@ void planWithSimpleSetup(void)
     const int dimension = param.dimensions; const double minval = -10; const double maxval = 10;
     VectorXd start_state(dimension);
     VectorXd goal_state(dimension);
-    start_state << -5.0, -5.0, -5.0, -5.0;
-    goal_state << 5.0, 5.0, 5.0, 5.0;
+    start_state << 0.0, 0.0;
+    goal_state << 5.0, 5.0;
 
     if(MAIN_VERBOSE) std::cout << "Start: " << std::endl << start_state << std::endl;
     if(MAIN_VERBOSE) std::cout << "Goal: " << std::endl << goal_state << std::endl;
@@ -200,13 +200,11 @@ void planWithSimpleSetup(void)
     pdef->setStartAndGoalStates(start, goal);
 
     if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl;
-    if(MAIN_VERBOSE) std::cout << "Start State Size: " << start_state_vector.size() << std::endl;
-    if(MAIN_VERBOSE) std::cout << "Goal State Size: " << goal_state_vector.size() << std::endl;
 
     ///
     /// Construct Sampler
     ///
-    double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
+    double sigma = 5; int max_steps = 20; double alpha = 0.1; double batch_size = 20;
     auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
 
     if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
@@ -215,7 +213,7 @@ void planWithSimpleSetup(void)
     /// Get Optimization Objective
     ///
     auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
-    opt->setCostThreshold(ob::Cost(1.51));
+    opt->setCostThreshold(ob::Cost(1.00));
     pdef->setOptimizationObjective(opt);
 
     if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
@@ -234,7 +232,7 @@ void planWithSimpleSetup(void)
     ///
     /// Run the planner and print
     ///
-    ob::PlannerStatus solved = planner->solve(5.0);
+    ob::PlannerStatus solved = planner->solve(15.0);
 
     if(MAIN_VERBOSE) std::cout << "Planner solved!" << std::endl;
 
