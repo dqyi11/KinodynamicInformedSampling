@@ -100,7 +100,8 @@ bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const
 
 		if(maxCost.value() != prev_cost_) sampler_->update_level_set(maxCost.value());
 
-		batch_samples_ = sampler_->sample(sample_batch_size_, false);
+                high_resolution_clock::duration duration;
+		batch_samples_ = sampler_->sample(sample_batch_size_, duration);
 
 		// for(uint i = 0; i < batch_samples_.rows(); i++)
 		// {

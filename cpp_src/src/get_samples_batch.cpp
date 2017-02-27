@@ -63,7 +63,12 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-samples")));
     	else
     		args.push_back(100); // Default to 100 samples
-
+        // Get the batch number
+    	if(cmdOptionExists(argv, argv+argc, "-batch"))
+    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-batch")));
+    	else
+    		args.push_back(20); // Default to 20 batches
+    
     	// Get the boolean to determine if we should time
     	if(cmdOptionExists(argv, argv+argc, "-time"))
     		args.push_back(atoi(getCmdOption(argv, argv+argc, "-time")));
@@ -130,11 +135,12 @@ int main(int argc, char * argv[])
 	if(!run) return 0;
 
 	int no_samples = args[0];
-	bool time = (args[1] == 1) ? true : false;
-	bool run_hmc = (args[2] == 1) ? true : false;
-	bool run_mcmc = (args[3] == 1) ? true : false;
-	bool run_rej = (args[4] == 1) ? true : false;
-    bool run_ghrej = (args[5] == 1) ? true : false;
+        int no_batch = args[1];
+	bool time = (args[2] == 1) ? true : false;
+	bool run_hmc = (args[3] == 1) ? true : false;
+	bool run_mcmc = (args[4] == 1) ? true : false;
+	bool run_rej = (args[5] == 1) ? true : false;
+        bool run_ghrej = (args[6] == 1) ? true : false;
 
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
@@ -162,7 +168,7 @@ int main(int argc, char * argv[])
 	double a_max = 1;
   	Dimt dimt(a_max);
   	// double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-    double level_set = 1.4 * (goal_state - start_state).norm();
+        double level_set = 1.4 * (goal_state - start_state).norm();
   	std::cout << "Level set: " << level_set << std::endl;
 
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
@@ -171,103 +177,68 @@ int main(int argc, char * argv[])
 			return (start_state - state).norm() + (goal_state - state).norm();
 			// return dimt.get_min_time(start_state, goal_state, state);
 		});
+        
+        std::vector<high_resolution_clock::duration> times(4 * no_batch);
+        for(unsigned int i=0; i < no_batch; i++) {
 
-	// Initialize the sampler
-	// HMC parameters
-	MatrixXd hmc_samples;
-	if (run_hmc)
-	{
-		double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-		HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
-		std::cout << "Running HMC Sampling..." << std::endl;
-		hmc_samples = hmc_s.sample(no_samples, time);
-	}
-
-	MatrixXd mcmc_samples;
-	if (run_mcmc)
-	{
-		double sigma = 5; int max_steps = 20; double alpha = 0.5;
-		MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
-		std::cout << "Running MCMC Sampling..." << std::endl;
-		mcmc_samples = mcmc_s.sample(no_samples, time);
-	}
-
-	MatrixXd rej_samples;
-	if(run_rej)
-	{
-		RejectionSampler rej_s = RejectionSampler(prob);
-		std::cout << "Running Rejection Sampling..." << std::endl;
-		rej_samples = rej_s.sample(no_samples, time);
-	}
-
-    MatrixXd ghrej_samples;
-    if(run_ghrej)
-    {
-        ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
-                                                       state_max, level_set,
-        [dimt, start_state, goal_state](const VectorXd& state)
-        {
-            return (start_state - state).norm() + (goal_state - state).norm();
-        });
-
-        GeometricHierarchicalRejectionSampler ghrej_s =
-            GeometricHierarchicalRejectionSampler(geo_prob);
-        std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-        ghrej_samples = ghrej_s.sample(no_samples, time);
-    }
-
-	if(save)
-	{
-                std::cout << "START SAVING" << std::endl;
-		if(run_hmc)
-		{
-			std::ofstream hmc_file(filename + "_hmc.log");
-			if (hmc_file.is_open())
-			{
-				for(int i = 0; i < hmc_samples.rows(); i++)
-				{
-					hmc_file << hmc_samples.row(i) << std::endl;
-				}
-			}
-			hmc_file.close();
-		}
-		if(run_mcmc)
-		{
-			std::ofstream mcmc_file(filename + "_mcmc.log");
-			if (mcmc_file.is_open())
-			{
-				for(int i = 0; i < mcmc_samples.rows(); i++)
-				{
-					mcmc_file << mcmc_samples.row(i) << std::endl;
-				}
-			}
-			mcmc_file.close();
-		}
-		if(run_rej)
-		{
-			std::ofstream rej_file(filename + "_rej.log");
-			if (rej_file.is_open())
-			{
-				for(int i = 0; i < rej_samples.rows(); i++)
-				{
-					rej_file << rej_samples.row(i) << std::endl;
-				}
-			}
-			rej_file.close();
-		}
-        if(run_ghrej)
-        {
-            std::ofstream ghrej_file(filename + "_ghrej.log");
-            if (ghrej_file.is_open())
-            {
-                for(int i = 0; i < ghrej_samples.rows(); i++)
+                std::cout << "BATCH " << i << std::endl;
+		// Initialize the sampler
+		// HMC parameters
                 {
-                    ghrej_file << ghrej_samples.row(i) << std::endl;
-                }
-            }
-            ghrej_file.close();
-        }
+		MatrixXd hmc_samples;
+			double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+			HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
+			//std::cout << "Running HMC Sampling..." << std::endl;
+			hmc_samples = hmc_s.sample(no_samples, times[i]);
+		}
 
-		std::cout << "Saved samples and costs to " << filename << std::endl;
+		{
+			MatrixXd mcmc_samples;
+		
+			double sigma = 5; int max_steps = 20; double alpha = 0.5;
+			MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
+			//std::cout << "Running MCMC Sampling..." << std::endl;
+			mcmc_samples = mcmc_s.sample(no_samples, times[no_batch+i]);
+		}
+
+		{
+			MatrixXd rej_samples;
+			RejectionSampler rej_s = RejectionSampler(prob);
+			//std::cout << "Running Rejection Sampling..." << std::endl;
+			rej_samples = rej_s.sample(no_samples, times[2*no_batch+i]);
+		}
+
+		{
+    			MatrixXd ghrej_samples;
+  	        	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
+        	                                               state_max, level_set,
+       				 [dimt, start_state, goal_state](const VectorXd& state)
+        			{
+      		      			return (start_state - state).norm() + (goal_state - state).norm();
+       			 	});
+	
+	    		GeometricHierarchicalRejectionSampler ghrej_s = GeometricHierarchicalRejectionSampler(geo_prob);
+	       		//std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
+			ghrej_samples = ghrej_s.sample(no_samples, times[3*no_batch+i]);
+		}
 	}
+
+        if(save)
+        {
+        	std::cout << "START SAVING" << std::endl;
+		std::ofstream time_file(filename + "_time.log");	
+		if (time_file.is_open())
+		{
+			for(int i = 0; i < 4; i++)
+			{
+				for(int j=0;j<no_batch;j++)
+				{
+					time_file << duration_cast<milliseconds>( times[i*no_batch+j] ).count() << " ";			
+				}
+                	        time_file << std::endl;		
+			}
+		}
+		time_file.close();
+	}
+
 }

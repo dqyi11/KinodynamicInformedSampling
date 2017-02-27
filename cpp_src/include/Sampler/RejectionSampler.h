@@ -24,7 +24,7 @@ public:
 	{ }
 
 	// Only function that you must implement
-	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
+	virtual MatrixXd sample(const int& no_samples, high_resolution_clock::duration& duration);
 
 	// Can implement as many private functions as you want to help do the sampling
 	virtual VectorXd get_random_sample(const double& max, const double& min, const int& size) const;
@@ -52,7 +52,7 @@ public:
 	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
-	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
+	virtual MatrixXd sample(const int& no_samples, high_resolution_clock::duration& duration);
 
 private:
 	///
