@@ -178,18 +178,27 @@ int main(int argc, char * argv[])
 			// return dimt.get_min_time(start_state, goal_state, state);
 		});
         
-        std::vector<high_resolution_clock::duration> times(4 * no_batch);
+        std::vector<high_resolution_clock::duration> times(5 * no_batch);
         for(unsigned int i=0; i < no_batch; i++) {
 
                 std::cout << "BATCH " << i << std::endl;
 		// Initialize the sampler
 		// HMC parameters
                 {
-		MatrixXd hmc_samples;
+			MatrixXd hmc_samples;
 			double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
 			HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
 			//std::cout << "Running HMC Sampling..." << std::endl;
 			hmc_samples = hmc_s.sample(no_samples, times[i]);
+		}
+
+                {
+			MatrixXd hmc_samples;
+			double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+			HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
+			//std::cout << "Running HMC Sampling..." << std::endl;
+			//hmc_samples = hmc_s.sample(no_samples, times[i]);
+			hmc_samples = hmc_s.sample_batch_memorized(no_samples, times[no_batch+i]);
 		}
 
 		{
@@ -198,14 +207,14 @@ int main(int argc, char * argv[])
 			double sigma = 5; int max_steps = 20; double alpha = 0.5;
 			MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
 			//std::cout << "Running MCMC Sampling..." << std::endl;
-			mcmc_samples = mcmc_s.sample(no_samples, times[no_batch+i]);
+			mcmc_samples = mcmc_s.sample(no_samples, times[2*no_batch+i]);
 		}
 
 		{
 			MatrixXd rej_samples;
 			RejectionSampler rej_s = RejectionSampler(prob);
 			//std::cout << "Running Rejection Sampling..." << std::endl;
-			rej_samples = rej_s.sample(no_samples, times[2*no_batch+i]);
+			rej_samples = rej_s.sample(no_samples, times[3*no_batch+i]);
 		}
 
 		{
@@ -219,7 +228,7 @@ int main(int argc, char * argv[])
 	
 	    		GeometricHierarchicalRejectionSampler ghrej_s = GeometricHierarchicalRejectionSampler(geo_prob);
 	       		//std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-			ghrej_samples = ghrej_s.sample(no_samples, times[3*no_batch+i]);
+			ghrej_samples = ghrej_s.sample(no_samples, times[4*no_batch+i]);
 		}
 	}
 
@@ -229,7 +238,7 @@ int main(int argc, char * argv[])
 		std::ofstream time_file(filename + "_time.log");	
 		if (time_file.is_open())
 		{
-			for(int i = 0; i < 4; i++)
+			for(int i = 0; i < 5; i++)
 			{
 				for(int j=0;j<no_batch;j++)
 				{

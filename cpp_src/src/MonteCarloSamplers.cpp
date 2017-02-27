@@ -321,8 +321,8 @@ VectorXd HMCSampler::sample_memorized()
 
         if(current_step_ < 0 ){
 		VectorXd start = MonteCarloSampler::get_random_sample();
-                q = newton_raphson(start);
-                //q = grad_descent(alpha());
+                //q = newton_raphson(start);
+                q = grad_descent(alpha());
         }
 	current_step_++;
 

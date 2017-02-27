@@ -12,6 +12,8 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 add_executable(get_samples ${PROJECT_SOURCE_DIR}/src/get_samples.cpp)
 add_executable(get_samples_batch ${PROJECT_SOURCE_DIR}/src/get_samples_batch.cpp)
+add_executable(get_samples_diff_levels ${PROJECT_SOURCE_DIR}/src/get_samples_diff_levels.cpp)
+add_executable(get_samples_diff_sample_no ${PROJECT_SOURCE_DIR}/src/get_samples_diff_sample_no.cpp)
 add_executable(unit_test ${PROJECT_SOURCE_DIR}/src/Test.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -73,6 +75,20 @@ target_link_libraries(get_samples
 					  )
 
 target_link_libraries(get_samples_batch
+					  samplerLib
+					  problemDefinitionLib
+					  ${EIGEN3_LIBRARIES}
+					  #{OMPL_LIBRARIES}
+					  )
+
+target_link_libraries(get_samples_diff_levels
+					  samplerLib
+					  problemDefinitionLib
+					  ${EIGEN3_LIBRARIES}
+					  #{OMPL_LIBRARIES}
+					  )
+
+target_link_libraries(get_samples_diff_sample_no
 					  samplerLib
 					  problemDefinitionLib
 					  ${EIGEN3_LIBRARIES}
