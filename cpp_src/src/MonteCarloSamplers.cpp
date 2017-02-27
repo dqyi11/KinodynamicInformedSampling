@@ -225,7 +225,7 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
-		const double thresh = 200;
+		const double thresh = 20;
 		// if(steps > thresh || cost > prev_cost)
 		if(steps > thresh || cost > 10*problem().level_set() || grad.norm() < 0.001)
 		{
