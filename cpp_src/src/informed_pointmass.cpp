@@ -35,11 +35,24 @@ public:
     {
         const ob::RealVectorStateSpace::StateType* state_rv =
             state->as<ob::RealVectorStateSpace::StateType>();
-        for (int i=0; i<param.dimensions; i=i+2){
-          if(state_rv->values[i]<-1 || state_rv->values[i]>1)
+        // for (int i=0; i<param.dimensions; i=i+2){
+        //   if(state_rv->values[i]<-1 || state_rv->values[i]>1)
+        //     return true;
+        // }
+        // return false;
+// Narrow Corridor problem
+      for (int i=0; i<param.dimensions; i=i+2)
+      {
+        if (i==0)
+          if(state_rv->values[i]<-0.3 ||  state_rv->values[i]>0.3)
             return true;
-        }
-        return false;
+        else
+          if(state_rv->values[i] < -5 ||  
+            (state_rv->values[i] > -0.05 && state_rv->values[i] < 0.05) || 
+             state_rv->values[i] > 5)
+            return true;
+      }
+      return false;
     }
 };
 
@@ -135,7 +148,7 @@ bounds.setHigh(10);
 space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
 ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
 si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
-si->setStateValidityCheckingResolution(0.03); // 3%
+si->setStateValidityCheckingResolution(0.01); // 3%
 si->setup();
 
 if(MAIN_VERBOSE) std::cout << "Set up the state space!" << std::endl;
@@ -145,11 +158,32 @@ ompl::base::State *start_s = space->allocState();
 ompl::base::State *goal_s = space->allocState();
 for (int i=0; i<param.dimensions; i++)
 {
-  start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -5;
-  goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 5;
-  start_state[i] = -5;
-  goal_state[i] = 5;
+  if (i%2==0) // position
+  {
+    start_state[i] = 0;
+    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
+    goal_state[i] = 0;
+    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+  }
+  else // velocity
+  {
+    start_state[i] = 2;
+    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
+    goal_state[i] = 2;
+    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+  }
 }
+    start_state[0] = -1.5;
+    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = start_state[0];
+    goal_state[0] = 1.5;
+    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = goal_state[0];
+    start_state[2] = 1;
+    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = start_state[2];
+    goal_state[2] = 1;
+    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
+
+std::cout << "MinTime b/w start and goal = " << double_integrator.getMinTime(start_state, goal_state) << std::endl;
+std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
 ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
 ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
 
@@ -179,22 +213,20 @@ auto prob = create_prob_definition(start_state, goal_state, dimension, minval, m
   });
 
 // Set up the sampler
-auto mcmc_s = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-auto rej_s = std::make_shared<RejectionSampler>(prob);
+// auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+auto current_sampler = std::make_shared<RejectionSampler>(prob);
 
 if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
 
-// auto opt = get_geom_opt_obj(si, start_state, goal_state, mcmc_s, batch_size);
-auto opt = get_dimt_opt_ob(si, start_state, goal_state, mcmc_s, batch_size, double_integrator);
-// auto opt = get_dimt_opt_ob(si, start_state, goal_state, rej_s, batch_size, double_integrator);
+// auto opt = get_geom_opt_obj(si, start_state, goal_state, current_sampler, batch_size);
+auto opt = get_dimt_opt_ob(si, start_state, goal_state, current_sampler, batch_size, double_integrator);
 
 opt->setCostThreshold(ob::Cost(1.51));
 pdef->setOptimizationObjective(opt);
 
 if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
 
-auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, mcmc_s, batch_size));
-// auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, rej_s, batch_size));
+auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, current_sampler, batch_size));
 
 if(MAIN_VERBOSE) std::cout << "Created the informed ompl sampler!" << std::endl;
 
@@ -210,7 +242,7 @@ planner->setup();
 if(MAIN_VERBOSE) std::cout << "Set up Informed RRT* planner!" << std::endl;
 
 // Run planner
-ob::PlannerStatus solved = planner->solve(100.0);
+ob::PlannerStatus solved = planner->solve(15.0);
 
 if(MAIN_VERBOSE) std::cout << "Planner solved!" << std::endl;
 
