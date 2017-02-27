@@ -213,8 +213,9 @@ auto prob = create_prob_definition(start_state, goal_state, dimension, minval, m
   });
 
 // Set up the sampler
-// auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-auto current_sampler = std::make_shared<RejectionSampler>(prob);
+auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+// auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
+// auto current_sampler = std::make_shared<RejectionSampler>(prob);
 
 if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
 

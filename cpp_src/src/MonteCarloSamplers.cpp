@@ -228,7 +228,10 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 		if(steps > thresh)
 		{
 			if(VERBOSE) std::cout << "Restarting!" << std::endl;
-			return grad_descent(alpha);
+			// recursing gives segfaults so just change the start position instead
+			// return grad_descent(alpha); 
+			start = MonteCarloSampler::get_random_sample();
+			steps = 0;
 		}
 	}
 
