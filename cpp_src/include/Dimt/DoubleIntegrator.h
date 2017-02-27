@@ -416,10 +416,6 @@ public:
 	 //        std::cout << state2.row(i) << " ";
 	 //    }
 	 //    std::cout << "]" << std::endl;
-
-
-
-
 		const Vector distances = state2.template head<dof>() - state1.template head<dof>();
 		double minTime = 0.0;
 		int limitDof = -1; // DOF for which the min time but not the infeasible interval has been calculated yet
