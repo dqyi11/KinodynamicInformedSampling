@@ -210,7 +210,8 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 {
 	VectorXd start = MonteCarloSampler::get_random_sample();
 	double cost = problem().get_cost(start);
-
+	double prev_cost = cost;
+	
 	int steps = 0;
 	while(cost > problem().level_set())
 	{
@@ -224,8 +225,9 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
-		const double thresh = 20;
-		if(steps > thresh)
+		const double thresh = 200;
+		// if(steps > thresh || cost > prev_cost)
+		if(steps > thresh || cost > 10*problem().level_set() || grad.norm() < 0.001)
 		{
 			if(VERBOSE) std::cout << "Restarting!" << std::endl;
 			// recursing gives segfaults so just change the start position instead
@@ -233,6 +235,7 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 			start = MonteCarloSampler::get_random_sample();
 			steps = 0;
 		}
+		prev_cost = cost;
 	}
 
 	return start;
