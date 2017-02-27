@@ -62,6 +62,7 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
 		std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
 		std::cout << "\t -rej - Boolean (0,1)" << std::endl;
         std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
+        std::cout << "\t -dimthrs - Boolean(0,1)" << std::endl;
 		std::cout << "\t -filename - Filename to save the samples to" << std::endl;
 		std::cout << "________________________________________________" << std::endl;
 		return std::make_tuple(false, std::vector<int>{});
@@ -104,7 +105,13 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
         if(cmdOptionExists(argv, argv+argc, "-ghrej"))
             args.push_back(atoi(getCmdOption(argv, argv+argc, "-ghrej")));
         else
-            args.push_back(1); // Default to run rej
+            args.push_back(1); // Default to run ghrej
+
+        // Get the boolean to determine if we run dimt hierarchical rejection sampling
+        if(cmdOptionExists(argv, argv+argc, "-dimthrs"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-dimthrs")));
+        else
+            args.push_back(1); // Default to run dimthrs
 
     	return std::make_tuple(true, args);
     }
@@ -146,7 +153,8 @@ int main(int argc, char * argv[])
 	bool run_hmc = (args[2] == 1) ? true : false;
 	bool run_mcmc = (args[3] == 1) ? true : false;
 	bool run_rej = (args[4] == 1) ? true : false;
-    	bool run_ghrej = (args[5] == 1) ? true : false;
+    bool run_ghrej = (args[5] == 1) ? true : false;
+    bool run_dimthrs = (args[6] == 1) ? true : false;
 
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
@@ -195,13 +203,13 @@ int main(int argc, char * argv[])
 		HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
 		std::cout << "Running HMC Sampling..." << std::endl;
 		hmc_samples = hmc_s.sample(no_samples, duration);
-                if(time) 
+                if(time)
                 {
                 	printTime(duration);
 		}
 		std::cout << "Running HMC2 Sampling..." << std::endl;
                 hmc_samples2 = hmc_s.sample_batch_memorized(no_samples, duration);
-                if(time) 
+                if(time)
                 {
                 	printTime(duration);
 		}
@@ -214,7 +222,7 @@ int main(int argc, char * argv[])
 		MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
 		std::cout << "Running MCMC Sampling..." << std::endl;
 		mcmc_samples = mcmc_s.sample(no_samples, duration);
-                if(time) 
+                if(time)
                 {
                 	printTime(duration);
 		}
@@ -226,31 +234,52 @@ int main(int argc, char * argv[])
 		RejectionSampler rej_s = RejectionSampler(prob);
 		std::cout << "Running Rejection Sampling..." << std::endl;
 		rej_samples = rej_s.sample(no_samples, duration);
-                if(time) 
-                {
-                	printTime(duration);
+        if(time)
+        {
+        	printTime(duration);
 		}
 	}
 
-    	MatrixXd ghrej_samples;
-    	if(run_ghrej)
-    	{
-        	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
-        	                                               state_max, level_set,
-        	[dimt, start_state, goal_state](const VectorXd& state)
-        	{
-        	    return (start_state - state).norm() + (goal_state - state).norm();
-        	});
+	MatrixXd ghrej_samples;
+	if(run_ghrej)
+	{
+        ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
+                                                       state_max, level_set,
+        [dimt, start_state, goal_state](const VectorXd& state)
+        {
+            return (start_state - state).norm() + (goal_state - state).norm();
+        });
 
-        	GeometricHierarchicalRejectionSampler ghrej_s =
-        	    GeometricHierarchicalRejectionSampler(geo_prob);
-        	std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-        	ghrej_samples = ghrej_s.sample(no_samples, duration);
-                if(time) 
-                {
-                	printTime(duration);
-		}
-    	}
+        GeometricHierarchicalRejectionSampler ghrej_s =
+            GeometricHierarchicalRejectionSampler(geo_prob);
+        std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
+        ghrej_samples = ghrej_s.sample(no_samples, duration);
+        if(time)
+        {
+        	printTime(duration);
+	    }
+	}
+
+    MatrixXd dimthrs_samples;
+    if(run_dimthrs)
+    {
+        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+        for (unsigned int i = 0; i < 1; ++i)
+        {
+            maxVelocities1[i] = 10;
+            maxAccelerations1[i] = param.a_max;
+        }
+        DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+
+        DimtHierarchicalRejectionSampler dimthrs_s(prob, double_integrator_1dof);
+        std::cout << "Running DIMT HRS..." << std::endl;
+        dimthrs_samples = dimthrs_s.sample(no_samples, duration);
+        if(time)
+        {
+            printTime(duration);
+        }
+
+    }
 
 	if(save)
 	{
