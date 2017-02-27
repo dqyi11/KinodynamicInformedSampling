@@ -2,8 +2,6 @@
 #pragma once
 
 #include <iostream>
-#include <chrono>
-using namespace std::chrono;
 
 // Eigen namespace
 #include <Eigen/Dense>
@@ -37,7 +35,7 @@ public:
 	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
-	virtual MatrixXd sample(const int& no_samples, const bool& time) const = 0;
+	virtual MatrixXd sample(const int& no_samples, high_resolution_clock::duration& duration) = 0;
 
 	///
 	/// Surf down the cost function to get to the levelset
@@ -159,9 +157,9 @@ public:
 	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
-	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
+	virtual MatrixXd sample(const int& no_samples, high_resolution_clock::duration& duration);
 
-        virtual MatrixXd sample_batch_memorized(const int& no_samples, const bool& time);
+        virtual MatrixXd sample_batch_memorized(const int& no_samples, high_resolution_clock::duration& duration);
         virtual VectorXd sample_memorized();
 
 private:
@@ -205,7 +203,7 @@ public:
 	/// @param time Boolean that determines if the time to run the proccess is displayed
 	/// @return A series of samples of shape (number of samples, sample dimension)
 	///
-	virtual MatrixXd sample(const int& no_samples, const bool& time) const override;
+	virtual MatrixXd sample(const int& no_samples, high_resolution_clock::duration& duration);
 
 	///
 	/// Get Sigma for sampling the step
