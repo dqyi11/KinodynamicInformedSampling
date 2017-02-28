@@ -116,6 +116,11 @@ private:
 	/// @return Final cost of the aggregation
 	///
 	virtual double get_cost(const double &cost) const { return cost; }
+
+protected:
+
+    /// Dimension of the space
+    uint dimension_;
 };
 
 ///
@@ -135,9 +140,12 @@ public:
         // Get the limits of the state
         std::tie(min_, max_) = problem.state_limits();
 
-        // // Set up the random number generator
+        // Set up the random number generator
         std::random_device rd;
         gen_ = std::mt19937(rd());
+
+        // Figure out the dimension. For Geometric it is the size of the space
+        dimension_ = problem.start_state().size();
     }
 
 private:
@@ -217,6 +225,9 @@ public:
         // Set up the random number generator
         std::random_device rd;
         gen_ = std::mt19937(rd());
+
+        // Figure out the dimension. For DIMT it is the number of joints.
+        dimension_ = param.dof;
     }
 
 private:
