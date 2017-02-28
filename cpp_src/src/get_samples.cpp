@@ -114,6 +114,12 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
             args.push_back(atoi(getCmdOption(argv, argv+argc, "-dimthrs")));
         else
             args.push_back(1); // Default to run dimthrs
+        
+        // Get the boolean to determine if we run dimt hierarchical rejection sampling
+        if(cmdOptionExists(argv, argv+argc, "-gibbs"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-gibbs")));
+        else
+            args.push_back(1); // Default to run dimthrs
 
         // Get the boolean to determine if we run dimt hierarchical rejection sampling
         if(cmdOptionExists(argv, argv+argc, "-gibbs"))
