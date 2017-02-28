@@ -13,6 +13,7 @@ using Eigen::MatrixXd;
 #include "Dimt/Dimt.h"
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
+#include <Sampler/HitAndRun.h>
 
 //
 // From stackoverflow:
@@ -63,6 +64,7 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
 		std::cout << "\t -rej - Boolean (0,1)" << std::endl;
         std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
         std::cout << "\t -dimthrs - Boolean(0,1)" << std::endl;
+        std::cout << "\t -gibbs - Boolean(0,1)" << std::endl;
 		std::cout << "\t -filename - Filename to save the samples to" << std::endl;
 		std::cout << "________________________________________________" << std::endl;
 		return std::make_tuple(false, std::vector<int>{});
@@ -112,6 +114,18 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
             args.push_back(atoi(getCmdOption(argv, argv+argc, "-dimthrs")));
         else
             args.push_back(1); // Default to run dimthrs
+        
+        // Get the boolean to determine if we run dimt hierarchical rejection sampling
+        if(cmdOptionExists(argv, argv+argc, "-gibbs"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-gibbs")));
+        else
+            args.push_back(1); // Default to run dimthrs
+
+        // Get the boolean to determine if we run dimt hierarchical rejection sampling
+        if(cmdOptionExists(argv, argv+argc, "-gibbs"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-gibbs")));
+        else
+            args.push_back(1); // Default to run dimthrs
 
     	return std::make_tuple(true, args);
     }
@@ -153,8 +167,9 @@ int main(int argc, char * argv[])
 	bool run_hmc = (args[2] == 1) ? true : false;
 	bool run_mcmc = (args[3] == 1) ? true : false;
 	bool run_rej = (args[4] == 1) ? true : false;
-    bool run_ghrej = (args[5] == 1) ? true : false;
-    bool run_dimthrs = (args[6] == 1) ? true : false;
+  bool run_ghrej = (args[5] == 1) ? true : false;
+  bool run_dimthrs = (args[6] == 1) ? true : false;
+  bool run_gibbs = (args[7] == 1) ? true : false;
 
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
@@ -260,30 +275,50 @@ int main(int argc, char * argv[])
 	    }
 	}
 
-    MatrixXd dimthrs_samples;
-    if(run_dimthrs)
-    {
-        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-        for (unsigned int i = 0; i < 1; ++i)
-        {
-            maxVelocities1[i] = 10;
-            maxAccelerations1[i] = param.a_max;
-        }
-        DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+  MatrixXd dimthrs_samples;
+  if(run_dimthrs)
+  {
+      DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+      for (unsigned int i = 0; i < 1; ++i)
+      {
+          maxVelocities1[i] = 10;
+          maxAccelerations1[i] = param.a_max;
+      }
+      DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-        DimtHierarchicalRejectionSampler dimthrs_s(prob, double_integrator_1dof);
-        std::cout << "Running DIMT HRS..." << std::endl;
-        dimthrs_samples = dimthrs_s.sample(no_samples, duration);
-        if(time)
-        {
-            printTime(duration);
-        }
+      DimtHierarchicalRejectionSampler dimthrs_s(prob, double_integrator_1dof);
+      std::cout << "Running DIMT HRS..." << std::endl;
+      dimthrs_samples = dimthrs_s.sample(no_samples, duration);
+      if(time)
+      {
+          printTime(duration);
+      }
 
-    }
+  }
+
+  MatrixXd gibbs_samples;
+  if(run_gibbs)
+  {
+      DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+      for (unsigned int i = 0; i < 1; ++i)
+      {
+          maxVelocities1[i] = 10;
+          maxAccelerations1[i] = param.a_max;
+      }
+      DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+
+      GibbsSampler gibbs_s = GibbsSampler(prob);
+      std::cout << "Running Gibbs Sampler..." << std::endl;
+      gibbs_samples = gibbs_s.sample(no_samples, duration);
+      if(time)
+      {
+        printTime(duration);
+      }
+  }
 
 	if(save)
 	{
-                std::cout << "START SAVING" << std::endl;
+        std::cout << "START SAVING" << std::endl;
 		if(run_hmc)
 		{
 			std::ofstream hmc_file(filename + "_hmc.log");
@@ -329,18 +364,31 @@ int main(int argc, char * argv[])
 			}
 			rej_file.close();
 		}
-        if(run_ghrej)
+    if(run_ghrej)
+    {
+      std::ofstream ghrej_file(filename + "_ghrej.log");
+      if (ghrej_file.is_open())
+      {
+        for(int i = 0; i < ghrej_samples.rows(); i++)
         {
-            std::ofstream ghrej_file(filename + "_ghrej.log");
-            if (ghrej_file.is_open())
-            {
-                for(int i = 0; i < ghrej_samples.rows(); i++)
-                {
-                    ghrej_file << ghrej_samples.row(i) << std::endl;
-                }
-            }
-            ghrej_file.close();
+            ghrej_file << ghrej_samples.row(i) << std::endl;
         }
+ 	    }
+      ghrej_file.close();
+    }
+		if(run_gibbs)
+    {
+      std::ofstream gibbs_file(filename + "_gibbs.log");
+      if (gibbs_file.is_open())
+      {
+          for(int i = 0; i < gibbs_samples.rows(); i++)
+          {
+            gibbs_file << gibbs_samples.row(i) << std::endl;
+          }
+      }
+      gibbs_file.close();
+    }
+
 
 		std::cout << "Saved samples and costs to " << filename << std::endl;
 	}

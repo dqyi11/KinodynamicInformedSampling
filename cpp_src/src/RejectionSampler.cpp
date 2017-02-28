@@ -94,7 +94,7 @@ MatrixXd HierarchicalRejectionSampler::sample(const int& no_samples, high_resolu
 	while(curr_no_samples < no_samples)
 	{
 		VectorXd sample(problem().start_state().size());
-		HRS(0, problem().start_state().size() - 1, sample);
+		HRS(0, dimension_ - 1, sample);
 
 		if(problem().is_in_level_set(sample))
 		{
@@ -229,8 +229,7 @@ double DimtHierarchicalRejectionSampler::calculate_leaf(const VectorXd &x1,
                                                         const VectorXd &x2,
                                                         const int &i) const
 {
-    std::cout << x1.segment(i, i+1);
-    return double_integrator_1dof_.getMinTime(x1.segment(i, i+1), x2.segment(i, i+1));
+    return double_integrator_1dof_.getMinTime(x1.segment(i, 2), x2.segment(i, 2));
 }
 
 ///

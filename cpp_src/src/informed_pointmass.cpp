@@ -11,6 +11,7 @@
 #include <ProblemDefinition/ProblemDefinition.h>
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
+#include <Sampler/HitAndRun.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
 #include <OmplWrappers/MyInformedRRTstar.h>
@@ -44,7 +45,7 @@ public:
       for (int i=0; i<param.dimensions; i=i+2)
       {
         if (i==0)
-          if(state_rv->values[i]<-0.3 ||  state_rv->values[i]>0.3)
+          if(state_rv->values[i]<-0.5 ||  state_rv->values[i]>0.5)
             return true;
         else
           if(state_rv->values[i] < -5 ||  
@@ -137,6 +138,7 @@ if(MAIN_VERBOSE) std::cout << "Created the double integrator model!" << std::end
 const int dimension = param.dimensions; const double minval = -10; const double maxval = 10;
 VectorXd start_state(dimension);
 VectorXd goal_state(dimension);
+VectorXd int_state(dimension);
 
 if(MAIN_VERBOSE) std::cout << "Got the start and goal states!" << std::endl;
 
@@ -164,6 +166,7 @@ for (int i=0; i<param.dimensions; i++)
     start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
     goal_state[i] = 0;
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+    int_state[i] = 0;
   }
   else // velocity
   {
@@ -171,6 +174,7 @@ for (int i=0; i<param.dimensions; i++)
     start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
     goal_state[i] = 2;
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+    int_state[i] = 2;
   }
 }
     start_state[0] = -1.5;
@@ -182,7 +186,9 @@ for (int i=0; i<param.dimensions; i++)
     goal_state[2] = 1;
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
 
-std::cout << "MinTime b/w start and goal = " << double_integrator.getMinTime(start_state, goal_state) << std::endl;
+std::cout << "MinTime b/w start and goal = " << 
+double_integrator.getMinTime(start_state, int_state) +
+double_integrator.getMinTime(int_state, goal_state) << std::endl;
 std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
 ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
 ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
@@ -214,6 +220,7 @@ auto prob = create_prob_definition(start_state, goal_state, dimension, minval, m
 
 // Set up the sampler
 auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+// auto current_sampler = std::make_shared<GibbsSampler>(prob); 
 // auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
 // auto current_sampler = std::make_shared<RejectionSampler>(prob);
 

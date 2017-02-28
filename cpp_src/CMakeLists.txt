@@ -39,6 +39,7 @@ add_library(samplerLib
 			 src/MonteCarloSamplers.cpp
 			 src/RejectionSampler.cpp
 			 src/OmplSamplers.cpp
+			 src/HitAndRun.cpp
 			)
 target_link_libraries(samplerLib
 					  problemDefinitionLib
