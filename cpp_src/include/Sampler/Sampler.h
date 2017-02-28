@@ -9,7 +9,7 @@ using Eigen::MatrixXd;
 
 class Sampler
 {
-private:
+protected:
 	ProblemDefinition problem_;
 
 public:
@@ -45,5 +45,5 @@ public:
 	///
 	/// @param level_set The new level_set
 	///
-	void update_level_set(const double& level_set) { problem_.update_level_set(level_set); }
+	virtual void update_level_set(const double& level_set) { problem_.update_level_set(level_set); }
 };

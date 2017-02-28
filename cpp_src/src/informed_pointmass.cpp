@@ -11,6 +11,7 @@
 #include <ProblemDefinition/ProblemDefinition.h>
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
+#include <Sampler/HitAndRun.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
 #include <OmplWrappers/MyInformedRRTstar.h>
@@ -219,6 +220,7 @@ auto prob = create_prob_definition(start_state, goal_state, dimension, minval, m
 
 // Set up the sampler
 auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+// auto current_sampler = std::make_shared<GibbsSampler>(prob); 
 // auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
 // auto current_sampler = std::make_shared<RejectionSampler>(prob);
 
