@@ -114,7 +114,7 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
             args.push_back(atoi(getCmdOption(argv, argv+argc, "-dimthrs")));
         else
             args.push_back(1); // Default to run dimthrs
-        
+
         // Get the boolean to determine if we run dimt hierarchical rejection sampling
         if(cmdOptionExists(argv, argv+argc, "-gibbs"))
             args.push_back(atoi(getCmdOption(argv, argv+argc, "-gibbs")));
@@ -364,31 +364,42 @@ int main(int argc, char * argv[])
 			}
 			rej_file.close();
 		}
-    if(run_ghrej)
-    {
-      std::ofstream ghrej_file(filename + "_ghrej.log");
-      if (ghrej_file.is_open())
-      {
-        for(int i = 0; i < ghrej_samples.rows(); i++)
+        if(run_ghrej)
         {
-            ghrej_file << ghrej_samples.row(i) << std::endl;
-        }
- 	    }
-      ghrej_file.close();
-    }
-		if(run_gibbs)
-    {
-      std::ofstream gibbs_file(filename + "_gibbs.log");
-      if (gibbs_file.is_open())
-      {
-          for(int i = 0; i < gibbs_samples.rows(); i++)
+          std::ofstream ghrej_file(filename + "_ghrej.log");
+          if (ghrej_file.is_open())
           {
-            gibbs_file << gibbs_samples.row(i) << std::endl;
+            for(int i = 0; i < ghrej_samples.rows(); i++)
+            {
+                ghrej_file << ghrej_samples.row(i) << std::endl;
+            }
+     	    }
+          ghrej_file.close();
+        }
+        if(run_dimthrs)
+        {
+            std::ofstream dimthrs_file(filename + "_dimthrs.log");
+            if(dimthrs_file.is_open())
+            {
+                for(int i = 0; i < dimthrs_samples.rows(); i++)
+                {
+                    dimthrs_file << dimthrs_samples.row(i) << std::endl;
+                }
+            }
+            dimthrs_file.close();
+        }
+    	if(run_gibbs)
+        {
+          std::ofstream gibbs_file(filename + "_gibbs.log");
+          if (gibbs_file.is_open())
+          {
+              for(int i = 0; i < gibbs_samples.rows(); i++)
+              {
+                gibbs_file << gibbs_samples.row(i) << std::endl;
+              }
           }
-      }
-      gibbs_file.close();
-    }
-
+          gibbs_file.close();
+        }
 
 		std::cout << "Saved samples and costs to " << filename << std::endl;
 	}

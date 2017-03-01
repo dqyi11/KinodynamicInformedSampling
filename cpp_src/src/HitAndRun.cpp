@@ -2,7 +2,7 @@
 
 const bool VERBOSE = false;
 
-VectorXd GibbsSampler::get_random_sample(double min, double max, const int& dim) 
+VectorXd GibbsSampler::get_random_sample(double min, double max, const int& dim)
 {
 	std::uniform_real_distribution<> dis(min, max);
 	// Updates the member variable of the class as well
@@ -10,20 +10,20 @@ VectorXd GibbsSampler::get_random_sample(double min, double max, const int& dim)
 	return prev_sample_;
 }
 
-MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::duration& duration) 
+MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::duration& duration)
 {
 	// Get the limits of the space
 	VectorXd max_vals, min_vals;
 	const int dim = problem().start_state().size();
 	std::tie(max_vals, min_vals) = problem().state_limits();
-	
+
 	// Run until you get the correct number of samples
 	MatrixXd samples(no_samples, dim + 1);
-	
+
 	// If you want to time the sampling
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	VectorXd sample; 
+	VectorXd sample;
 	unsigned int skip = 0, trys=0;
 	for(int i=0; i<no_samples; i++)
 	{
@@ -44,15 +44,15 @@ MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::dura
 		newsample << sample, problem().get_cost(sample);
 		samples.row(i) = newsample;
 	}
-  
-  high_resolution_clock::time_point t2 = high_resolution_clock::now();
-  duration = t2 - t1;
-  return samples;
-} 
 
-void GibbsSampler::update_level_set(const double& level_set) 
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    duration = t2 - t1;
+    return samples;
+}
+
+void GibbsSampler::update_level_set(const double& level_set)
 {
-	prev_sample_ = problem_.start_state(); 
-	problem_.update_level_set(level_set); 
+	prev_sample_ = problem_.start_state();
+	problem_.update_level_set(level_set);
 	// std::cout << "Updated Level Set" << std::endl;
 }

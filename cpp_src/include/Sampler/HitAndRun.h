@@ -19,19 +19,20 @@ class GibbsSampler: public Sampler
 {
 public:
 	///
-	/// Constructor for Gibbs Sampler 
+	/// Constructor for Gibbs Sampler
 	/// @param problem Problem definition
 	///
 	GibbsSampler(const ProblemDefinition& problem)
 		: Sampler(problem)
-  {
+    {
 		// Set up the random number generator
 		std::random_device rd;
 		gen_ = std::mt19937(rd());
+
 		// Use the start positions as starting point of the algorithm
 		// (This will always be inside the informed subspace)
-		prev_sample_ = problem.start_state(); 
-  }
+		prev_sample_ = problem.start_state();
+    }
 
 	///
 	/// Get a series of samples for the problem space
@@ -47,10 +48,11 @@ public:
 private:
 	std::mt19937 gen_;
 	VectorXd prev_sample_;
+
 	///
 	/// Get one random uniform sample from the space
 	///
 	/// @return Random uniform vector from the space
 	///
-  virtual VectorXd get_random_sample(double min, double max, const int& dim);
+    virtual VectorXd get_random_sample(double min, double max, const int& dim);
 };
