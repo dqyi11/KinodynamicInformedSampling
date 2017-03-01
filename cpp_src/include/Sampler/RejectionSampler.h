@@ -6,6 +6,7 @@
 using namespace std::chrono;
 #include <tuple>
 #include <math.h>
+#include <utility>
 
 // Eigen namespace
 #include <Eigen/Dense>
@@ -78,7 +79,7 @@ private:
 	/// @param i Index of the degree of freedom
 	/// @return Cost to go from x1 to x2
 	///
-	virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) const = 0;
+	virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) = 0;
 
     ///
     /// Combines the cost of two states
@@ -157,7 +158,7 @@ private:
 	/// @param i Index of the degree of freedom
 	/// @return Cost to go from x1 to x2
 	///
-	virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) const override;
+	virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) override;
 
     ///
     /// Combines the cost of two states
@@ -217,7 +218,10 @@ public:
     ///
     DimtHierarchicalRejectionSampler(const ProblemDefinition &problem,
                                      const DoubleIntegrator<1> double_integrator_1dof)
-        : HierarchicalRejectionSampler(problem), double_integrator_1dof_(double_integrator_1dof)
+        : HierarchicalRejectionSampler(problem),
+          double_integrator_1dof_(double_integrator_1dof),
+          infeasible_intervals_(param.dof, std::make_pair(0.0, 0.0)),
+          costs_(param.dof, 0.0)
     {
         // Get the limits of the state
         std::tie(min_, max_) = problem.state_limits();
@@ -239,7 +243,7 @@ private:
     /// @param i Index of the degree of freedom
     /// @return Cost to go from x1 to x2
     ///
-    virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) const override;
+    virtual double calculate_leaf(const VectorXd &x1, const VectorXd &x2, const int &i) override;
 
     ///
     /// Combines the cost of two states
@@ -287,4 +291,10 @@ private:
 
     // Double Integrator Model
     DoubleIntegrator<1> double_integrator_1dof_;
+
+    // Infeasible time intervals
+    std::vector<std::pair<double, double>> infeasible_intervals_;
+
+    // Costs for the dofs
+    std::vector<double> costs_;
 };

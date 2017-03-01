@@ -44,6 +44,7 @@
 #include <array>
 #include <cmath>
 #include <Eigen/Core>
+#include <tuple>
 
 template <int dof>
 class DoubleIntegrator {
@@ -400,7 +401,7 @@ public:
 	}
 
 	double getMinTime(const StateVector &state1, const StateVector &state2,
-	                         double maxTime = std::numeric_limits<double>::infinity()) const
+	                  double maxTime = std::numeric_limits<double>::infinity()) const
 	{
 
 		// std::cout << "Min time state1: [";
@@ -430,6 +431,25 @@ public:
 		assert(minTime < std::numeric_limits<double>::infinity());
 		return minTime;
 	}
+
+    std::tuple<double, double, double>
+    getMinTimeAndIntervals(const StateVector &state1, const StateVector &state2,
+                      double maxTime = std::numeric_limits<double>::infinity()) const
+    {
+        const Vector distances = state2.template head<dof>() - state1.template head<dof>();
+        double minTime = 0.0;
+        int limitDof = -1; // DOF for which the min time but not the infeasible interval has been calculated yet
+        std::pair<double, double> infeasibleIntervals[dof];
+        Vector firstAccelerations;
+
+        for(unsigned int i = 0; i < dof && minTime < maxTime; ++i) {
+            const double time = getMinTime1D(state1[dof+i], state2[dof+i], distances[i], maxAccelerations_[i], maxVelocities_[i], maxTime, firstAccelerations[i]);
+            adjustForInfeasibleIntervals(i, time, maxTime, state1.template tail<dof>(), state2.template tail<dof>(), distances, firstAccelerations, maxAccelerations_, maxVelocities_,
+                                         minTime, infeasibleIntervals, limitDof);
+        }
+        assert(minTime < std::numeric_limits<double>::infinity());
+        return std::make_tuple(minTime, std::get<0>(infeasibleIntervals[limitDof]), std::get<1>(infeasibleIntervals[limitDof]));
+    }
 
 	Trajectory getTrajectory(const StateVector &state1, const StateVector &state2, double time) const
 	{

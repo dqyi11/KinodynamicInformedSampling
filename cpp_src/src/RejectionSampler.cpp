@@ -170,7 +170,7 @@ HierarchicalRejectionSampler::HRS(const int &start_index, const int &end_index, 
 ///
 double GeometricHierarchicalRejectionSampler::calculate_leaf(const VectorXd &x1,
 															 const VectorXd &x2,
-															 const int &i) const
+															 const int &i)
 {
 	return std::pow(x1[i] - x2[i], 2);
 }
@@ -227,11 +227,57 @@ void GeometricHierarchicalRejectionSampler::sample_leaf(VectorXd &sample,
 ///
 double DimtHierarchicalRejectionSampler::calculate_leaf(const VectorXd &x1,
                                                         const VectorXd &x2,
-                                                        const int &i) const
+                                                        const int &i)
 {
-    return double_integrator_1dof_.getMinTime(x1.segment(i, 2), x2.segment(i, 2));
+    const auto state1 = x1.segment(i, 2);
+    const auto state2 = x2.segment(i, 2);
+    const Eigen::Matrix<double, 1, 1> distances = state2.template head<1>() - state1.template head<1>();
+    Eigen::Matrix<double, 1, 1> firstAccelerations;
+
+    double cost, infeasible_min, infeasible_max;
+    std::tie(cost, infeasible_min, infeasible_max) =
+        double_integrator_1dof_.getMinTimeAndIntervals(x1.segment(i, 2), x2.segment(i, 2));
+
+    infeasible_intervals_[i] = std::make_pair(infeasible_min, infeasible_max);
+
+    costs_[i] = cost;
+
+    return costs_[i];
 }
 
+std::pair<size_t, double> max_in_range(const std::vector<double> &costs,
+                                       const size_t start,
+                                       const size_t end)
+{
+    double max = -1;
+    size_t index = -1;
+    for(size_t i = start; i <= end; i++)
+    {
+        if(costs[i] > max)
+        {
+            max = costs[i];
+            index = i;
+        }
+    }
+
+    return std::make_pair(index, max);
+}
+
+std::pair<bool, double> find_infeasible_intervals(const std::vector<std::pair<double,double>> &intervals,
+                                                  const double max_val,
+                                                  const size_t start,
+                                                  const size_t end)
+{
+    for(size_t i = start; i <= end; i++)
+    {
+        if(max_val > std::get<0>(intervals[i]) and max_val < std::get<1>(intervals[i]))
+        {
+            return std::make_pair(true, std::get<1>(intervals[i]));
+        }
+    }
+
+    return std::make_pair(false, max_val);
+}
 ///
 /// Combines the cost of two states
 ///
@@ -252,6 +298,18 @@ double DimtHierarchicalRejectionSampler::combine_costs(const VectorXd &x1,
                                                        const double &c1,
                                                        const double &c2) const
 {
+    // std::cout << "i: " << i << " | j: " << j << " | cost size: " << costs_.size() << std::endl;
+
+    // Find the index and the max value of cost from the costs in the range
+    size_t index;
+    double max_val;
+    std::tie(index, max_val) = max_in_range(costs_, i, j);
+
+    bool is_invalid = true;
+    while(is_invalid)
+    {
+        std::tie(is_invalid, max_val) = find_infeasible_intervals(infeasible_intervals_, max_val, i, j);
+    }
     return std::max(c1, c2);
 }
 
