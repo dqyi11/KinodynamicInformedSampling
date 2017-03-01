@@ -167,9 +167,9 @@ int main(int argc, char * argv[])
 	bool run_hmc = (args[2] == 1) ? true : false;
 	bool run_mcmc = (args[3] == 1) ? true : false;
 	bool run_rej = (args[4] == 1) ? true : false;
-  bool run_ghrej = (args[5] == 1) ? true : false;
-  bool run_dimthrs = (args[6] == 1) ? true : false;
-  bool run_gibbs = (args[7] == 1) ? true : false;
+	bool run_ghrej = (args[5] == 1) ? true : false;
+	bool run_dimthrs = (args[6] == 1) ? true : false;
+	bool run_gibbs = (args[7] == 1) ? true : false;
 
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
@@ -204,8 +204,8 @@ int main(int argc, char * argv[])
 	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
 		[dimt, start_state, goal_state](const VectorXd& state)
 		{
-			return (start_state - state).norm() + (goal_state - state).norm();
-			// return dimt.get_min_time(start_state, goal_state, state);
+			//return (start_state - state).norm() + (goal_state - state).norm();
+			return dimt.get_min_time(start_state, goal_state, state);
 		});
 
 	// Initialize the sampler
@@ -249,76 +249,76 @@ int main(int argc, char * argv[])
 		RejectionSampler rej_s = RejectionSampler(prob);
 		std::cout << "Running Rejection Sampling..." << std::endl;
 		rej_samples = rej_s.sample(no_samples, duration);
-        if(time)
-        {
-        	printTime(duration);
+	        if(time)
+        	{
+        		printTime(duration);
 		}
 	}
 
 	MatrixXd ghrej_samples;
 	if(run_ghrej)
 	{
-        ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
+        	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
                                                        state_max, level_set,
-        [dimt, start_state, goal_state](const VectorXd& state)
-        {
-            return (start_state - state).norm() + (goal_state - state).norm();
-        });
+        	[dimt, start_state, goal_state](const VectorXd& state)
+        	{
+            		return (start_state - state).norm() + (goal_state - state).norm();
+        	});
 
-        GeometricHierarchicalRejectionSampler ghrej_s =
-            GeometricHierarchicalRejectionSampler(geo_prob);
-        std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-        ghrej_samples = ghrej_s.sample(no_samples, duration);
-        if(time)
-        {
-        	printTime(duration);
-	    }
+        	GeometricHierarchicalRejectionSampler ghrej_s =
+            		GeometricHierarchicalRejectionSampler(geo_prob);
+        	std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
+        	ghrej_samples = ghrej_s.sample(no_samples, duration);
+        	if(time)
+        	{
+        		printTime(duration);
+	    	}
 	}
 
-  MatrixXd dimthrs_samples;
-  if(run_dimthrs)
-  {
-      DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-      for (unsigned int i = 0; i < 1; ++i)
-      {
-          maxVelocities1[i] = 10;
-          maxAccelerations1[i] = param.a_max;
-      }
-      DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+	MatrixXd dimthrs_samples;
+	if(run_dimthrs)
+  	{
+		DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+   		for (unsigned int i = 0; i < 1; ++i)
+      		{
+         		maxVelocities1[i] = 10;
+          		maxAccelerations1[i] = param.a_max;
+      		}
+      		DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-      DimtHierarchicalRejectionSampler dimthrs_s(prob, double_integrator_1dof);
-      std::cout << "Running DIMT HRS..." << std::endl;
-      dimthrs_samples = dimthrs_s.sample(no_samples, duration);
-      if(time)
-      {
-          printTime(duration);
-      }
+    		DimtHierarchicalRejectionSampler dimthrs_s(prob, double_integrator_1dof);
+      		std::cout << "Running DIMT HRS..." << std::endl;
+    		dimthrs_samples = dimthrs_s.sample(no_samples, duration);
+     		if(time)
+      		{
+          		printTime(duration);
+      		}
 
-  }
+	}
 
-  MatrixXd gibbs_samples;
-  if(run_gibbs)
-  {
-      DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-      for (unsigned int i = 0; i < 1; ++i)
-      {
-          maxVelocities1[i] = 10;
-          maxAccelerations1[i] = param.a_max;
-      }
-      DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+  	MatrixXd gibbs_samples;
+	if(run_gibbs)
+  	{
+      		DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+ 		for (unsigned int i = 0; i < 1; ++i)
+      		{
+          		maxVelocities1[i] = 10;
+          		maxAccelerations1[i] = param.a_max;
+      		}
+      		DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-      GibbsSampler gibbs_s = GibbsSampler(prob);
-      std::cout << "Running Gibbs Sampler..." << std::endl;
-      gibbs_samples = gibbs_s.sample(no_samples, duration);
-      if(time)
-      {
-        printTime(duration);
-      }
-  }
+    		GibbsSampler gibbs_s = GibbsSampler(prob);
+    		std::cout << "Running Gibbs Sampler..." << std::endl;
+   		gibbs_samples = gibbs_s.sample(no_samples, duration);
+    		if(time)
+      		{
+        		printTime(duration);
+      		}
+  	}
 
 	if(save)
 	{
-        std::cout << "START SAVING" << std::endl;
+    		std::cout << "START SAVING" << std::endl;
 		if(run_hmc)
 		{
 			std::ofstream hmc_file(filename + "_hmc.log");

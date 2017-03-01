@@ -88,15 +88,35 @@ bool ompl::base::MyInformedSampler::sample_full_space(State *statePtr)
 ///
 bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const Cost maxCost)
 {
+	if(started_ == false) // Set the timer when the function is called for the first time
+	{
+		started_ = true;
+		// set time
+		t_start_ = high_resolution_clock::now();
+		// push back zero time and initial cost
+		duration_vec_.push_back(t_start_ - t_start_);
+		cost_vec_.push_back(maxCost.value());	
+	}
+	else
+	{
+		// Measure time and save it with cost
+		t_now_ = high_resolution_clock::now();
+		duration_vec_.push_back(t_now_ - t_start_);
+		cost_vec_.push_back(maxCost.value());	
+	}
+	
+	std::cout << "Time: " << duration_cast<milliseconds>( duration_vec_.back() ).count()
+	<< " Cost: " << cost_vec_.back() << std::endl;
+
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
     if(!same_cost(maxCost.value(), prev_cost_) or sample_index_ >= sample_batch_size_)
 	{
-        std::cout << "Cost: " << maxCost.value();
-        // std::cout << " | Sample Index: " << sample_index_;
-        std::cout << " | Prev cost: " << prev_cost_;
-        // std::cout << " | Sample batch size: " << sample_batch_size_;
-        std::cout << " | Level set: " << sampler_->problem().level_set() << std::endl;
+        // std::cout << "Cost: " << maxCost.value();
+        // // std::cout << " | Sample Index: " << sample_index_;
+        // std::cout << " | Prev cost: " << prev_cost_;
+        // // std::cout << " | Sample batch size: " << sample_batch_size_;
+        // std::cout << " | Level set: " << sampler_->problem().level_set() << std::endl;
 
 		if(maxCost.value() != prev_cost_) sampler_->update_level_set(maxCost.value());
 

@@ -43,7 +43,7 @@ public:
 	///
 	virtual MatrixXd sample(const int& no_samples, high_resolution_clock::duration& duration);
 
-	void update_level_set(const double& level_set) override;
+	virtual void update_level_set(const double& level_set) override;
 
 private:
 	std::mt19937 gen_;
