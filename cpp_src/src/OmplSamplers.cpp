@@ -105,8 +105,8 @@ bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const
 		cost_vec_.push_back(maxCost.value());	
 	}
 	
-	// std::cout << "Time: " << duration_cast<seconds>( duration_vec_.back() ).count()
-	// << "Cost: " << cost_vec_.back() << std::endl;
+	std::cout << "Time: " << duration_cast<milliseconds>( duration_vec_.back() ).count()
+	<< " Cost: " << cost_vec_.back() << std::endl;
 
 	// if the informed subspace has changed or we've used all the samples
 	// in the batch, resample
