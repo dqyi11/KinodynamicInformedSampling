@@ -16,6 +16,7 @@
 // stdlib
 #include <iostream>
 #include <memory>
+#include <vector>
 
 // OMPL
 #include <ompl/base/samplers/InformedStateSampler.h>
@@ -50,6 +51,13 @@ namespace ompl
 
 			// Samples in the batch
 			MatrixXd batch_samples_;
+
+			// Timing stuff
+			high_resolution_clock::time_point t_start_;
+			high_resolution_clock::time_point t_now_;
+			std::vector<high_resolution_clock::duration> duration_vec_;
+			std::vector<double> cost_vec_;
+			bool started_;
 
 			///
 			/// Function to sample a state uniformly from the entire space before you have
@@ -95,7 +103,7 @@ namespace ompl
 				  sampler_(sampler),
 				  sample_batch_size_(sample_batch_size)
 			{
-
+				started_ = false;
 			}
 
 			///
