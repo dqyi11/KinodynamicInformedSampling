@@ -310,7 +310,7 @@ double DimtHierarchicalRejectionSampler::combine_costs(const VectorXd &x1,
     {
         std::tie(is_invalid, max_val) = find_infeasible_intervals(infeasible_intervals_, max_val, i, j);
     }
-    return std::max(c1, c2);
+    return max_val;
 }
 
 ///
@@ -328,4 +328,6 @@ void DimtHierarchicalRejectionSampler::sample_leaf(VectorXd &sample,
 
     sample[dof] = dis1(gen_);
     sample[dof+1] = dis2(gen_);
+
+    // std::cout << "DOF: " << dof << " [ " << sample[dof] << ", " << sample[dof + 1] << " ]" << std::endl;
 }
