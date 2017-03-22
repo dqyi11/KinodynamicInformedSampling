@@ -20,10 +20,15 @@ class GibbsSampler: public Sampler
 public:
 	///
 	/// Constructor for Gibbs Sampler
-	/// @param problem Problem definition
+    ///
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
 	///
-	GibbsSampler(const ProblemDefinition& problem)
-		: Sampler(problem)
+	GibbsSampler(const ompl::base::SpaceInformationPtr& si,
+                 const ompl::base::ProblemDefinitionPtr& problem,
+                 const double level_set)
+		: Sampler(si, problem, level_set)
     {
 		// Set up the random number generator
 		std::random_device rd;
@@ -31,7 +36,7 @@ public:
 
 		// Use the start positions as starting point of the algorithm
 		// (This will always be inside the informed subspace)
-		prev_sample_ = problem.start_state();
+		prev_sample_ = start_state();
     }
 
 	///

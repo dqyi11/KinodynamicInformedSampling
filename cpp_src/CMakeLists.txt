@@ -23,15 +23,6 @@ include_directories(${PROJECT_SOURCE_DIR}/include/eigen-eigen-f562a193118d)
 find_package(OMPL REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 
-# Add library for problem definition class
-add_library(problemDefinitionLib
-			SHARED
-			 src/ProblemDefinition.cpp
-			)
-target_link_libraries(problemDefinitionLib
-					  ${EIGEN3_LIBRARIES}
-					 )
-
 # Add library for sampler class
 add_library(samplerLib
 			SHARED
@@ -42,7 +33,6 @@ add_library(samplerLib
 			 src/HitAndRun.cpp
 			)
 target_link_libraries(samplerLib
-					  problemDefinitionLib
 					  ${EIGEN3_LIBRARIES}
 					  ${OMPL_LIBRARIES}
 					 )
@@ -63,6 +53,7 @@ add_library(omplwrapperLib
 			 src/OmplSamplers.cpp
 			 src/MyOptimizationObjective.cpp
 			 src/MyInformedRRTstar.cpp
+             src/OmplHelpers.cpp
 			)
 target_link_libraries(omplwrapperLib
 					  ${OMPL_LIBRARIES}
@@ -71,28 +62,28 @@ target_link_libraries(omplwrapperLib
 # Link libraries for main file
 target_link_libraries(get_samples
 					  samplerLib
-					  problemDefinitionLib
+                      omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
 
 target_link_libraries(get_samples_batch
 					  samplerLib
-					  problemDefinitionLib
+                      omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
 
 target_link_libraries(get_samples_diff_levels
 					  samplerLib
-					  problemDefinitionLib
+                      omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
 
 target_link_libraries(get_samples_diff_levels_geometry
 					  samplerLib
-					  problemDefinitionLib
+                      omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
@@ -100,7 +91,7 @@ target_link_libraries(get_samples_diff_levels_geometry
 
 target_link_libraries(get_samples_diff_sample_no
 					  samplerLib
-					  problemDefinitionLib
+                      omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
@@ -108,7 +99,6 @@ target_link_libraries(get_samples_diff_sample_no
 target_link_libraries(unit_test
 					  dimtLib
 					  samplerLib
-					  problemDefinitionLib
 					  ${EIGEN3_LIBRARIES}
 					  )
 
@@ -129,7 +119,3 @@ target_link_libraries(informed_sampling_test
 # Informed Pointmass
 add_executable (informed_pointmass src/informed_pointmass.cpp)
 target_link_libraries (informed_pointmass ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} samplerLib omplwrapperLib)
-
-# Informed Pointmass
-add_executable (get_IRRT_star_path src/get_IRRT_star_path.cpp)
-target_link_libraries (get_IRRT_star_path ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} samplerLib omplwrapperLib)

@@ -14,8 +14,8 @@ MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::dura
 {
 	// Get the limits of the space
 	VectorXd max_vals, min_vals;
-	const int dim = problem().start_state().size();
-	std::tie(max_vals, min_vals) = problem().state_limits();
+	const int dim = start_state().size();
+	std::tie(max_vals, min_vals) = state_limits();
 
 	// Run until you get the correct number of samples
 	MatrixXd samples(no_samples, dim + 1);
@@ -39,9 +39,9 @@ MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::dura
 			trys++;
 			if (VERBOSE) std::cout << "Trys:" << trys << " Skip:" << skip << std::endl;
 		}
-		while(!problem().is_in_level_set(sample));
-		VectorXd newsample(problem().start_state().size() + 1);
-		newsample << sample, problem().get_cost(sample);
+		while(!is_in_level_set(sample));
+		VectorXd newsample(start_state().size() + 1);
+		newsample << sample, get_cost(sample);
 		samples.row(i) = newsample;
 	}
 
@@ -52,7 +52,7 @@ MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::dura
 
 void GibbsSampler::update_level_set(const double& level_set)
 {
-	prev_sample_ = problem_.start_state();
-	problem_.update_level_set(level_set);
+	prev_sample_ = start_state();
+	update_level_set(level_set);
 	// std::cout << "Updated Level Set" << std::endl;
 }

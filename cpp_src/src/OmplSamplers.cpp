@@ -69,7 +69,7 @@ bool ompl::base::MyInformedSampler::sample_full_space(State *statePtr)
 {
 	// Get the limits of the space
 	VectorXd max_vals, min_vals;
-	std::tie(max_vals, min_vals) = sampler_->problem().state_limits();
+	std::tie(max_vals, min_vals) = sampler_->state_limits();
 
 	double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
 	for(int i = 0; i < param.dimensions; i++)
@@ -95,16 +95,16 @@ bool ompl::base::MyInformedSampler::sample_informed_space(State *statePtr, const
 		t_start_ = high_resolution_clock::now();
 		// push back zero time and initial cost
 		duration_vec_.push_back(t_start_ - t_start_);
-		cost_vec_.push_back(maxCost.value());	
+		cost_vec_.push_back(maxCost.value());
 	}
 	else
 	{
 		// Measure time and save it with cost
 		t_now_ = high_resolution_clock::now();
 		duration_vec_.push_back(t_now_ - t_start_);
-		cost_vec_.push_back(maxCost.value());	
+		cost_vec_.push_back(maxCost.value());
 	}
-	
+
 	std::cout << "Time: " << duration_cast<milliseconds>( duration_vec_.back() ).count()
 	<< " Cost: " << cost_vec_.back() << std::endl;
 

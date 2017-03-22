@@ -62,6 +62,25 @@ namespace ompl
 				  batch_size_(batch_size)
 			{ }
 
+            ///
+            /// Constructor
+            ///
+            /// @param si Space Information
+            /// @param state_cost_function Cost to go of individual state
+            /// @param motion_cost_function Cost function between two states
+            /// @param informed_sampler Informed sampler
+            ///
+            MyOptimizationObjective(const SpaceInformationPtr& si,
+                                    const double& batch_size,
+                                    const StateCostFxn& state_cost_function,
+                                    const MotionCostFxn& motion_cost_function)
+                : OptimizationObjective(si),
+                  state_cost_function_(state_cost_function),
+                  motion_cost_function_(motion_cost_function),
+                  batch_size_(batch_size)
+            { }
+
+
 			///
 			/// Return the cost of the state at this point
 			///

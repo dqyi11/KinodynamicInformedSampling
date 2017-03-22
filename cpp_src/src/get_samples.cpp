@@ -7,13 +7,23 @@
 // Eigen
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
+
+// OMPL
+#include <ompl/base/spaces/RealVectorStateSpace.h>
 
 // Internal Libraries
-#include "Sampler/RejectionSampler.h"
-#include "Dimt/Dimt.h"
+#include <Sampler/RejectionSampler.h>
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
 #include <Sampler/HitAndRun.h>
+#include <OmplWrappers/MyOptimizationObjective.h>
+#include <OmplWrappers/OmplHelpers.h>
+#include "DimtStateSpace.h"
+#include "Dimt/DoubleIntegrator.h"
+#include "Dimt/Dimt.h"
+#include "Dimt/Params.h"
+
 
 //
 // From stackoverflow:
@@ -186,27 +196,65 @@ int main(int argc, char * argv[])
 	{
 		start_state(i) = dis(gen);
 		goal_state(i) = dis(gen);
-	}
+    }
 
-	VectorXd state_min(num_dim);
-	state_min << VectorXd::Constant(num_dim, minval);
+    // VectorXd state_min(num_dim);
+    // state_min << VectorXd::constant(num_dim, minval);
 
-	VectorXd state_max(num_dim);
-	state_max << VectorXd::Constant(num_dim, maxval);
+    // VectorXd state_max(num_dim);
+    // state_max << VectorXd::constant(num_dim, maxval);
 
-	double a_max = 1;
-  	Dimt dimt(a_max);
-  	// double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-    	double level_set = 1.4 * (goal_state - start_state).norm();
+    // Initializations
+    Dimt dimt(param.a_max);
+    DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
+    for (unsigned int i = 0; i < param.dof; ++i)
+    {
+        maxVelocities[i] = 10;
+        maxAccelerations[i] = param.a_max;
+    }
+    DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
+
+  	const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
+    // const double level_set = 1.4 * (goal_state - start_state).norm();
 	high_resolution_clock::duration duration;
   	std::cout << "Level set: " << level_set << std::endl;
 
-	ProblemDefinition prob = ProblemDefinition(start_state, goal_state, state_min, state_max, level_set,
-		[dimt, start_state, goal_state](const VectorXd& state)
-		{
-			//return (start_state - state).norm() + (goal_state - state).norm();
-			return dimt.get_min_time(start_state, goal_state, state);
-		});
+    // Construct the state space we are planning in
+    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
+    ompl::base::RealVectorBounds bounds(param.dimensions);
+    bounds.setLow(minval);
+    bounds.setHigh(maxval);
+    space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
+    ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
+    // si->setStateValidityChecker(ompl::base::StateValidityCheckerPtr(new ValidityChecker(si)));
+    // si->setStateValidityCheckingResolution(0.01); // 3%
+    si->setup();
+
+    // Set custom start and goal
+    ompl::base::State *start_s = space->allocState();
+    ompl::base::State *goal_s = space->allocState();
+    for (int i=0; i<param.dimensions; i++)
+    {
+        if (i%2==0) // position
+        {
+            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
+            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+        }
+        else // velocity
+        {
+            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
+            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+        }
+    }
+
+    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
+    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
+
+    ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
+    pdef->setStartAndGoalStates(start, goal);
+
+    auto opt = get_dimt_opt_ob(si, start_state, goal_state, no_samples, double_integrator);
+    pdef->setOptimizationObjective(opt);
 
 	// Initialize the sampler
 	// HMC parameters
@@ -215,18 +263,18 @@ int main(int argc, char * argv[])
 	if (run_hmc)
 	{
 		double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-		HMCSampler hmc_s = HMCSampler(prob, alpha, L, epsilon, sigma, max_steps);
+		HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
 		std::cout << "Running HMC Sampling..." << std::endl;
 		hmc_samples = hmc_s.sample(no_samples, duration);
-                if(time)
-                {
-                	printTime(duration);
+        if(time)
+        {
+            printTime(duration);
 		}
 		std::cout << "Running HMC2 Sampling..." << std::endl;
-                hmc_samples2 = hmc_s.sample_batch_memorized(no_samples, duration);
-                if(time)
-                {
-                	printTime(duration);
+        hmc_samples2 = hmc_s.sample_batch_memorized(no_samples, duration);
+        if(time)
+        {
+            printTime(duration);
 		}
 	}
 
@@ -234,7 +282,7 @@ int main(int argc, char * argv[])
 	if (run_mcmc)
 	{
 		double sigma = 5; int max_steps = 20; double alpha = 0.5;
-		MCMCSampler mcmc_s = MCMCSampler(prob, alpha, sigma, max_steps);
+		MCMCSampler mcmc_s = MCMCSampler(si, pdef, level_set, alpha, sigma, max_steps);
 		std::cout << "Running MCMC Sampling..." << std::endl;
 		mcmc_samples = mcmc_s.sample(no_samples, duration);
                 if(time)
@@ -246,7 +294,7 @@ int main(int argc, char * argv[])
 	MatrixXd rej_samples;
 	if(run_rej)
 	{
-		RejectionSampler rej_s = RejectionSampler(prob);
+		RejectionSampler rej_s = RejectionSampler(si, pdef, level_set);
 		std::cout << "Running Rejection Sampling..." << std::endl;
 		rej_samples = rej_s.sample(no_samples, duration);
 	        if(time)
@@ -258,21 +306,21 @@ int main(int argc, char * argv[])
 	MatrixXd ghrej_samples;
 	if(run_ghrej)
 	{
-        	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
-                                                       state_max, level_set,
-        	[dimt, start_state, goal_state](const VectorXd& state)
-        	{
-            		return (start_state - state).norm() + (goal_state - state).norm();
-        	});
+      //   	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
+      //                                                  state_max, level_set,
+      //   	[dimt, start_state, goal_state](const VectorXd& state)
+      //   	{
+      //       		return (start_state - state).norm() + (goal_state - state).norm();
+      //   	});
 
-        	GeometricHierarchicalRejectionSampler ghrej_s =
-            		GeometricHierarchicalRejectionSampler(geo_prob);
-        	std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-        	ghrej_samples = ghrej_s.sample(no_samples, duration);
-        	if(time)
-        	{
-        		printTime(duration);
-	    	}
+      //   	GeometricHierarchicalRejectionSampler ghrej_s =
+      //       		GeometricHierarchicalRejectionSampler(geo_prob);
+      //   	std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
+      //   	ghrej_samples = ghrej_s.sample(no_samples, duration);
+      //   	if(time)
+      //   	{
+      //   		printTime(duration);
+	    	// }
 	}
 
 	MatrixXd dimthrs_samples;
@@ -286,7 +334,7 @@ int main(int argc, char * argv[])
       		}
       		DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-    		DimtHierarchicalRejectionSampler dimthrs_s(prob, double_integrator_1dof);
+    		DimtHierarchicalRejectionSampler dimthrs_s(si, pdef, level_set, double_integrator_1dof);
       		std::cout << "Running DIMT HRS..." << std::endl;
     		dimthrs_samples = dimthrs_s.sample(no_samples, duration);
      		if(time)
@@ -307,7 +355,7 @@ int main(int argc, char * argv[])
       		}
       		DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-    		GibbsSampler gibbs_s = GibbsSampler(prob);
+    		GibbsSampler gibbs_s = GibbsSampler(si, pdef, level_set);
     		std::cout << "Running Gibbs Sampler..." << std::endl;
    		gibbs_samples = gibbs_s.sample(no_samples, duration);
     		if(time)

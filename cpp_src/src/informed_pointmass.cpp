@@ -8,13 +8,13 @@
 #include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 
 #include <Sampler/Sampler.h>
-#include <ProblemDefinition/ProblemDefinition.h>
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
 #include <Sampler/HitAndRun.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
 #include <OmplWrappers/MyInformedRRTstar.h>
+#include <OmplWrappers/OmplHelpers.h>
 
 #include "DimtStateSpace.h"
 #include "Dimt/DoubleIntegrator.h"
@@ -48,75 +48,14 @@ public:
           if(state_rv->values[i]<-0.5 ||  state_rv->values[i]>0.5)
             return true;
         else
-          if(state_rv->values[i] < -5 ||  
-            (state_rv->values[i] > -0.05 && state_rv->values[i] < 0.05) || 
+          if(state_rv->values[i] < -5 ||
+            (state_rv->values[i] > -0.05 && state_rv->values[i] < 0.05) ||
              state_rv->values[i] > 5)
             return true;
       }
       return false;
     }
 };
-
-ProblemDefinition create_prob_definition(const VectorXd& start_state,
-                     const VectorXd& goal_state,
-                     const int& dimension,
-                     const double& minval,
-                     const double& maxval,
-                     const double& level_set,
-                     const CostFxn& costfxn)
-{
-  VectorXd state_min(dimension);
-  state_min << VectorXd::Constant(dimension, minval);
-
-  VectorXd state_max(dimension);
-  state_max << VectorXd::Constant(dimension, maxval);
-
-  return ProblemDefinition(start_state, goal_state, state_min,
-                           state_max, level_set, costfxn);
-}
-
-ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
-                        const VectorXd& start_state,
-                        const VectorXd& goal_state,
-                        const std::shared_ptr<Sampler> sampler,
-                        const double& batch_size)
-{
-  return
-  ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
-    [start_state, goal_state](const VectorXd& state)
-    {
-      return (start_state - state).norm() + (goal_state - state).norm();
-    },
-    [](const VectorXd& s1, const VectorXd& s2)
-    {
-      return (s2 - s1).norm();
-    }));
-}
-
-template <int dof>
-ob::OptimizationObjectivePtr get_dimt_opt_ob(const ob::SpaceInformationPtr &si,
-                                             const VectorXd& start_state,
-                                             const VectorXd& goal_state,
-                                             const std::shared_ptr<Sampler> sampler,
-                                             const double& batch_size,
-                                             const DoubleIntegrator<dof> &di)
-{
-  return
-  ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
-    [start_state, goal_state, di](const VectorXd& state)
-    {
-      std::cout << "Start state size: " << start_state.size() << std::endl;
-      std::cout << "Goal state size: " << goal_state.size() << std::endl;
-      std::cout << "State size: " << state.size() << std::endl;
-      return di.getMinTime(start_state, state) + di.getMinTime(state, goal_state);
-    },
-    [di](const VectorXd& s1, const VectorXd& s2)
-    {
-      // std::cout << "Start: " << s1 << std::endl;
-      // std::cout << "Goal: " << s2 << std::endl;
-      return di.getMinTime(s1, s2);
-    }));
-}
 
 bool MAIN_VERBOSE = true;
 
@@ -186,7 +125,7 @@ for (int i=0; i<param.dimensions; i++)
     goal_state[2] = 1;
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
 
-std::cout << "MinTime b/w start and goal = " << 
+std::cout << "MinTime b/w start and goal = " <<
 double_integrator.getMinTime(start_state, int_state) +
 double_integrator.getMinTime(int_state, goal_state) << std::endl;
 std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
@@ -211,16 +150,10 @@ if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl
 double sigma = 1; int max_steps = 100; double alpha = 1.0; double batch_size = 1000;
 // const double level_set = 100;
 const double level_set = std::numeric_limits<double>::infinity();
-auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
-  [start_state, goal_state, double_integrator](const VectorXd& state)
-  {
-    return double_integrator.getMinTime(start_state, state) +
-           double_integrator.getMinTime(state, goal_state);
-  });
 
 // Set up the sampler
-auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
-// auto current_sampler = std::make_shared<GibbsSampler>(prob); 
+auto current_sampler = std::make_shared<MCMCSampler>(si, pdef, level_set, alpha, sigma, max_steps);
+// auto current_sampler = std::make_shared<GibbsSampler>(prob);
 // auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
 // auto current_sampler = std::make_shared<RejectionSampler>(prob);
 

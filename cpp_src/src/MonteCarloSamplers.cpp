@@ -61,7 +61,7 @@ inline double rand_uni()
 ///
 bool MonteCarloSampler::any_dimensions_in_violation(const VectorXd sample) const
 {
-	const std::tuple<VectorXd, VectorXd> limits = problem().state_limits();
+	const std::tuple<VectorXd, VectorXd> limits = state_limits();
 	const auto min_vals = std::get<0>(limits);
 	const auto max_vals = std::get<1>(limits);
 
@@ -84,12 +84,12 @@ bool MonteCarloSampler::any_dimensions_in_violation(const VectorXd sample) const
 ///
 double MonteCarloSampler::get_energy(const VectorXd& curr_state) const
 {
-    const double cost = problem().get_cost(curr_state);
+    const double cost = get_cost(curr_state);
     // double E_grad = tanh(cost);
     const double E_grad = log(1+log(1+cost));
-    const double E_informed = 100 * sigmoid(cost - problem().level_set());
+    const double E_informed = 100 * sigmoid(cost - level_set());
     double E_region = 0;
-    std::tuple<VectorXd, VectorXd> limits = problem().state_limits();
+    std::tuple<VectorXd, VectorXd> limits = state_limits();
     for(int i=0; i < curr_state.size(); i++)
     {
     	E_region += 100 * sigmoid(std::get<0>(limits)(i) - curr_state(i)); // Lower Limits
@@ -132,9 +132,9 @@ VectorXd MonteCarloSampler::get_random_sample() const
 	std::mt19937 gen(rd());
 	// Get the limits of the space
 	VectorXd max_vals, min_vals;
-	std::tie(max_vals, min_vals) = problem().state_limits();
+	std::tie(max_vals, min_vals) = state_limits();
 
-	int size = problem().space_dimension();
+	int size = space_dimension();
 	VectorXd sample(size);
 	for(int i = 0; i < size; i++)
 	{
@@ -209,16 +209,16 @@ MatrixXd concatenate_matrix_and_vector(const MatrixXd& matrix, const VectorXd& v
 VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 {
 	VectorXd start = MonteCarloSampler::get_random_sample();
-	double cost = problem().get_cost(start);
+	double cost = get_cost(start);
 	double prev_cost = cost;
-	
+
 	int steps = 0;
-	while(cost > problem().level_set())
+	while(cost > level_set())
 	{
-		VectorXd grad = problem().get_grad(start);
+		VectorXd grad = get_grad(start);
 		start = start - alpha * grad;
 
-		cost = problem().get_cost(start);
+		cost = get_cost(start);
 
 		if(VERBOSE) std::cout << cost << std::endl;
 
@@ -227,11 +227,11 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 		// If the number of steps reaches some threshold, start over
 		const double thresh = 20;
 		// if(steps > thresh || cost > prev_cost)
-		if(steps > thresh || cost > 10*problem().level_set() || grad.norm() < 0.001)
+		if(steps > thresh || cost > 10*level_set() || grad.norm() < 0.001)
 		{
 			if(VERBOSE) std::cout << "Restarting!" << std::endl;
 			// recursing gives segfaults so just change the start position instead
-			// return grad_descent(alpha); 
+			// return grad_descent(alpha);
 			start = MonteCarloSampler::get_random_sample();
 			steps = 0;
 		}
@@ -250,15 +250,15 @@ VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
 VectorXd MonteCarloSampler::newton_raphson(const VectorXd& start) const
 {
     VectorXd end = start;
-	double cost = problem().get_cost(end);
+	double cost = get_cost(end);
 
 	int steps = 0;
-    while(cost > problem().level_set())
+    while(cost > level_set())
     {
         double last_cost = cost;
-        VectorXd inv_jacobian = problem().get_inv_jacobian(end);
+        VectorXd inv_jacobian = get_inv_jacobian(end);
         end = end - inv_jacobian * cost;
-		cost = problem().get_cost(end);
+		cost = get_cost(end);
 		steps++;
 
 		// If the number of steps reaches some threshold, start over
@@ -266,7 +266,7 @@ VectorXd MonteCarloSampler::newton_raphson(const VectorXd& start) const
 		if( last_cost - cost < trap_threshold )
 		{
             end = MonteCarloSampler::get_random_sample();
-            cost = problem().get_cost(end);
+            cost = get_cost(end);
 		}
 	}
 
@@ -285,7 +285,7 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 	std::mt19937 gen(rd());
 	std::normal_distribution<double> dis(mean, sigma);
 
-	int size = problem().space_dimension();
+	int size = space_dimension();
 	VectorXd sample(size);
 	for(int i = 0; i < size; i++)
 	{
@@ -297,7 +297,7 @@ VectorXd MonteCarloSampler::sample_normal(const double& mean, const double& sigm
 
 MatrixXd HMCSampler::sample_batch_memorized(const int& no_samples, high_resolution_clock::duration& duration)
 {
-	MatrixXd samples(1, problem().space_dimension() + 1);
+	MatrixXd samples(1, space_dimension() + 1);
 	// If you want to time the sampling
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
@@ -315,18 +315,19 @@ MatrixXd HMCSampler::sample_batch_memorized(const int& no_samples, high_resoluti
 
 VectorXd HMCSampler::sample_memorized()
 {
-        // last sample
-	VectorXd q = VectorXd(problem().start_state().size());
-        for(unsigned int i=0;i<problem().start_state().size();i++)
-        {
-                q[i] = last_sample_[i];
-        }
+    // last sample
+	VectorXd q = VectorXd(start_state().size());
+    for(unsigned int i = 0; i < start_state().size(); i++)
+    {
+        q[i] = last_sample_[i];
+    }
 
-        if(current_step_ < 0 ){
-		VectorXd start = MonteCarloSampler::get_random_sample();
-                //q = newton_raphson(start);
-                q = grad_descent(alpha());
-        }
+    if(current_step_ < 0 )
+    {
+        VectorXd start = MonteCarloSampler::get_random_sample();
+        //q = newton_raphson(start);
+        q = grad_descent(alpha());
+    }
 	current_step_++;
 
 	// Sample the momentum and set up the past and current state and momentum
@@ -337,7 +338,7 @@ VectorXd HMCSampler::sample_memorized()
 	if(VERBOSE) std::cout << "Sampled the momentum" << std::endl;
 
 	// Make a half step for momentum at the beginning
-	VectorXd grad = problem().get_grad(q);
+	VectorXd grad = get_grad(q);
 	if(VERBOSE) std::cout << "Got the gradient" << std::endl;
 
 	// Ensure that the gradient isn't two large
@@ -346,8 +347,8 @@ VectorXd HMCSampler::sample_memorized()
 		if(VERBOSE) std::cout << "WARNING: Gradient too high" << std::endl;
 
 		VectorXd start = MonteCarloSampler::get_random_sample();
-                q = newton_raphson(start);
-                grad = problem().get_grad(q);
+        q = newton_raphson(start);
+        grad = get_grad(q);
 	}
 
 	p = p - epsilon() * grad / 2;
@@ -384,8 +385,8 @@ VectorXd HMCSampler::sample_memorized()
 		q = q_last;
 	}
 
-    VectorXd newsample(problem().start_state().size() + 1);
-	newsample << q, problem().get_cost(q);
+    VectorXd newsample(start_state().size() + 1);
+	newsample << q, get_cost(q);
 
     last_sample_ = newsample;
     if (current_step_ >= steps())
@@ -407,7 +408,7 @@ VectorXd HMCSampler::sample_memorized()
 /// @param time Boolean that determines if the time to run the proccess is displayed
 /// @return A series of samples of shape (number of samples, sample dimension)
 ///
-MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::duration& duration) 
+MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::duration& duration)
 {
 	if(VERBOSE) std::cout << "Number of samples: " << no_samples << std::endl;
 	if(VERBOSE) std::cout << "Surfing" << std::endl;
@@ -415,8 +416,8 @@ MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::durati
 	if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
 
 	// Store the samples
-	MatrixXd samples(1, problem().space_dimension() + 1);
-	samples << q.transpose(), problem().get_cost(q);
+	MatrixXd samples(1, space_dimension() + 1);
+	samples << q.transpose(), get_cost(q);
 
 	int accepted = 0;
 	int rejected = 0;
@@ -440,7 +441,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::durati
 			if(VERBOSE) std::cout << "Sampled the momentum" << std::endl;
 
 			// Make a half step for momentum at the beginning
-			VectorXd grad = problem().get_grad(q);
+			VectorXd grad = get_grad(q);
 			if(VERBOSE) std::cout << "Got the gradient" << std::endl;
 
 			// Ensure that the gradient isn't two large
@@ -482,8 +483,8 @@ MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::durati
 			double alpha = std::min(1.0, std::exp(U_last-U_proposed+K_last-K_proposed));
 			if (rand_uni() <= alpha)
 			{
-				VectorXd newsample(problem().start_state().size() + 1);
-		    	newsample << q, problem().get_cost(q);
+				VectorXd newsample(start_state().size() + 1);
+		    	newsample << q, get_cost(q);
 				samples = concatenate_matrix_and_vector(samples, newsample);
 				accepted++;
 			}
@@ -505,7 +506,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::durati
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
         duration = t2 - t1;
-	
+
 	if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
 
 	return samples;
@@ -522,7 +523,7 @@ MatrixXd HMCSampler::sample(const int& no_samples, high_resolution_clock::durati
 /// @param time Boolean that determines if the time to run the proccess is displayed
 /// @return A series of samples of shape (number of samples, sample dimension)
 ///
-MatrixXd MCMCSampler::sample(const int& no_samples, high_resolution_clock::duration& duration) 
+MatrixXd MCMCSampler::sample(const int& no_samples, high_resolution_clock::duration& duration)
 {
 	if(VERBOSE) std::cout << "Number of samples: " << no_samples << std::endl;
 	if(VERBOSE) std::cout << "Surfing" << std::endl;
@@ -530,8 +531,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, high_resolution_clock::durat
 	if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
 
 	// Store the samples
-	MatrixXd samples(1, problem().space_dimension() + 1);
-	samples << q.transpose(), problem().get_cost(q);
+	MatrixXd samples(1, space_dimension() + 1);
+	samples << q.transpose(), get_cost(q);
 
 	int accepted = 0;
 	int rejected = 0;
@@ -558,8 +559,8 @@ MatrixXd MCMCSampler::sample(const int& no_samples, high_resolution_clock::durat
 			//    // !any_dimensions_in_violation(q_proposed))
             if(prob_proposed / prob_before >= rand_uni())
 			{
-				VectorXd newsample(problem().start_state().size() + 1);
-		    	newsample << q_proposed, problem().get_cost(q_proposed);
+				VectorXd newsample(start_state().size() + 1);
+		    	newsample << q_proposed, get_cost(q_proposed);
 				samples = concatenate_matrix_and_vector(samples, newsample);
 				accepted++;
 				q = q_proposed;
@@ -576,7 +577,7 @@ MatrixXd MCMCSampler::sample(const int& no_samples, high_resolution_clock::durat
 	}
 
 	if(VERBOSE) std::cout << "Number of accepted: " << accepted << std::endl;
-	
+
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	duration = t2 - t1;
 

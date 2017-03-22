@@ -19,24 +19,24 @@ MatrixXd RejectionSampler::sample(const int& no_samples, high_resolution_clock::
 {
 	// Get the limits of the space
 	VectorXd max_vals, min_vals;
-	std::tie(max_vals, min_vals) = problem().state_limits();
+	std::tie(max_vals, min_vals) = state_limits();
 	double max = max_vals(0); double min = min_vals(0);
 
 	// Run until you get the correct number of samples
 	int curr_no_samples = 0;
-	MatrixXd samples(no_samples, problem().start_state().size() + 1);
+	MatrixXd samples(no_samples, start_state().size() + 1);
 
 	// If you want to time the sampling
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	while(curr_no_samples < no_samples)
 	{
-		VectorXd sample = get_random_sample(max, min, problem().start_state().size());
+		VectorXd sample = get_random_sample(max, min, start_state().size());
 
-		if(problem().is_in_level_set(sample))
+		if(is_in_level_set(sample))
 		{
-			VectorXd newsample(problem().start_state().size() + 1);
-			newsample << sample, problem().get_cost(sample);
+			VectorXd newsample(start_state().size() + 1);
+			newsample << sample, get_cost(sample);
 			samples.row(curr_no_samples) = newsample;
 			curr_no_samples++;
 		}
@@ -81,25 +81,25 @@ MatrixXd HierarchicalRejectionSampler::sample(const int& no_samples, high_resolu
 {
 	// Get the limits of the space
 	VectorXd max_vals, min_vals;
-	std::tie(max_vals, min_vals) = problem().state_limits();
+	std::tie(max_vals, min_vals) = state_limits();
 	double max = max_vals(0); double min = min_vals(0);
 
 	// Run until you get the correct number of samples
 	int curr_no_samples = 0;
-	MatrixXd samples(no_samples, problem().start_state().size() + 1);
+	MatrixXd samples(no_samples, start_state().size() + 1);
 
 	// If you want to time the sampling
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	while(curr_no_samples < no_samples)
 	{
-		VectorXd sample(problem().start_state().size());
+		VectorXd sample(start_state().size());
 		HRS(0, dimension_ - 1, sample);
 
-		if(problem().is_in_level_set(sample))
+		if(is_in_level_set(sample))
 		{
-			VectorXd newsample(problem().start_state().size() + 1);
-			newsample << sample, problem().get_cost(sample);
+			VectorXd newsample(start_state().size() + 1);
+			newsample << sample, get_cost(sample);
 			samples.row(curr_no_samples) = newsample;
 			curr_no_samples++;
 		}
@@ -129,11 +129,11 @@ HierarchicalRejectionSampler::HRS(const int &start_index, const int &end_index, 
 
 	if(start_index == end_index)
 	{
-		while(get_cost(c_start) + get_cost(c_goal) > problem().level_set())
+		while(Cost(c_start) + Cost(c_goal) > level_set())
 		{
 			sample_leaf(sample, start_index);
-			c_start = calculate_leaf(problem().start_state(), sample, start_index);
-			c_goal = calculate_leaf(sample, problem().goal_state(), start_index);
+			c_start = calculate_leaf(start_state(), sample, start_index);
+			c_goal = calculate_leaf(sample, goal_state(), start_index);
 		}
 	}
 	else
@@ -142,13 +142,13 @@ HierarchicalRejectionSampler::HRS(const int &start_index, const int &end_index, 
 		double c_dash_start = std::numeric_limits<double>::infinity();
 		double c_dash_goal = std::numeric_limits<double>::infinity();
 
-		while(get_cost(c_start) + get_cost(c_goal) > problem().level_set())
+		while(Cost(c_start) + Cost(c_goal) > level_set())
 		{
 			std::tie(c_start, c_goal) = HRS(start_index, mid_index, sample);
 			std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, end_index, sample);
-			c_start = combine_costs(problem().start_state(), sample, start_index, mid_index,
+			c_start = combine_costs(start_state(), sample, start_index, mid_index,
                                     end_index, c_start, c_dash_start);
-			c_goal = combine_costs(sample, problem().goal_state(), start_index, mid_index,
+			c_goal = combine_costs(sample, goal_state(), start_index, mid_index,
                                    end_index, c_goal, c_dash_goal);
 		}
 	}

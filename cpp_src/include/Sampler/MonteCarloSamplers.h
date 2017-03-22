@@ -17,10 +17,16 @@ public:
 	///
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
-	/// @param problem Problem definition
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
+    /// @param alpha Step size of ggradient descent
 	///
-	MonteCarloSampler(const ProblemDefinition& problem, const double& alpha)
-		: Sampler(problem), alpha_(alpha)
+	MonteCarloSampler(const ompl::base::SpaceInformationPtr& si,
+                      const ompl::base::ProblemDefinitionPtr& problem,
+                      const double level_set,
+                      const double alpha)
+		: Sampler(si, problem, level_set), alpha_(alpha)
 	{ }
 
 	///
@@ -51,7 +57,7 @@ public:
 	/// @param start Starting state
 	/// @return Path to the level set
 	///
-        virtual VectorXd newton_raphson(const VectorXd& start) const;
+    virtual VectorXd newton_raphson(const VectorXd& start) const;
 
     ///
 	/// Get the energy of the state from the cost function
@@ -97,8 +103,6 @@ private:
 	// Learning rate for gradient descent
 	double alpha_;
 
-	//
-
 protected:
 	///
 	/// Function to determine if any of the joint limits are violated
@@ -114,20 +118,27 @@ public:
 	///
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
-	/// @param problem Problem definition
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
 	/// @param alpha Learning rate for gradient descent
 	/// @param L Distance of integration for HMC step
 	/// @param epsilon Integration constant for HMC
 	/// @param sigma Sampling the momentum as a normal distribution
 	/// @param steps Number of steps to run HMC for each chain
 	///
-	HMCSampler(const ProblemDefinition& problem, const double& alpha,
-			   const double& L, const double& epsilon, const double& sigma,
+	HMCSampler(const ompl::base::SpaceInformationPtr& si,
+               const ompl::base::ProblemDefinitionPtr& problem,
+               const double level_set,
+               const double& alpha,
+			   const double& L,
+               const double& epsilon,
+               const double& sigma,
 			   const int& steps)
-		: MonteCarloSampler(problem, alpha), L_(L), epsilon_(epsilon), sigma_(sigma),
+		: MonteCarloSampler(si, problem, level_set, alpha), L_(L), epsilon_(epsilon), sigma_(sigma),
 		  steps_(steps), current_step_(-1)
-	{
-                last_sample_ = VectorXd(problem.start_state().size()+1);
+	    {
+            last_sample_ = VectorXd(start_state().size()+1);
         }
 
 	///
@@ -175,9 +186,10 @@ private:
 	// Number of steps to run HMC
 	double steps_;
 
-        int current_step_;
-        // Last sample
-        VectorXd last_sample_;
+    int current_step_;
+
+    // Last sample
+    VectorXd last_sample_;
 };
 
 class MCMCSampler: public MonteCarloSampler
@@ -186,14 +198,20 @@ public:
 	///
 	/// Constructor for HMC Sampler (calls super class constructor)
 	///
-	/// @param problem Problem definition
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
 	/// @param alpha Learning rate for gradient descent
 	/// @param sigma Sigma for sampling the step
 	/// @param steps Number of steps to run MCMC for each chain
 	///
-	MCMCSampler(const ProblemDefinition& prob, const double& alpha,
-				const double& sigma, const double& steps)
-	: MonteCarloSampler(prob, alpha), sigma_(sigma), steps_(steps)
+	MCMCSampler(const ompl::base::SpaceInformationPtr& si,
+                const ompl::base::ProblemDefinitionPtr& problem,
+                const double level_set,
+                const double alpha,
+				const double sigma,
+                const double steps)
+	: MonteCarloSampler(si, problem, level_set, alpha), sigma_(sigma), steps_(steps)
 	{ }
 
 	///

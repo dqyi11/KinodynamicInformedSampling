@@ -21,12 +21,12 @@ namespace og = ompl::geometric;
 
 // Internal Libraries
 #include <Sampler/Sampler.h>
-#include <ProblemDefinition/ProblemDefinition.h>
 #include <Dimt/Dimt.h>
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
 #include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
+#include <OmplWrappers/OmplHelpers.h>
 #include "Dimt/Params.h"
 
 ///
@@ -50,44 +50,6 @@ std::tuple<VectorXd, VectorXd> get_random_start_and_goal(const int& dimension,
 	}
 
 	return std::make_tuple(start_state, goal_state);
-}
-
-ProblemDefinition create_prob_definition(const VectorXd& start_state,
-										 const VectorXd& goal_state,
-										 const int& dimension,
-										 const double& minval,
-										 const double& maxval,
-										 const double& level_set,
-										 const CostFxn& costfxn)
-{
-	VectorXd state_min(dimension);
-	state_min << VectorXd::Constant(dimension, minval);
-
-	VectorXd state_max(dimension);
-	state_max << VectorXd::Constant(dimension, maxval);
-
-	return ProblemDefinition(start_state, goal_state, state_min,
-							 state_max, level_set, costfxn);
-}
-
-ob::OptimizationObjectivePtr get_geom_opt_obj(const ob::SpaceInformationPtr& si,
-											  const VectorXd& start_state,
-											  const VectorXd& goal_state,
-											  const std::shared_ptr<Sampler> sampler,
-											  const double& batch_size)
-{
-	return
-	ob::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler, batch_size,
-		[start_state, goal_state](const VectorXd& state)
-		{
-			return (start_state - state).norm() + (goal_state - state).norm();
-		},
-		[](const VectorXd& s1, const VectorXd& s2)
-		{
-			// std::cout << "Start Size: " << s1 << std::endl;
-   // 			std::cout << "Goal Size: " << s2 << std::endl;
-			return (s2 - s1).norm();
-		}));
 }
 
 ///
@@ -118,8 +80,8 @@ public:
       		if(state_rv->values[i]<-0.3 ||  state_rv->values[i]>0.3)
       			return true;
       	else
-      		if(state_rv->values[i] < -5 ||  
-      			(state_rv->values[i] > -0.1 && state_rv->values[i] < 0.1) || 
+      		if(state_rv->values[i] < -5 ||
+      			(state_rv->values[i] > -0.1 && state_rv->values[i] < 0.1) ||
       			 state_rv->values[i] > 5)
       			return true;
       }
@@ -176,11 +138,6 @@ int main(int argc, char const *argv[])
 	std::cout << "Goal: " << std::endl << goal_state << std::endl;
 
 	const double level_set = std::numeric_limits<double>::infinity();
-	auto prob = create_prob_definition(start_state, goal_state, dimension, minval, maxval, level_set,
-		[start_state, goal_state](const VectorXd& state)
-		{
-			return (start_state - state).norm() + (goal_state - state).norm();
-		});
 
   	std::cout << "Level set: " << level_set << std::endl;
 
@@ -207,7 +164,7 @@ int main(int argc, char const *argv[])
 
 	// Set up the optimization objective
 	double sigma = 1; int max_steps = 20; double alpha = 1.0; double batch_size = 20;
-	auto current_sampler = std::make_shared<MCMCSampler>(prob, alpha, sigma, max_steps);
+	auto current_sampler = std::make_shared<MCMCSampler>(si, pdef, level_set, alpha, sigma, max_steps);
 	// auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
 	auto opt = get_geom_opt_obj(si, start_state, goal_state, current_sampler, batch_size);
 	opt->setCostThreshold(ob::Cost(1.51));

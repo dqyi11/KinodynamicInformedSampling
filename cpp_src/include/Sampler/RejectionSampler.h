@@ -24,8 +24,17 @@ using Eigen::VectorXd;
 class RejectionSampler: public Sampler
 {
 public:
-	RejectionSampler(const ProblemDefinition &problem)
-		: Sampler(problem)
+    ///
+    /// Constructor
+    ///
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
+    ///
+	RejectionSampler(const ompl::base::SpaceInformationPtr& si,
+                     const ompl::base::ProblemDefinitionPtr& problem,
+                     const double level_set)
+		: Sampler(si, problem, level_set)
 	{ }
 
 	// Only function that you must implement
@@ -41,13 +50,17 @@ public:
 class HierarchicalRejectionSampler: public RejectionSampler
 {
 public:
-	///
-	/// Constructor
-	///
-	/// @param problem Problem Definition
-	///
-	HierarchicalRejectionSampler(const ProblemDefinition &problem)
-		: RejectionSampler(problem)
+    ///
+    /// Constructor
+    ///
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
+    ///
+	HierarchicalRejectionSampler(const ompl::base::SpaceInformationPtr& si,
+                                 const ompl::base::ProblemDefinitionPtr& problem,
+                                 const double level_set)
+		: RejectionSampler(si, problem, level_set)
 	{ }
 
 	///
@@ -116,7 +129,7 @@ private:
 	/// @param cost Cost to get final form of
 	/// @return Final cost of the aggregation
 	///
-	virtual double get_cost(const double &cost) const { return cost; }
+	virtual double Cost(const double &cost) const { return cost; }
 
 protected:
 
@@ -130,23 +143,27 @@ protected:
 class GeometricHierarchicalRejectionSampler: public HierarchicalRejectionSampler
 {
 public:
-	///
-	/// Constructor
-	///
-	/// @param problem Problem Definition
-	///
-	GeometricHierarchicalRejectionSampler(const ProblemDefinition &problem)
-		: HierarchicalRejectionSampler(problem)
+    ///
+    /// Constructor
+    ///
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
+    ///
+	GeometricHierarchicalRejectionSampler(const ompl::base::SpaceInformationPtr& si,
+                                          const ompl::base::ProblemDefinitionPtr& problem,
+                                          const double level_set)
+		: HierarchicalRejectionSampler(si, problem, level_set)
 	{
         // Get the limits of the state
-        std::tie(min_, max_) = problem.state_limits();
+        std::tie(min_, max_) = state_limits();
 
         // Set up the random number generator
         std::random_device rd;
         gen_ = std::mt19937(rd());
 
         // Figure out the dimension. For Geometric it is the size of the space
-        dimension_ = problem.start_state().size();
+        dimension_ = start_state().size();
     }
 
 private:
@@ -195,7 +212,7 @@ private:
 	/// @param cost Cost to get final form of
 	/// @return Final cost of the aggregation
 	///
-	virtual double get_cost(const double &cost) const override { return std::sqrt(cost); }
+	virtual double Cost(const double &cost) const override { return std::sqrt(cost); }
 
     // Random number generator
     std::mt19937 gen_;
@@ -214,17 +231,22 @@ public:
     ///
     /// Constructor
     ///
-    /// @param problem Problem Definition
+    /// @param si Pointer to the space information
+    /// @param problem Problem deficition pointer
+    /// @param level_set Level set of the problem
+    /// @param double_integrator_1dof A 1DOF double integrator model
     ///
-    DimtHierarchicalRejectionSampler(const ProblemDefinition &problem,
+    DimtHierarchicalRejectionSampler(const ompl::base::SpaceInformationPtr& si,
+                                     const ompl::base::ProblemDefinitionPtr& problem,
+                                     const double level_set,
                                      const DoubleIntegrator<1> double_integrator_1dof)
-        : HierarchicalRejectionSampler(problem),
+        : HierarchicalRejectionSampler(si, problem, level_set),
           double_integrator_1dof_(double_integrator_1dof),
           infeasible_intervals_(param.dof, std::make_pair(0.0, 0.0)),
           costs_(param.dof, 0.0)
     {
         // Get the limits of the state
-        std::tie(min_, max_) = problem.state_limits();
+        std::tie(min_, max_) = state_limits();
 
         // Set up the random number generator
         std::random_device rd;
@@ -280,7 +302,7 @@ private:
     /// @param cost Cost to get final form of
     /// @return Final cost of the aggregation
     ///
-    virtual double get_cost(const double &cost) const override { return cost; }
+    virtual double Cost(const double &cost) const override { return cost; }
 
     // Random number generator
     std::mt19937 gen_;
