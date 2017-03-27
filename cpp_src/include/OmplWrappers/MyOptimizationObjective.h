@@ -35,7 +35,7 @@ namespace ompl
 			MotionCostFxn motion_cost_function_;
 
 			// Pointer to informed sampler
-			std::shared_ptr<Sampler> sampler_ptr_;
+			std::shared_ptr<MyInformedSampler> sampler_ptr_;
 
 			// Number of samples to get in a batch
 			double batch_size_;
@@ -51,7 +51,7 @@ namespace ompl
 			/// @param informed_sampler Informed sampler
 			///
 			MyOptimizationObjective(const SpaceInformationPtr& si,
-									const std::shared_ptr<Sampler>& sampler_ptr,
+									const std::shared_ptr<MyInformedSampler>& sampler_ptr,
 									const double& batch_size,
 									const StateCostFxn& state_cost_function,
 									const MotionCostFxn& motion_cost_function)
