@@ -1,6 +1,6 @@
 #include "Sampler/HitAndRun.h"
 
-const bool VERBOSE = false;
+const bool VERBOSE = true;
 
 VectorXd GibbsSampler::get_random_sample(double min, double max, const int& dim)
 {
@@ -37,7 +37,7 @@ MatrixXd GibbsSampler::sample(const int& no_samples, high_resolution_clock::dura
       }
       sample = get_random_sample(min_vals[(i+skip)%dim], max_vals[(i+skip)%dim], (i+skip)%dim);
       trys++;
-      if (VERBOSE) std::cout << "Trys:" << trys << " Skip:" << skip << std::endl;
+      // if (VERBOSE) std::cout << "Trys:" << trys << " Skip:" << skip << std::endl;
     }
     while(!problem().is_in_level_set(sample));
     VectorXd newsample(problem().start_state().size() + 1);
@@ -67,43 +67,55 @@ MatrixXd HitAndRun::sample(const int& no_samples, high_resolution_clock::duratio
   double diag = 0;
   for (unsigned int i=0; i<dim; i++)
     diag = diag + (max_vals[i]-min_vals[i]) * (max_vals[i]-min_vals[i]);
+  diag = std::sqrt(diag);
 
   // Run until you get the correct number of samples
   MatrixXd samples(no_samples, dim + 1);
 
   // Set up RGN
   std::normal_distribution<> norm_dis(0, 1);
-  std::uniform_real_distribution<> uni_dis(-diag, diag);
+  double lamda_upper_bound, lamda_lower_bound;
+  VectorXd dir(dim);
 
   // If you want to time the sampling
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
   VectorXd sample;
-  unsigned int skip = 0, trys=0;
+  int skip = 0, trys = 0;
   for(int i=0; i<no_samples; i++)
   {
-    trys=0;
-    // Sample random direction in S^dim
-    VectorXd dir(dim);
-    double sum=0;
-    for (unsigned int i=0; i<dim; i++)
-      {
-        dir[i] = norm_dis(gen_);
-        sum = sum + dir[i]*dir[i];
-      }
-    dir = dir / sum;
+    trys=-1;
     do
     {
-      if (trys > 10000)
+      if (trys > 10000 || trys == -1)
       {
+        // Sample random direction in S^dim
+        double sum=0;
+        for (unsigned int i=0; i<dim; i++)
+          {
+            dir[i] = norm_dis(gen_);
+            sum = sum + dir[i]*dir[i];
+          }
+        dir = dir / sum;
+        lamda_upper_bound = diag;
+        lamda_lower_bound = -diag;
         skip++;
         trys=0;
       }
       // Generate random sample along dir
+      std::uniform_real_distribution<> uni_dis(lamda_lower_bound, lamda_upper_bound);
       double lamda = uni_dis(gen_);
       sample = prev_sample_ + lamda*dir;
+      if (!problem().is_in_bound(sample))
+      {
+        if (abs(diag - lamda) < abs(-diag - lamda))
+          lamda_upper_bound = lamda;
+        else
+          lamda_lower_bound = lamda;
+      }
       trys++;
-      if (VERBOSE) std::cout << "Trys:" << trys << " Skip:" << skip << std::endl;
+      if (VERBOSE) std::cout << "Current_sample: " << i << " Trys: " << trys << " Skip: " << skip
+                             << " UB:" << lamda_upper_bound << " LB:" << lamda_lower_bound << std::endl;
     }
     while(!problem().is_in_level_set(sample));
     VectorXd newsample(problem().start_state().size() + 1);

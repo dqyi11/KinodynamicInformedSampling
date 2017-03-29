@@ -1,5 +1,5 @@
 clear; clc; close all;
-gibbs = dlmread('test_gibbs.log');
+gibbs = dlmread('test_hitnrun.log');
 rej = dlmread('test_rej.log');
 
 for i = 1:2:(size(gibbs,2)-1)

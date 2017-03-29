@@ -115,7 +115,26 @@ public:
 	/// @param state State to test
 	/// @return Boolean that is true if it is in the level set
 	///
-	virtual bool is_in_level_set(const VectorXd& state) const { return cost_(state) <= level_set_; }
+	virtual bool is_in_level_set(const VectorXd& state) const
+  {
+    if (!is_in_bound(state))
+      return false;
+    return cost_(state) <= level_set_;
+  }
+
+  ///
+	/// Determines if a sample is within the boundaries of the space 
+	///
+	/// @param state State to test
+	/// @return Boolean that is true if it is in the boundaries of the space 
+	///
+	virtual bool is_in_bound(const VectorXd& state) const
+  {
+    for (unsigned int i=0; i<state.size(); i++)
+      if (state(i) > state_max_(i) || state(i) < state_min_(i))
+        return false;
+    return true;
+  }
 
 	///
 	/// Get the gradient of the cost function at a specific state

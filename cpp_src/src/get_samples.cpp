@@ -199,7 +199,7 @@ int main(int argc, char * argv[])
   double a_max = 1;
     Dimt dimt(a_max);
     // double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-      double level_set = 1.4 * (goal_state - start_state).norm();
+      double level_set = 1.6 * (goal_state - start_state).norm();
   high_resolution_clock::duration duration;
     std::cout << "Level set: " << level_set << std::endl;
 
