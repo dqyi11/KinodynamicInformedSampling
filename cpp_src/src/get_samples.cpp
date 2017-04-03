@@ -177,13 +177,13 @@ int main(int argc, char * argv[])
   std::tie(save, filename) = get_filename(argc, argv);
 
   // Create a problem definition
-  int num_dim = 12;
-  double maxval = 25; double minval = -25;
+  int num_dim = 4;
+  double maxval = 10; double minval = -10;
   VectorXd start_state(num_dim);
   VectorXd goal_state(num_dim);
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<double> dis(-25, 25);
+  std::uniform_real_distribution<double> dis(0.3*minval, 0.3*maxval);
   for(int i = 0; i < num_dim; i++)
   {
     start_state(i) = dis(gen);
@@ -199,7 +199,7 @@ int main(int argc, char * argv[])
   double a_max = 1;
     Dimt dimt(a_max);
     // double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-      double level_set = 1.6 * (goal_state - start_state).norm();
+      double level_set = 1.8 * dimt.get_min_time(start_state, goal_state);
   high_resolution_clock::duration duration;
     std::cout << "Level set: " << level_set << std::endl;
 
@@ -210,6 +210,12 @@ int main(int argc, char * argv[])
       return dimt.get_min_time(start_state, goal_state, state);
     });
 
+  ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
+                                                 state_max, level_set,
+                                                 [dimt, start_state, goal_state](const VectorXd& state)
+                                                 {
+                                                   return (start_state - state).norm() + (goal_state - state).norm();
+                                                 });
   // Initialize the sampler
   // HMC parameters
   MatrixXd hmc_samples;
@@ -245,6 +251,18 @@ int main(int argc, char * argv[])
     }
   }
 
+  MatrixXd hitnrun_samples;
+  if(run_hitnrun)
+    {
+      HitAndRun hitnrun_s = HitAndRun(prob);
+      std::cout << "Running Hit and Run Sampler..." << std::endl;
+      hitnrun_samples = hitnrun_s.sample(no_samples, duration);
+      if(time)
+        {
+          printTime(duration);
+        }
+    }
+
   MatrixXd rej_samples;
   if(run_rej)
   {
@@ -260,13 +278,6 @@ int main(int argc, char * argv[])
   MatrixXd ghrej_samples;
   if(run_ghrej)
   {
-          ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
-                                                       state_max, level_set,
-          [dimt, start_state, goal_state](const VectorXd& state)
-          {
-                return (start_state - state).norm() + (goal_state - state).norm();
-          });
-
           GeometricHierarchicalRejectionSampler ghrej_s =
                 GeometricHierarchicalRejectionSampler(geo_prob);
           std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
@@ -304,18 +315,6 @@ int main(int argc, char * argv[])
     GibbsSampler gibbs_s = GibbsSampler(prob);
     std::cout << "Running Gibbs Sampler..." << std::endl;
     gibbs_samples = gibbs_s.sample(no_samples, duration);
-    if(time)
-    {
-      printTime(duration);
-    }
-  }
-
-  MatrixXd hitnrun_samples;
-  if(run_hitnrun)
-  {
-    HitAndRun hitnrun_s = HitAndRun(prob);
-    std::cout << "Running Hit and Run Sampler..." << std::endl;
-    hitnrun_samples = hitnrun_s.sample(no_samples, duration);
     if(time)
     {
       printTime(duration);

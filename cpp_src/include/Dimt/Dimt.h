@@ -55,6 +55,9 @@ public:
 			throw std::invalid_argument(error_msg);
 		}
 
+    if (x1 == xi || x2 == xi)
+      return get_min_time(x1, x2);
+
 		return get_min_time(x1, xi) + get_min_time(xi, x2);
 	}
 

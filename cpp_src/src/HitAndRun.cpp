@@ -1,6 +1,6 @@
 #include "Sampler/HitAndRun.h"
 
-const bool VERBOSE = true;
+const bool VERBOSE = false;
 
 VectorXd GibbsSampler::get_random_sample(double min, double max,
                                          const int& dim) {
@@ -79,9 +79,11 @@ MatrixXd HitAndRun::sample(const int& no_samples,
 
   VectorXd sample;
   int skip = 0, trys = 0;
+  bool retry;
   for (int i = 0; i < no_samples; i++) {
     trys = -1;
     do {
+      retry = false;
       if (trys > 10000 || trys == -1) {
         // Sample random direction in S^dim
         double sum = 0;
@@ -101,17 +103,23 @@ MatrixXd HitAndRun::sample(const int& no_samples,
       double lamda = uni_dis(gen_);
       sample = prev_sample_ + lamda * dir;
       if (!problem().is_in_bound(sample)) {
-        if (abs(diag - lamda) < abs(-diag - lamda))
+        if (lamda > 0)
           lamda_upper_bound = lamda;
         else
           lamda_lower_bound = lamda;
-      }
+        retry = true;
+      } else if (!problem().is_in_level_set(sample))
+        retry = true;
       trys++;
       if (VERBOSE)
         std::cout << "Current_sample: " << i << " Trys: " << trys
                   << " Skip: " << skip << " UB:" << lamda_upper_bound
                   << " LB:" << lamda_lower_bound << std::endl;
-    } while (!problem().is_in_level_set(sample));
+      // if (!problem().is_in_level_set(prev_sample_))
+      //   std::cout << "\nstart_FALSE!!!!!!!!!!!!!!!!!!"  << std::endl;
+      // else
+      //   std::cout << "\nstart_TRUE!!!!!!!" << std::endl;
+    } while (retry);
     VectorXd newsample(problem().start_state().size() + 1);
     prev_sample_ = sample;
     newsample << sample, problem().get_cost(sample);
