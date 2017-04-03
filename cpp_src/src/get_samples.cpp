@@ -177,7 +177,7 @@ int main(int argc, char * argv[])
   std::tie(save, filename) = get_filename(argc, argv);
 
   // Create a problem definition
-  int num_dim = 4;
+  int num_dim = 12;
   double maxval = 10; double minval = -10;
   VectorXd start_state(num_dim);
   VectorXd goal_state(num_dim);
