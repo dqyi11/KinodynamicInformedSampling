@@ -165,11 +165,15 @@ namespace ompl
             double c_start = std::numeric_limits<double>::infinity();
             double c_goal = std::numeric_limits<double>::infinity();
 
+            // std::cout << " [ " << sample[0] << ", " << sample[1] <<  ", " <<
+            //     sample[2] << ", " << sample[3] << " ]" << std::endl;
+
             if(start_index == end_index)
             {
                 while(Cost(c_start) + Cost(c_goal) > getLevelSet())
                 {
                     sampleLeaf(sample, start_index);
+
                     c_start = calculateLeaf(getStartState(), sample, start_index);
                     c_goal = calculateLeaf(sample, getGoalState(), start_index);
                 }
@@ -316,6 +320,7 @@ namespace ompl
 
             return std::make_pair(false, max_val);
         }
+
         ///
         /// Combines the cost of two states
         ///
@@ -336,8 +341,6 @@ namespace ompl
                                                               const double c1,
                                                               const double c2) const
         {
-            // std::cout << "i: " << i << " | j: " << j << " | cost size: " << costs_.size() << std::endl;
-
             // Find the index and the max value of cost from the costs in the range
             size_t index;
             double max_val;
@@ -361,13 +364,13 @@ namespace ompl
         void DimtHierarchicalRejectionSampler::sampleLeaf(Eigen::VectorXd &sample,
                                                           const int dof)
         {
-            std::uniform_real_distribution<double> dis1(min_[dof], max_[dof]);
-            std::uniform_real_distribution<double> dis2(min_[dof + 1], max_[dof + 1]);
+            std::uniform_real_distribution<double> dis1(min_[dof * 2], max_[dof * 2]);
+            std::uniform_real_distribution<double> dis2(min_[dof * 2 + 1], max_[dof * 2 + 1]);
 
-            sample[dof] = dis1(gen_);
-            sample[dof+1] = dis2(gen_);
+            sample[dof * 2] = dis1(gen_);
+            sample[dof * 2 + 1] = dis2(gen_);
 
-            // std::cout << "DOF: " << dof << " [ " << sample[dof] << ", " << sample[dof + 1] << " ]" << std::endl;
+            // std::cout << "DOF: " << dof << " [ " << sample[dof * 2] << ", " << sample[dof * 2 + 1] << " ]" << std::endl;
         }
     } // namespace ompl
 } // namespace base
