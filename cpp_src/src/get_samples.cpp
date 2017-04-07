@@ -3,6 +3,8 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
+#include <chrono>
+using namespace std::chrono;
 
 // Eigen
 #include <Eigen/Dense>
@@ -11,6 +13,7 @@ using Eigen::VectorXd;
 
 // OMPL
 #include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/OptimizationObjective.h>
 
 // Internal Libraries
 #include <Sampler/RejectionSampler.h>
@@ -198,12 +201,6 @@ int main(int argc, char * argv[])
 		goal_state(i) = dis(gen);
     }
 
-    // VectorXd state_min(num_dim);
-    // state_min << VectorXd::constant(num_dim, minval);
-
-    // VectorXd state_max(num_dim);
-    // state_max << VectorXd::constant(num_dim, maxval);
-
     // Initializations
     Dimt dimt(param.a_max);
     DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
@@ -215,7 +212,6 @@ int main(int argc, char * argv[])
     DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
 
   	const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-    // const double level_set = 1.4 * (goal_state - start_state).norm();
 	high_resolution_clock::duration duration;
   	std::cout << "Level set: " << level_set << std::endl;
 
@@ -226,8 +222,6 @@ int main(int argc, char * argv[])
     bounds.setHigh(maxval);
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
-    // si->setStateValidityChecker(ompl::base::StateValidityCheckerPtr(new ValidityChecker(si)));
-    // si->setStateValidityCheckingResolution(0.01); // 3%
     si->setup();
 
     // Set custom start and goal
@@ -253,7 +247,11 @@ int main(int argc, char * argv[])
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    auto opt = get_dimt_opt_ob(si, start_state, goal_state, no_samples, double_integrator);
+    const ompl::base::OptimizationObjectivePtr opt =
+        ompl::base::OptimizationObjectivePtr(new ompl::base::DimtObjective<param.dof>(si,
+                                                                                      start_state,
+                                                                                      goal_state,
+                                                                                      double_integrator));
     pdef->setOptimizationObjective(opt);
 
 	// Initialize the sampler
@@ -263,7 +261,7 @@ int main(int argc, char * argv[])
 	if (run_hmc)
 	{
 		double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-		HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
+		ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
 		std::cout << "Running HMC Sampling..." << std::endl;
 		hmc_samples = hmc_s.sample(no_samples, duration);
         if(time)
@@ -271,7 +269,7 @@ int main(int argc, char * argv[])
             printTime(duration);
 		}
 		std::cout << "Running HMC2 Sampling..." << std::endl;
-        hmc_samples2 = hmc_s.sample_batch_memorized(no_samples, duration);
+        hmc_samples2 = hmc_s.sampleBatchMemorized(no_samples, duration);
         if(time)
         {
             printTime(duration);
@@ -282,24 +280,24 @@ int main(int argc, char * argv[])
 	if (run_mcmc)
 	{
 		double sigma = 5; int max_steps = 20; double alpha = 0.5;
-		MCMCSampler mcmc_s = MCMCSampler(si, pdef, level_set, alpha, sigma, max_steps);
+		ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
 		std::cout << "Running MCMC Sampling..." << std::endl;
 		mcmc_samples = mcmc_s.sample(no_samples, duration);
-                if(time)
-                {
-                	printTime(duration);
+        if(time)
+        {
+            printTime(duration);
 		}
 	}
 
 	MatrixXd rej_samples;
 	if(run_rej)
 	{
-		RejectionSampler rej_s = RejectionSampler(si, pdef, level_set);
+		ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
 		std::cout << "Running Rejection Sampling..." << std::endl;
 		rej_samples = rej_s.sample(no_samples, duration);
-	        if(time)
-        	{
-        		printTime(duration);
+        if(time)
+        {
+        	printTime(duration);
 		}
 	}
 
@@ -328,102 +326,105 @@ int main(int argc, char * argv[])
   	{
 		DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
    		for (unsigned int i = 0; i < 1; ++i)
-      		{
-         		maxVelocities1[i] = 10;
-          		maxAccelerations1[i] = param.a_max;
-      		}
-      		DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+        {
+        	maxVelocities1[i] = 10;
+        	maxAccelerations1[i] = param.a_max;
+        }
+        DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-    		DimtHierarchicalRejectionSampler dimthrs_s(si, pdef, level_set, double_integrator_1dof);
-      		std::cout << "Running DIMT HRS..." << std::endl;
-    		dimthrs_samples = dimthrs_s.sample(no_samples, duration);
-     		if(time)
-      		{
-          		printTime(duration);
-      		}
-
+        ompl::base::DimtHierarchicalRejectionSampler dimthrs_s(si, pdef, level_set, 100, 100, double_integrator_1dof);
+        std::cout << "Running DIMT HRS..." << std::endl;
+        dimthrs_samples = dimthrs_s.sample(no_samples, duration);
+        if(time)
+        {
+        	printTime(duration);
+        }
 	}
 
   	MatrixXd gibbs_samples;
 	if(run_gibbs)
-  	{
-      		DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
- 		for (unsigned int i = 0; i < 1; ++i)
-      		{
-          		maxVelocities1[i] = 10;
-          		maxAccelerations1[i] = param.a_max;
-      		}
-      		DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+    {
+        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+        for (unsigned int i = 0; i < 1; ++i)
+        {
+            maxVelocities1[i] = 10;
+            maxAccelerations1[i] = param.a_max;
+        }
+        DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
 
-    		GibbsSampler gibbs_s = GibbsSampler(si, pdef, level_set);
-    		std::cout << "Running Gibbs Sampler..." << std::endl;
-   		gibbs_samples = gibbs_s.sample(no_samples, duration);
-    		if(time)
-      		{
-        		printTime(duration);
-      		}
-  	}
+        ompl::base::GibbsSampler gibbs_s(si, pdef, level_set, 100, 100);
+        std::cout << "Running Gibbs Sampler..." << std::endl;
+        gibbs_samples = gibbs_s.sample(no_samples, duration);
+        if(time)
+        {
+            printTime(duration);
+        }
+    }
 
-	if(save)
-	{
-    		std::cout << "START SAVING" << std::endl;
-		if(run_hmc)
-		{
-			std::ofstream hmc_file(filename + "_hmc.log");
-			if (hmc_file.is_open())
-			{
-				for(int i = 0; i < hmc_samples.rows(); i++)
-				{
-					hmc_file << hmc_samples.row(i) << std::endl;
-				}
-			}
-			hmc_file.close();
-			std::ofstream hmc2_file(filename + "_hmc2.log");
-			if (hmc2_file.is_open())
-			{
-				for(int i = 0; i < hmc_samples2.rows(); i++)
-				{
-					hmc2_file << hmc_samples2.row(i) << std::endl;
-				}
-			}
-			hmc2_file.close();
-		}
-		if(run_mcmc)
-		{
-			std::ofstream mcmc_file(filename + "_mcmc.log");
-			if (mcmc_file.is_open())
-			{
-				for(int i = 0; i < mcmc_samples.rows(); i++)
-				{
-					mcmc_file << mcmc_samples.row(i) << std::endl;
-				}
-			}
-			mcmc_file.close();
-		}
-		if(run_rej)
-		{
-			std::ofstream rej_file(filename + "_rej.log");
-			if (rej_file.is_open())
-			{
-				for(int i = 0; i < rej_samples.rows(); i++)
-				{
-					rej_file << rej_samples.row(i) << std::endl;
-				}
-			}
-			rej_file.close();
-		}
+    if(save)
+    {
+        std::cout << "START SAVING" << std::endl;
+        if(run_hmc)
+        {
+            std::ofstream hmc_file(filename + "_hmc.log");
+            if (hmc_file.is_open())
+            {
+                for(int i = 0; i < hmc_samples.rows(); i++)
+                {
+                    hmc_file << hmc_samples.row(i) << std::endl;
+                }
+            }
+            hmc_file.close();
+            std::ofstream hmc2_file(filename + "_hmc2.log");
+            if (hmc2_file.is_open())
+            {
+                for(int i = 0; i < hmc_samples2.rows(); i++)
+                {
+                    hmc2_file << hmc_samples2.row(i) << std::endl;
+                }
+            }
+            hmc2_file.close();
+        }
+
+        if(run_mcmc)
+        {
+            std::ofstream mcmc_file(filename + "_mcmc.log");
+            if (mcmc_file.is_open())
+            {
+                for(int i = 0; i < mcmc_samples.rows(); i++)
+                {
+                    mcmc_file << mcmc_samples.row(i) << std::endl;
+                }
+            }
+            mcmc_file.close();
+        }
+
+        if(run_rej)
+        {
+            std::ofstream rej_file(filename + "_rej.log");
+            if (rej_file.is_open())
+            {
+                for(int i = 0; i < rej_samples.rows(); i++)
+                {
+                    rej_file << rej_samples.row(i) << std::endl;
+                }
+            }
+            rej_file.close();
+        }
+
         if(run_ghrej)
         {
-          std::ofstream ghrej_file(filename + "_ghrej.log");
-          if (ghrej_file.is_open())
-          {
-            for(int i = 0; i < ghrej_samples.rows(); i++)
+            std::ofstream ghrej_file(filename + "_ghrej.log");
+            if (ghrej_file.is_open())
             {
-                ghrej_file << ghrej_samples.row(i) << std::endl;
+                for(int i = 0; i < ghrej_samples.rows(); i++)
+                {
+                    ghrej_file << ghrej_samples.row(i) << std::endl;
+                }
             }
-     	    }
-          ghrej_file.close();
+            ghrej_file.close();
         }
+
         if(run_dimthrs)
         {
             std::ofstream dimthrs_file(filename + "_dimthrs.log");
@@ -436,19 +437,20 @@ int main(int argc, char * argv[])
             }
             dimthrs_file.close();
         }
-    	if(run_gibbs)
+
+        if(run_gibbs)
         {
-          std::ofstream gibbs_file(filename + "_gibbs.log");
-          if (gibbs_file.is_open())
-          {
-              for(int i = 0; i < gibbs_samples.rows(); i++)
-              {
-                gibbs_file << gibbs_samples.row(i) << std::endl;
-              }
-          }
-          gibbs_file.close();
+            std::ofstream gibbs_file(filename + "_gibbs.log");
+            if (gibbs_file.is_open())
+            {
+                for(int i = 0; i < gibbs_samples.rows(); i++)
+                {
+                    gibbs_file << gibbs_samples.row(i) << std::endl;
+                }
+            }
+            gibbs_file.close();
         }
 
-		std::cout << "Saved samples and costs to " << filename << std::endl;
-	}
+        std::cout << "Saved samples and costs to " << filename << std::endl;
+    }
 }

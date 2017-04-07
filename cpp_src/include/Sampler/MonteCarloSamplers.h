@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Authors: Cole Gulino and Rohan Thakker */
+/* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
 // #ifndef OMPL_BASE_SAMPLERS_INFORMED_MONTE_CARLO_SAMPLERS_
 // #define OMPL_BASE_SAMPLERS_INFORMED_MONTE_CARLO_SAMPLERS_
@@ -80,16 +80,6 @@ namespace ompl
             /// Get alpha - learning rate for gradient descent
             ///
             double getAlpha() const { return alpha_; }
-
-            ///
-            /// Get a series of samples for the problem space
-            ///
-            /// @param no_samples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is displayed
-            /// @return A series of samples of shape (number of samples, sample dimension)
-            ///
-            virtual Eigen::MatrixXd sample(const int no_samples,
-                                           std::chrono::high_resolution_clock::duration &duration) = 0;
 
             ///
             /// Surf down the cost function to get to the levelset
@@ -244,7 +234,7 @@ namespace ompl
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const int noSamples,
-                                           std::chrono::high_resolution_clock::duration &duration);
+                                           std::chrono::high_resolution_clock::duration &duration) override;
 
             virtual Eigen::MatrixXd sampleBatchMemorized(const int no_samples,
                                                          std::chrono::high_resolution_clock::duration &duration);
@@ -306,7 +296,7 @@ namespace ompl
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const int no_samples,
-                                           std::chrono::high_resolution_clock::duration &duration);
+                                           std::chrono::high_resolution_clock::duration &duration) override;
 
             ///
             /// Get Sigma for sampling the step
@@ -327,3 +317,5 @@ namespace ompl
         };
     } // base
 } // ompl
+
+// #endif // OMPL_BASE_SAMPLERS_INFORMED_MONTE_CARLO_SAMPLERS_

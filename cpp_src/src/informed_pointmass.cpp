@@ -11,7 +11,6 @@
 #include <Sampler/RejectionSampler.h>
 #include <Sampler/MonteCarloSamplers.h>
 #include <Sampler/HitAndRun.h>
-#include <OmplWrappers/OmplSamplers.h>
 #include <OmplWrappers/MyOptimizationObjective.h>
 #include <OmplWrappers/MyInformedRRTstar.h>
 #include <OmplWrappers/OmplHelpers.h>
@@ -135,39 +134,44 @@ ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
 if(MAIN_VERBOSE) std::cout << "Got the vector start and goal state space ompl!" << std::endl;
 if(MAIN_VERBOSE) std::cout << start_s << std::endl << goal_s << std::endl;
 
-// Set random start and goal
-// ob::ScopedState<> start(space);
-// start.random();
-// ob::ScopedState<> goal(space);
-// goal.random();
-// Setup Problem Definition
-ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-pdef->setStartAndGoalStates(start, goal);
+// Get a base problem definition that has the optimization objective with the space
+// This probably should be changed
+ob::ProblemDefinitionPtr base_pdef(new ob::ProblemDefinition(si));
+base_pdef->setStartAndGoalStates(start, goal);
+
+const ompl::base::OptimizationObjectivePtr base_opt =
+        ompl::base::OptimizationObjectivePtr(new ompl::base::DimtObjective<param.dof>(si,
+                                                                                      start_state,
+                                                                                      goal_state,
+                                                                                      double_integrator));
+base_pdef->setOptimizationObjective(base_opt);
 
 if(MAIN_VERBOSE) std::cout << "Set up the OMPL problem definition!" << std::endl;
 
-// Construct Sampler and Planner
+// Construct Sampler with the base pdef and base optimization objective
 double sigma = 1; int max_steps = 100; double alpha = 1.0; double batch_size = 1000;
-// const double level_set = 100;
 const double level_set = std::numeric_limits<double>::infinity();
+const auto sampler = ompl::base::MyInformedSamplerPtr(new ompl::base::MCMCSampler(si,
+                                                                                  base_pdef,
+                                                                                  level_set,
+                                                                                  1000,
+                                                                                  batch_size,
+                                                                                  alpha,
+                                                                                  sigma,
+                                                                                  max_steps));
 
-// Set up the sampler
-auto current_sampler = std::make_shared<MCMCSampler>(si, pdef, level_set, alpha, sigma, max_steps);
-// auto current_sampler = std::make_shared<GibbsSampler>(prob);
-// auto current_sampler = std::make_shared<GeometricHierarchicalRejectionSampler>(prob);
-// auto current_sampler = std::make_shared<RejectionSampler>(prob);
+// Set up the final problem with the full optimization objective
+ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
+pdef->setStartAndGoalStates(start, goal);
 
+const ompl::base::OptimizationObjectivePtr opt =
+    ompl::base::OptimizationObjectivePtr(new ompl::base::MyOptimizationObjective(si, sampler));
 if(MAIN_VERBOSE) std::cout << "Set up the MCMC sampler!" << std::endl;
-
-// auto opt = get_geom_opt_obj(si, start_state, goal_state, current_sampler, batch_size);
-auto opt = get_dimt_opt_ob(si, start_state, goal_state, current_sampler, batch_size, double_integrator);
 
 opt->setCostThreshold(ob::Cost(1.51));
 pdef->setOptimizationObjective(opt);
 
 if(MAIN_VERBOSE) std::cout << "Created the optimization objection!" << std::endl;
-
-auto sampler = ob::InformedSamplerPtr(new ob::MyInformedSampler(pdef, 1000, current_sampler, batch_size));
 
 if(MAIN_VERBOSE) std::cout << "Created the informed ompl sampler!" << std::endl;
 

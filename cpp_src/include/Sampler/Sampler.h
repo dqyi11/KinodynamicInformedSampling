@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Authors: Cole Gulino and Rohan Thakker */
+/* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
 // #ifndef OMPL_BASE_SAMPLERS_INFORMED_SAMPLER_
 // #define OMPL_BASE_SAMPLERS_INFORMED_SAMPLER_
@@ -50,6 +50,7 @@
 // stdlib
 #include <tuple>
 #include <chrono>
+#include <memory>
 
 namespace ompl
 {
@@ -125,7 +126,7 @@ namespace ompl
                               const ProblemDefinitionPtr &problem,
                               const double levelSet,
                               const unsigned int maxNumberCalls,
-                              const int sampleBatchSize = 100)
+                              const int sampleBatchSize)
                 : InformedSampler(problem, maxNumberCalls),
                   si_(si),
                   problem_(problem),
@@ -176,7 +177,8 @@ namespace ompl
             /// @param time Boolean that determines if the time to run the proccess is displayed
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
-            virtual Eigen::MatrixXd sample(const int &no_samples, std::chrono::high_resolution_clock::duration &duration) = 0;
+            virtual Eigen::MatrixXd sample(const int no_samples,
+                                           std::chrono::high_resolution_clock::duration &duration) = 0;
 
             ///
             /// Get the problem definition for the problem
@@ -266,7 +268,11 @@ namespace ompl
             ///
             virtual Eigen::VectorXd getInvJacobian(const Eigen::VectorXd &curr_state) const;
         }; // MyInformedSampler
+
+        using MyInformedSamplerPtr = std::shared_ptr<ompl::base::MyInformedSampler>;
     } // base
 } // ompl
 
+
 // #endif // OMPL_BASE_SAMPLERS_INFORMED_SAMPLER_
+

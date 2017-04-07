@@ -3,6 +3,9 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
+#include <chrono>
+#include <limits>
+using namespace std::chrono;
 
 // Eigen
 #include <Eigen/Dense>
@@ -168,147 +171,135 @@ int main(int argc, char * argv[])
     pdef->setStartAndGoalStates(start, goal);
 
 
-        int sample_num_sets[] = {100, 200, 500, 1000, 3000, 5000};
-        int sample_num_sets_num = sizeof(sample_num_sets)/sizeof(int);
-        std::cout << "sample set num " << sample_num_sets_num << std::endl;
-        //double level_set = level_set_ratios[j] * (goal_state - start_state).norm();
+    int sample_num_sets[] = {100, 200, 500, 1000, 3000, 5000};
+    int sample_num_sets_num = sizeof(sample_num_sets)/sizeof(int);
+    std::cout << "sample set num " << sample_num_sets_num << std::endl;
 
-      	std::vector<high_resolution_clock::duration> times_hmc1(sample_num_sets_num * no_batch);
-      	std::vector<high_resolution_clock::duration> times_hmc2(sample_num_sets_num * no_batch);
+    std::vector<high_resolution_clock::duration> times_hmc1(sample_num_sets_num * no_batch);
+    std::vector<high_resolution_clock::duration> times_hmc2(sample_num_sets_num * no_batch);
 	std::vector<high_resolution_clock::duration> times_mcmc(sample_num_sets_num * no_batch);
 	std::vector<high_resolution_clock::duration> times_rs(sample_num_sets_num * no_batch);
 	std::vector<high_resolution_clock::duration> times_hrs(sample_num_sets_num * no_batch);
-        for(unsigned int j=0; j<sample_num_sets_num;j++) {
+    for(unsigned int j=0; j < sample_num_sets_num; j++)
+    {
 
-	        no_samples = sample_num_sets[j];
-                std::cout << "NO SAMPLE " << no_samples << std::endl;
+        no_samples = sample_num_sets[j];
+        std::cout << "NO SAMPLE " << no_samples << std::endl;
 
-            auto opt = get_geom_opt_obj(si, start_state, goal_state, no_samples);
-            pdef->setOptimizationObjective(opt);
+        const ompl::base::OptimizationObjectivePtr opt =
+            ompl::base::OptimizationObjectivePtr(new ompl::base::DimtObjective<param.dof>(si,
+                                                                                          start_state,
+                                                                                          goal_state,
+                                                                                          double_integrator));
 
-    		for(unsigned int i=0; i < no_batch; i++) {
+        pdef->setOptimizationObjective(opt);
 
-                	std::cout << "BATCH " << i << std::endl;
-			// Initialize the sampler
-			// HMC parameters
-                	{
-				MatrixXd hmc_samples;
-				double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-				HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
-				//std::cout << "Running HMC Sampling..." << std::endl;
-				hmc_samples = hmc_s.sample(no_samples, times_hmc1[j*no_batch+i]);
-			}
-
-        	        {
-				MatrixXd hmc_samples;
-				double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-				HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
-				//std::cout << "Running HMC Sampling..." << std::endl;
-				//hmc_samples = hmc_s.sample(no_samples, times[i]);
-				hmc_samples = hmc_s.sample_batch_memorized(no_samples, times_hmc2[j*no_batch+i]);
-			}
-
-			{
-				MatrixXd mcmc_samples;
-
-				double sigma = 5; int max_steps = 20; double alpha = 0.5;
-				MCMCSampler mcmc_s = MCMCSampler(si, pdef, level_set, alpha, sigma, max_steps);
-				//std::cout << "Running MCMC Sampling..." << std::endl;
-				mcmc_samples = mcmc_s.sample(no_samples, times_mcmc[j*no_batch+i]);
-			}
-
-			{
-				MatrixXd rej_samples;
-				RejectionSampler rej_s = RejectionSampler(si, pdef, level_set);
-				//std::cout << "Running Rejection Sampling..." << std::endl;
-				rej_samples = rej_s.sample(no_samples, times_rs[j*no_batch+i]);
-			}
-
-			{
-	    			MatrixXd ghrej_samples;
-		    		GeometricHierarchicalRejectionSampler ghrej_s =
-                        GeometricHierarchicalRejectionSampler(si, pdef, level_set);
-		       		//std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-				ghrej_samples = ghrej_s.sample(no_samples, times_hrs[j*no_batch+i]);
-			}
-
-
-		}
-	}
-
-        if(save)
+        for(unsigned int i = 0; i < no_batch; i++)
         {
-        	std::cout << "START SAVING" << std::endl;
-		std::ofstream time1_file(filename + "_time_sn_hmc1.log");
-		if (time1_file.is_open())
-		{
-			for(int i = 0; i < sample_num_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time1_file << duration_cast<milliseconds>( times_hmc1[i*no_batch+j] ).count() << " ";
-				}
-                	        time1_file << std::endl;
-			}
-		}
-		time1_file.close();
+            std::cout << "BATCH " << i << std::endl;
 
-		std::ofstream time2_file(filename + "_time_sn_hmc2.log");
-		if (time2_file.is_open())
-		{
-			for(int i = 0; i < sample_num_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time2_file << duration_cast<milliseconds>( times_hmc2[i*no_batch+j] ).count() << " ";
-				}
-                	        time2_file << std::endl;
-			}
-		}
-		time2_file.close();
+            {
+                MatrixXd hmc_samples;
+                double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+                ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+                hmc_samples = hmc_s.sample(no_samples, times_hmc1[j*no_batch+i]);
+            }
 
-		std::ofstream time3_file(filename + "_time_sn_mcmc.log");
-		if (time3_file.is_open())
-		{
-			for(int i = 0; i < sample_num_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time3_file << duration_cast<milliseconds>( times_mcmc[i*no_batch+j] ).count() << " ";
-				}
-                	        time3_file << std::endl;
-			}
-		}
-		time3_file.close();
+            {
+                MatrixXd hmc_samples;
+                double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+                ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+                hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times_hmc2[j*no_batch+i]);
+            }
 
-		std::ofstream time4_file(filename + "_time_sn_rs.log");
-		if (time4_file.is_open())
-		{
-			for(int i = 0; i < sample_num_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time4_file << duration_cast<milliseconds>( times_rs[i*no_batch+j] ).count() << " ";
-				}
-                	        time4_file << std::endl;
-			}
-		}
-		time4_file.close();
+            {
+                MatrixXd mcmc_samples;
+                double sigma = 5; int max_steps = 20; double alpha = 0.5;
+                ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
+                mcmc_samples = mcmc_s.sample(no_samples, times_mcmc[j*no_batch+i]);
+            }
 
-		std::ofstream time5_file(filename + "_time_sn_hrs.log");
-		if (time5_file.is_open())
-		{
-			for(int i = 0; i < sample_num_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time5_file << duration_cast<milliseconds>( times_hrs[i*no_batch+j] ).count() << " ";
-				}
-                	        time5_file << std::endl;
-			}
-		}
-		time5_file.close();
+            {
+                MatrixXd rej_samples;
+                ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
+                rej_samples = rej_s.sample(no_samples, times_rs[j*no_batch+i]);
+            }
+        }
+    }
 
-	}
+    if(save)
+    {
+        std::cout << "START SAVING" << std::endl;
+        std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
+        if (time1_file.is_open())
+        {
+            for(int i = 0; i < sample_num_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time1_file << duration_cast<milliseconds>( times_hmc1[i*no_batch+j] ).count() << " ";
+                }
+                time1_file << std::endl;
+            }
+        }
+        time1_file.close();
 
+        std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
+        if (time2_file.is_open())
+        {
+            for(int i = 0; i < sample_num_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time2_file << duration_cast<milliseconds>( times_hmc2[i*no_batch+j] ).count() << " ";
+                }
+                time2_file << std::endl;
+            }
+        }
+        time2_file.close();
+
+        std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
+        if (time3_file.is_open())
+        {
+            for(int i = 0; i < sample_num_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time3_file << duration_cast<milliseconds>( times_mcmc[i*no_batch+j] ).count() << " ";
+                }
+                time3_file << std::endl;
+            }
+        }
+        time3_file.close();
+
+        std::ofstream time4_file(filename + "_time_lvl_rs.log");
+        if (time4_file.is_open())
+        {
+            for(int i = 0; i < sample_num_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time4_file << duration_cast<milliseconds>( times_rs[i*no_batch+j] ).count() << " ";
+                }
+                time4_file << std::endl;
+            }
+        }
+        time4_file.close();
+
+        std::ofstream time5_file(filename + "_time_lvl_hrs.log");
+        if (time5_file.is_open())
+        {
+            for(int i = 0; i < sample_num_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time5_file << duration_cast<milliseconds>( times_hrs[i*no_batch+j] ).count() << " ";
+                }
+            time5_file << std::endl;
+        }
+        }
+        time5_file.close();
+    }
 }
+
+

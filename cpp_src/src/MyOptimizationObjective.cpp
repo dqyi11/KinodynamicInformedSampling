@@ -7,36 +7,14 @@ using Eigen::VectorXd;
 // OMPL
 #include <ompl/base/State.h>
 #include <ompl/base/Cost.h>
-#include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/samplers/InformedStateSampler.h>
 
 // Internal Libraries
-#include <OmplWrappers/OmplSamplers.h>
 #include <Dimt/Params.h>
+#include <Sampler/MonteCarloSamplers.h>
 
-///
-/// Function to convert a State to a VectorXd
-///
-/// @param s Ompl State
-/// @return Eigen VectorXd
-///
-VectorXd get_eigen_vector(const ompl::base::State* s)
-{
-    double * val = static_cast<const ompl::base::RealVectorStateSpace::StateType*>(s)->values;
-
-    VectorXd v(param.dimensions);
-
-    for(uint i = 0; i < param.dimensions; i++)
-    {
-    	v[i] = val[i];
-    }
-
-	return v;
-}
-
-///
-/// MyOptimizationObjective
-///
+// stdlib
+#include <exception>
 
 ///
 /// Return the cost of the state at this point
@@ -46,7 +24,11 @@ VectorXd get_eigen_vector(const ompl::base::State* s)
 ///
 ompl::base::Cost ompl::base::MyOptimizationObjective::stateCost(const ompl::base::State *s) const
 {
-	return ompl::base::Cost(state_cost_function_(get_eigen_vector(s)));
+    if(sampler_ == nullptr or opt_ == nullptr)
+    {
+        throw std::runtime_error("An informed sampler with optimization objective must be provided or set.");
+    }
+	return opt_->stateCost(s);
 }
 
 ///
@@ -59,7 +41,11 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::stateCost(const ompl::base
 ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::base::State *s1,
 										 			             const ompl::base::State *s2) const
 {
-	return ompl::base::Cost(motion_cost_function_(get_eigen_vector(s1), get_eigen_vector(s2)));
+    if(sampler_ == nullptr)
+    {
+        throw std::runtime_error("An informed sampler with optimization objective must be provided or set.");
+    }
+	return opt_->motionCost(s1, s2);
 }
 
 ///
@@ -72,9 +58,31 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::bas
 ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInformedStateSampler(
 	const ProblemDefinitionPtr probDefn, unsigned int maxNumberCalls) const
 {
-	return ompl::base::InformedSamplerPtr(
-		new ompl::base::MyInformedSampler(probDefn,
-										  maxNumberCalls,
-										  sampler_ptr_,
-										  batch_size_));
+    if(sampler_ == nullptr)
+    {
+        throw std::runtime_error("An informed sampler with optimization objective must be provided or set.");
+    }
+	return sampler_;
 }
+
+namespace ompl
+{
+    namespace base
+    {
+        Cost GeometricObjective::stateCost(const State *s) const
+        {
+            return Cost((startState_ - get_eigen_vector(s)).norm() +
+                        (goalState_ - get_eigen_vector(s)).norm());
+        }
+
+        Cost GeometricObjective::motionCost(const State *s1, const State *s2) const
+        {
+            return Cost((get_eigen_vector(s1) - get_eigen_vector(s2)).norm());
+        }
+
+        Cost GeometricObjective::combineCosts(Cost c1, Cost c2) const
+        {
+            return Cost(c1.value() + c2.value());
+        }
+    } // namespace base
+} // namespace ompl

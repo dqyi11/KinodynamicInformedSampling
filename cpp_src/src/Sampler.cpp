@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Authors: Cole Gulino and Rohan Thakker */
+/* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
 #include <Sampler/Sampler.h>
 
@@ -51,64 +51,6 @@
 
 namespace
 {
-
-///
-/// Function to convert a State to a VectorXd
-///
-/// @param s Ompl State
-/// @return Eigen VectorXd
-///
-Eigen::VectorXd get_eigen_vector(const ompl::base::State* s)
-{
-    double * val = static_cast<const ompl::base::RealVectorStateSpace::StateType*>(s)->values;
-
-    Eigen::VectorXd v(param.dimensions);
-
-    for(uint i = 0; i < param.dimensions; i++)
-    {
-        v[i] = val[i];
-    }
-
-    return v;
-}
-
-///
-/// Function to convert a std::vector to a VectorXd
-///
-/// @param vec Standard vector
-/// @return A VectorXd with the state information
-///
-template <typename T>
-Eigen::VectorXd get_eigen_vector(const std::vector<T>& vec)
-{
-    Eigen::VectorXd v(param.dimensions);
-
-    for(uint i = 0; i < param.dimensions; i++)
-    {
-        v[i] = vec[i];
-    }
-
-    return v;
-}
-
-///
-/// Convert an Eigen::VectorXd to an ompl State pointer
-///
-/// @param vec VectorXd representing the state
-/// @return Pointer to an ompl state
-///
-ompl::base::State* get_ompl_state(const Eigen::VectorXd &vec,
-                                  const ompl::base::RealVectorStateSpace* space)
-{
-    ompl::base::State *state = space->allocState();
-
-    for(uint i = 0; i < vec.size(); i++)
-    {
-        state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = vec[i];
-    }
-
-    return state;
-}
 
 bool same_cost(double a, double b)
 {

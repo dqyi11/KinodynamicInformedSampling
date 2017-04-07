@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Authors: Cole Gulino and Rohan Thakker */
+/* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
 #include "Sampler/MonteCarloSamplers.h"
 

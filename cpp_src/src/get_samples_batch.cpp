@@ -3,6 +3,8 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
+#include <chrono>
+using namespace std::chrono;
 
 // Eigen
 #include <Eigen/Dense>
@@ -135,23 +137,23 @@ std::vector<double> get_random_vector(const double& max, const double& min, cons
 
 int main(int argc, char * argv[])
 {
-	//
-	// Example for how to use the above sampler
-	//
-	bool run; std::vector<int> args;
-	std::tie(run, args) = handle_arguments(argc, argv);
-	if(!run) return 0;
+    //
+    // Example for how to use the above sampler
+    //
+    bool run; std::vector<int> args;
+    std::tie(run, args) = handle_arguments(argc, argv);
+    if(!run) return 0;
 
-	int no_samples = args[0];
-        int no_batch = args[1];
-	bool time = (args[2] == 1) ? true : false;
-	bool run_hmc = (args[3] == 1) ? true : false;
-	bool run_mcmc = (args[4] == 1) ? true : false;
-	bool run_rej = (args[5] == 1) ? true : false;
-        bool run_ghrej = (args[6] == 1) ? true : false;
+    int no_samples = args[0];
+    int no_batch = args[1];
+    bool time = (args[2] == 1) ? true : false;
+    bool run_hmc = (args[3] == 1) ? true : false;
+    bool run_mcmc = (args[4] == 1) ? true : false;
+    bool run_rej = (args[5] == 1) ? true : false;
+    bool run_ghrej = (args[6] == 1) ? true : false;
 
-	std::string filename; bool save;
-	std::tie(save, filename) = get_filename(argc, argv);
+    std::string filename; bool save;
+    std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
     int num_dim = 12;
@@ -167,12 +169,6 @@ int main(int argc, char * argv[])
         goal_state(i) = dis(gen);
     }
 
-    // VectorXd state_min(num_dim);
-    // state_min << VectorXd::constant(num_dim, minval);
-
-    // VectorXd state_max(num_dim);
-    // state_max << VectorXd::constant(num_dim, maxval);
-
     // Initializations
     Dimt dimt(param.a_max);
     DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
@@ -184,7 +180,6 @@ int main(int argc, char * argv[])
     DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
 
     const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-    // const double level_set = 1.4 * (goal_state - start_state).norm();
     high_resolution_clock::duration duration;
     std::cout << "Level set: " << level_set << std::endl;
 
@@ -195,8 +190,6 @@ int main(int argc, char * argv[])
     bounds.setHigh(maxval);
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
-    // si->setStateValidityChecker(ompl::base::StateValidityCheckerPtr(new ValidityChecker(si)));
-    // si->setStateValidityCheckingResolution(0.01); // 3%
     si->setup();
 
     // Set custom start and goal
@@ -222,79 +215,61 @@ int main(int argc, char * argv[])
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    auto opt = get_dimt_opt_ob(si, start_state, goal_state, no_samples, double_integrator);
+    const ompl::base::OptimizationObjectivePtr opt =
+        ompl::base::OptimizationObjectivePtr(new ompl::base::DimtObjective<param.dof>(si,
+                                                                                      start_state,
+                                                                                      goal_state,
+                                                                                      double_integrator));
     pdef->setOptimizationObjective(opt);
 
-        std::vector<high_resolution_clock::duration> times(5 * no_batch);
-        for(unsigned int i=0; i < no_batch; i++) {
+    std::vector<high_resolution_clock::duration> times(5 * no_batch);
+    for(unsigned int i=0; i < no_batch; i++)
+    {
+        std::cout << "BATCH " << i << std::endl;
 
-                std::cout << "BATCH " << i << std::endl;
-		// Initialize the sampler
-		// HMC parameters
-                {
-			MatrixXd hmc_samples;
-			double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-			HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
-			//std::cout << "Running HMC Sampling..." << std::endl;
-			hmc_samples = hmc_s.sample(no_samples, times[i]);
-		}
-
-                {
-			MatrixXd hmc_samples;
-			double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-			HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
-			//std::cout << "Running HMC Sampling..." << std::endl;
-			//hmc_samples = hmc_s.sample(no_samples, times[i]);
-			hmc_samples = hmc_s.sample_batch_memorized(no_samples, times[no_batch+i]);
-		}
-
-		{
-			MatrixXd mcmc_samples;
-
-			double sigma = 5; int max_steps = 20; double alpha = 0.5;
-			MCMCSampler mcmc_s = MCMCSampler(si, pdef, level_set, alpha, sigma, max_steps);
-			//std::cout << "Running MCMC Sampling..." << std::endl;
-			mcmc_samples = mcmc_s.sample(no_samples, times[2*no_batch+i]);
-		}
-
-		{
-			MatrixXd rej_samples;
-			RejectionSampler rej_s = RejectionSampler(si, pdef, level_set);
-			//std::cout << "Running Rejection Sampling..." << std::endl;
-			rej_samples = rej_s.sample(no_samples, times[3*no_batch+i]);
-		}
-
-		{
-   //  			MatrixXd ghrej_samples;
-  	//         	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
-   //      	                                               state_max, level_set,
-   //     				 [dimt, start_state, goal_state](const VectorXd& state)
-   //      			{
-   //    		      			return (start_state - state).norm() + (goal_state - state).norm();
-   //     			 	});
-
-	  //   		GeometricHierarchicalRejectionSampler ghrej_s = GeometricHierarchicalRejectionSampler(geo_prob);
-	  //      		//std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-			// ghrej_samples = ghrej_s.sample(no_samples, times[4*no_batch+i]);
-		}
-	}
-
-        if(save)
         {
-        	std::cout << "START SAVING" << std::endl;
-		std::ofstream time_file(filename + "_time.log");
-		if (time_file.is_open())
-		{
-			for(int i = 0; i < 5; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time_file << duration_cast<milliseconds>( times[i*no_batch+j] ).count() << " ";
-				}
-                	        time_file << std::endl;
-			}
-		}
-		time_file.close();
-	}
+            MatrixXd hmc_samples;
+            double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+            ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+            hmc_samples = hmc_s.sample(no_samples, times[i]);
+        }
 
+        {
+            MatrixXd hmc_samples;
+            double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+            ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+            hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times[no_batch+i]);
+        }
+
+        {
+            MatrixXd mcmc_samples;
+            double sigma = 5; int max_steps = 20; double alpha = 0.5;
+            ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
+            mcmc_samples = mcmc_s.sample(no_samples, times[2*no_batch+i]);
+        }
+
+        {
+            MatrixXd rej_samples;
+            ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
+            rej_samples = rej_s.sample(no_samples, times[3*no_batch+i]);
+        }
+    }
+
+    if(save)
+    {
+        std::cout << "START SAVING" << std::endl;
+        std::ofstream time_file(filename + "_time.log");
+        if (time_file.is_open())
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time_file << duration_cast<milliseconds>( times[i*no_batch+j] ).count() << " ";
+                }
+                time_file << std::endl;
+            }
+        }
+        time_file.close();
+    }
 }

@@ -3,6 +3,9 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
+#include <chrono>
+#include <limits>
+using namespace std::chrono;
 
 // Eigen
 #include <Eigen/Dense>
@@ -44,75 +47,75 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
 {
-	if(cmdOptionExists(argv, argv+argc, "-h"))
+    if(cmdOptionExists(argv, argv+argc, "-h"))
     {
-		std::cout << "________________________________________________" << std::endl;
-		std::cout << "Main function for sampling" << std::endl;
-		std::cout << "________________________________________________" << std::endl;
-		std::cout << "Arguments:" << std::endl;
-                std::cout << "\t -batch - NUmber of batches to run" << std::endl;
-		std::cout << "\t -samples - Number of samples to get" << std::endl;
-		std::cout << "\t -filename - Filename to save the samples to" << std::endl;
-		std::cout << "________________________________________________" << std::endl;
-		return std::make_tuple(false, std::vector<int>{});
+        std::cout << "________________________________________________" << std::endl;
+        std::cout << "Main function for sampling" << std::endl;
+        std::cout << "________________________________________________" << std::endl;
+        std::cout << "Arguments:" << std::endl;
+        std::cout << "\t -batch - NUmber of batches to run" << std::endl;
+        std::cout << "\t -samples - Number of samples to get" << std::endl;
+        std::cout << "\t -filename - Filename to save the samples to" << std::endl;
+        std::cout << "________________________________________________" << std::endl;
+        return std::make_tuple(false, std::vector<int>{});
     }
     else
     {
-    	std::vector<int> args;
+        std::vector<int> args;
 
-    	// Get the number of samples
-    	if(cmdOptionExists(argv, argv+argc, "-samples"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-samples")));
-    	else
-    		args.push_back(100); // Default to 100 samples
+        // Get the number of samples
+        if(cmdOptionExists(argv, argv+argc, "-samples"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-samples")));
+        else
+            args.push_back(100); // Default to 100 samples
         // Get the batch number
-    	if(cmdOptionExists(argv, argv+argc, "-batch"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-batch")));
-    	else
-    		args.push_back(20); // Default to 20 batches
+        if(cmdOptionExists(argv, argv+argc, "-batch"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-batch")));
+        else
+            args.push_back(20); // Default to 20 batches
 
-    	return std::make_tuple(true, args);
+        return std::make_tuple(true, args);
     }
 }
 
 std::tuple<bool, std::string> get_filename(int argc, char * argv[])
 {
-	if(cmdOptionExists(argv, argv+argc, "-filename"))
-		return std::make_tuple(true, std::string(getCmdOption(argv, argv+argc, "-filename")));
-	else
-		return std::make_tuple(false, "none");
+    if(cmdOptionExists(argv, argv+argc, "-filename"))
+        return std::make_tuple(true, std::string(getCmdOption(argv, argv+argc, "-filename")));
+    else
+        return std::make_tuple(false, "none");
 }
 
 std::vector<double> get_random_vector(const double& max, const double& min, const int& num_dim)
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> dis(min, max);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(min, max);
 
-	std::vector<double> vec;
+    std::vector<double> vec;
 
-	for(int i = 0; i < num_dim; i++)
-	{
-		vec.push_back(dis(gen));
-	}
+    for(int i = 0; i < num_dim; i++)
+    {
+        vec.push_back(dis(gen));
+    }
 }
 
 int main(int argc, char * argv[])
 {
-	//
-	// Example for how to use the above sampler
-	//
-	bool run; std::vector<int> args;
-	std::tie(run, args) = handle_arguments(argc, argv);
-	if(!run) return 0;
+    //
+    // Example for how to use the above sampler
+    //
+    bool run; std::vector<int> args;
+    std::tie(run, args) = handle_arguments(argc, argv);
+    if(!run) return 0;
 
-	int no_samples = args[0];
-        int no_batch = args[1];
+    int no_samples = args[0];
+    int no_batch = args[1];
 
-	std::string filename; bool save;
-	std::tie(save, filename) = get_filename(argc, argv);
+    std::string filename; bool save;
+    std::tie(save, filename) = get_filename(argc, argv);
 
-        // Create a problem definition
+    // Create a problem definition
     int num_dim = 12;
     double maxval = 25; double minval = -25;
     VectorXd start_state(num_dim);
@@ -125,12 +128,6 @@ int main(int argc, char * argv[])
         start_state(i) = dis(gen);
         goal_state(i) = dis(gen);
     }
-
-    // VectorXd state_min(num_dim);
-    // state_min << VectorXd::constant(num_dim, minval);
-
-    // VectorXd state_max(num_dim);
-    // state_max << VectorXd::constant(num_dim, maxval);
 
     // Initializations
     Dimt dimt(param.a_max);
@@ -151,8 +148,6 @@ int main(int argc, char * argv[])
     bounds.setHigh(maxval);
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
-    // si->setStateValidityChecker(ompl::base::StateValidityCheckerPtr(new ValidityChecker(si)));
-    // si->setStateValidityCheckingResolution(0.01); // 3%
     si->setup();
 
     // Set custom start and goal
@@ -178,152 +173,132 @@ int main(int argc, char * argv[])
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    auto opt = get_dimt_opt_ob(si, start_state, goal_state, no_samples, double_integrator);
+    const ompl::base::OptimizationObjectivePtr opt =
+        ompl::base::OptimizationObjectivePtr(new ompl::base::DimtObjective<param.dof>(si,
+                                                                                      start_state,
+                                                                                      goal_state,
+                                                                                      double_integrator));
     pdef->setOptimizationObjective(opt);
 
     double level_set_ratios[] = {1.6, 1.5, 1.4, 1.3, 1.2, 1.1};
     int level_sets_num = sizeof(level_set_ratios)/sizeof(double);
     std::cout << "level set num " << level_sets_num << std::endl;
 
-      	std::vector<high_resolution_clock::duration> times_hmc1(level_sets_num * no_batch);
-      	std::vector<high_resolution_clock::duration> times_hmc2(level_sets_num * no_batch);
-	std::vector<high_resolution_clock::duration> times_mcmc(level_sets_num * no_batch);
-	std::vector<high_resolution_clock::duration> times_rs(level_sets_num * no_batch);
-	std::vector<high_resolution_clock::duration> times_hrs(level_sets_num * no_batch);
-        for(unsigned int j=0; j<level_sets_num;j++) {
-	  	// double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-        	double level_set = level_set_ratios[j] * (goal_state - start_state).norm();
-	  	std::cout << "Level set: " << level_set << std::endl;
+    std::vector<high_resolution_clock::duration> times_hmc1(level_sets_num * no_batch);
+    std::vector<high_resolution_clock::duration> times_hmc2(level_sets_num * no_batch);
+    std::vector<high_resolution_clock::duration> times_mcmc(level_sets_num * no_batch);
+    std::vector<high_resolution_clock::duration> times_rs(level_sets_num * no_batch);
+    std::vector<high_resolution_clock::duration> times_hrs(level_sets_num * no_batch);
 
-    		for(unsigned int i=0; i < no_batch; i++) {
+    for(unsigned int j=0; j<level_sets_num;j++)
+    {
+        double level_set = level_set_ratios[j] * (goal_state - start_state).norm();
+        std::cout << "Level set: " << level_set << std::endl;
 
-                	std::cout << "BATCH " << i << std::endl;
-			// Initialize the sampler
-			// HMC parameters
-                	{
-				MatrixXd hmc_samples;
-				double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-				HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
-				//std::cout << "Running HMC Sampling..." << std::endl;
-				hmc_samples = hmc_s.sample(no_samples, times_hmc1[j*no_batch+i]);
-			}
-
-        	        {
-				MatrixXd hmc_samples;
-				double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
-				HMCSampler hmc_s = HMCSampler(si, pdef, level_set, alpha, L, epsilon, sigma, max_steps);
-				//std::cout << "Running HMC Sampling..." << std::endl;
-				//hmc_samples = hmc_s.sample(no_samples, times[i]);
-				hmc_samples = hmc_s.sample_batch_memorized(no_samples, times_hmc2[j*no_batch+i]);
-			}
-
-			{
-				MatrixXd mcmc_samples;
-
-				double sigma = 5; int max_steps = 20; double alpha = 0.5;
-				MCMCSampler mcmc_s = MCMCSampler(si, pdef, level_set, alpha, sigma, max_steps);
-				//std::cout << "Running MCMC Sampling..." << std::endl;
-				mcmc_samples = mcmc_s.sample(no_samples, times_mcmc[j*no_batch+i]);
-			}
-
-			{
-				MatrixXd rej_samples;
-				RejectionSampler rej_s = RejectionSampler(si, pdef, level_set);
-				//std::cout << "Running Rejection Sampling..." << std::endl;
-				rej_samples = rej_s.sample(no_samples, times_rs[j*no_batch+i]);
-			}
-
-			{
-	   //  			MatrixXd ghrej_samples;
-	  	//         	ProblemDefinition geo_prob = ProblemDefinition(start_state, goal_state, state_min,
-			 //                                               state_max, level_set,
-	   //     				 [dimt, start_state, goal_state](const VectorXd& state)
-				// 	{
-	   //    		      			return (start_state - state).norm() + (goal_state - state).norm();
-	   //     			 	});
-
-		  //   		GeometricHierarchicalRejectionSampler ghrej_s = GeometricHierarchicalRejectionSampler(geo_prob);
-		  //      		//std::cout << "Running Geometric Hierarchical Rejection Sampling..." << std::endl;
-				// ghrej_samples = ghrej_s.sample(no_samples, times_hrs[j*no_batch+i]);
-			}
-
-
-		}
-	}
-
-        if(save)
+        for(unsigned int i=0; i < no_batch; i++)
         {
-        	std::cout << "START SAVING" << std::endl;
-		std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
-		if (time1_file.is_open())
-		{
-			for(int i = 0; i < level_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time1_file << duration_cast<milliseconds>( times_hmc1[i*no_batch+j] ).count() << " ";
-				}
-                	        time1_file << std::endl;
-			}
-		}
-		time1_file.close();
+            std::cout << "BATCH " << i << std::endl;
 
-		std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
-		if (time2_file.is_open())
-		{
-			for(int i = 0; i < level_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time2_file << duration_cast<milliseconds>( times_hmc2[i*no_batch+j] ).count() << " ";
-				}
-                	        time2_file << std::endl;
-			}
-		}
-		time2_file.close();
+            {
+                MatrixXd hmc_samples;
+                double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+                ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+                hmc_samples = hmc_s.sample(no_samples, times_hmc1[j*no_batch+i]);
+            }
 
-		std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
-		if (time3_file.is_open())
-		{
-			for(int i = 0; i < level_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time3_file << duration_cast<milliseconds>( times_mcmc[i*no_batch+j] ).count() << " ";
-				}
-                	        time3_file << std::endl;
-			}
-		}
-		time3_file.close();
+            {
+                MatrixXd hmc_samples;
+                double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+                ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+                hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times_hmc2[j*no_batch+i]);
+            }
 
-		std::ofstream time4_file(filename + "_time_lvl_rs.log");
-		if (time4_file.is_open())
-		{
-			for(int i = 0; i < level_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time4_file << duration_cast<milliseconds>( times_rs[i*no_batch+j] ).count() << " ";
-				}
-                	        time4_file << std::endl;
-			}
-		}
-		time4_file.close();
+            {
+                MatrixXd mcmc_samples;
+                double sigma = 5; int max_steps = 20; double alpha = 0.5;
+                ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
+                mcmc_samples = mcmc_s.sample(no_samples, times_mcmc[j*no_batch+i]);
+            }
 
-		std::ofstream time5_file(filename + "_time_lvl_hrs.log");
-		if (time5_file.is_open())
-		{
-			for(int i = 0; i < level_sets_num; i++)
-			{
-				for(int j=0;j<no_batch;j++)
-				{
-					time5_file << duration_cast<milliseconds>( times_hrs[i*no_batch+j] ).count() << " ";
-				}
-                	        time5_file << std::endl;
-			}
-		}
-		time5_file.close();
+            {
+                MatrixXd rej_samples;
+                ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
+                rej_samples = rej_s.sample(no_samples, times_rs[j*no_batch+i]);
+            }
+        }
+    }
 
-	}
+    if(save)
+    {
+        std::cout << "START SAVING" << std::endl;
+        std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
+        if (time1_file.is_open())
+        {
+            for(int i = 0; i < level_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time1_file << duration_cast<milliseconds>( times_hmc1[i*no_batch+j] ).count() << " ";
+                }
+                time1_file << std::endl;
+            }
+        }
+        time1_file.close();
 
+        std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
+        if (time2_file.is_open())
+        {
+            for(int i = 0; i < level_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time2_file << duration_cast<milliseconds>( times_hmc2[i*no_batch+j] ).count() << " ";
+                }
+                time2_file << std::endl;
+            }
+        }
+        time2_file.close();
+
+        std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
+        if (time3_file.is_open())
+        {
+            for(int i = 0; i < level_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time3_file << duration_cast<milliseconds>( times_mcmc[i*no_batch+j] ).count() << " ";
+                }
+                time3_file << std::endl;
+            }
+        }
+        time3_file.close();
+
+        std::ofstream time4_file(filename + "_time_lvl_rs.log");
+        if (time4_file.is_open())
+        {
+            for(int i = 0; i < level_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time4_file << duration_cast<milliseconds>( times_rs[i*no_batch+j] ).count() << " ";
+                }
+                time4_file << std::endl;
+            }
+        }
+        time4_file.close();
+
+        std::ofstream time5_file(filename + "_time_lvl_hrs.log");
+        if (time5_file.is_open())
+        {
+            for(int i = 0; i < level_sets_num; i++)
+            {
+                for(int j=0;j<no_batch;j++)
+                {
+                    time5_file << duration_cast<milliseconds>( times_hrs[i*no_batch+j] ).count() << " ";
+                }
+            time5_file << std::endl;
+        }
+        }
+        time5_file.close();
+    }
 }
