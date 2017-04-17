@@ -267,6 +267,15 @@ namespace ompl
             /// @return Inverse Jacobian of the function at the current state (same dimension as current state)
             ///
             virtual Eigen::VectorXd getInvJacobian(const Eigen::VectorXd &curr_state) const;
+
+
+            ///
+            /// Determines if a sample is within the boundaries of the space
+            ///
+            /// @param state State to test
+            /// @return Boolean that is true if it is in the boundaries of the space
+            ///
+            virtual bool isInBound(const Eigen::VectorXd &state) const;
         }; // MyInformedSampler
 
         using MyInformedSamplerPtr = std::shared_ptr<ompl::base::MyInformedSampler>;

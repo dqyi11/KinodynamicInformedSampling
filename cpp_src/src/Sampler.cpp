@@ -331,5 +331,22 @@ namespace ompl
         {
             return InformedSampler::space_->getMeasure();
         }
+
+        ///
+        /// Determines if a sample is within the boundaries of the space
+        ///
+        /// @param state State to test
+        /// @return Boolean that is true if it is in the boundaries of the space
+        ///
+        bool MyInformedSampler::isInBound(const Eigen::VectorXd &state) const
+        {
+            Eigen::VectorXd state_max, state_min;
+            std::tie(state_min, state_max) = getStateLimits();
+            for (unsigned int i=0; i<state.size(); i++)
+                if (state(i) > state_max(i) || state(i) < state_min(i))
+                    return false;
+            return true;
+        }
+
     } // base
 } // oml

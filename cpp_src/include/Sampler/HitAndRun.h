@@ -97,10 +97,10 @@ namespace ompl
 
             virtual void updateLevelSet(const double level_set) override;
 
-        private:
             std::mt19937 gen_;
             Eigen::VectorXd prev_sample_;
 
+        private:
             ///
             /// Get one random uniform sample from the space
             ///
@@ -108,7 +108,31 @@ namespace ompl
             ///
             virtual Eigen::VectorXd getRandomSample(double min, double max, const int dim);
         };
+
+        class HitAndRun : GibbsSampler
+        {
+        public:
+            HitAndRun(const SpaceInformationPtr &si,
+                      const ProblemDefinitionPtr &problem,
+                      const double levelSet,
+                      const unsigned int maxNumberCalls,
+                      const int sampleBatchSize)
+            : GibbsSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+            {
+            }
+
+            ///
+            /// Get a series of samples for the problem space
+            ///
+            /// @param no_samples Number of samples to get
+            /// @param time Boolean that determines if the time to run the proccess is displayed
+            /// @return A series of samples of shape (number of samples, sample dimension)
+            ///
+            virtual Eigen::MatrixXd sample(const int no_samples,
+                                           std::chrono::high_resolution_clock::duration &duration) override;
+        };
     } // namespace base
 } // namespace ompl
 
 // #endif // OMPL_BASE_SAMPLERS_INFORMED_SAMPLER_
+

@@ -78,6 +78,7 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
         std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
         std::cout << "\t -dimthrs - Boolean(0,1)" << std::endl;
         std::cout << "\t -gibbs - Boolean(0,1)" << std::endl;
+        std::cout << "\t -hitnrun - Boolean(0,1)" << std::endl;
 		std::cout << "\t -filename - Filename to save the samples to" << std::endl;
 		std::cout << "________________________________________________" << std::endl;
 		return std::make_tuple(false, std::vector<int>{});
@@ -128,15 +129,15 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
         else
             args.push_back(1); // Default to run dimthrs
 
-        // Get the boolean to determine if we run dimt hierarchical rejection sampling
+        // Get the boolean to determine if we run gibbs sampling
         if(cmdOptionExists(argv, argv+argc, "-gibbs"))
             args.push_back(atoi(getCmdOption(argv, argv+argc, "-gibbs")));
         else
             args.push_back(1); // Default to run dimthrs
 
-        // Get the boolean to determine if we run dimt hierarchical rejection sampling
-        if(cmdOptionExists(argv, argv+argc, "-gibbs"))
-            args.push_back(atoi(getCmdOption(argv, argv+argc, "-gibbs")));
+        // Get the boolean to determine if we run hit and run sampling
+        if(cmdOptionExists(argv, argv+argc, "-hitnrun"))
+            args.push_back(atoi(getCmdOption(argv, argv+argc, "-hitnrun")));
         else
             args.push_back(1); // Default to run dimthrs
 
@@ -183,6 +184,7 @@ int main(int argc, char * argv[])
 	bool run_ghrej = (args[5] == 1) ? true : false;
 	bool run_dimthrs = (args[6] == 1) ? true : false;
 	bool run_gibbs = (args[7] == 1) ? true : false;
+    bool run_hitnrun = (args[8] == 1) ? true : false;
 
 	std::string filename; bool save;
 	std::tie(save, filename) = get_filename(argc, argv);
@@ -344,17 +346,21 @@ int main(int argc, char * argv[])
   	MatrixXd gibbs_samples;
 	if(run_gibbs)
     {
-        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-        for (unsigned int i = 0; i < 1; ++i)
-        {
-            maxVelocities1[i] = 10;
-            maxAccelerations1[i] = param.a_max;
-        }
-        DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
-
         ompl::base::GibbsSampler gibbs_s(si, pdef, level_set, 100, 100);
         std::cout << "Running Gibbs Sampler..." << std::endl;
         gibbs_samples = gibbs_s.sample(no_samples, duration);
+        if(time)
+        {
+            printTime(duration);
+        }
+    }
+
+    MatrixXd hitnrun_samples;
+    if(run_hitnrun)
+    {
+        ompl::base::HitAndRun hitnrun_s(si, pdef, level_set, 100, 100);
+        std::cout << "Running Hit and Run Sampler..." << std::endl;
+        gibbs_samples = hitnrun_s.sample(no_samples, duration);
         if(time)
         {
             printTime(duration);
@@ -449,6 +455,19 @@ int main(int argc, char * argv[])
                 }
             }
             gibbs_file.close();
+        }
+
+        if(run_hitnrun)
+        {
+            std::ofstream hitnrun_file(filename + "_hitnrun.log");
+            if (hitnrun_file.is_open())
+            {
+                for(int i = 0; i < hitnrun_samples.rows(); i++)
+                {
+                    hitnrun_file << hitnrun_samples.row(i) << std::endl;
+                }
+            }
+            hitnrun_file.close();
         }
 
         std::cout << "Saved samples and costs to " << filename << std::endl;
