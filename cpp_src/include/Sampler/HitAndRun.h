@@ -79,6 +79,7 @@ namespace ompl
                 // Set up the random number generator
                 std::random_device rd;
                 gen_ = std::mt19937(rd());
+                gen_.seed(1); /* TODO remove */
 
                 // Use the start positions as starting point of the algorithm
                 // (This will always be inside the informed subspace)

@@ -196,12 +196,16 @@ int main(int argc, char * argv[])
 	VectorXd goal_state(num_dim);
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> dis(-25, 25);
+	gen.seed(1); /* TODO remove */
+        std::uniform_real_distribution<double> dis(-25, 25);
 	for(int i = 0; i < num_dim; i++)
 	{
 		start_state(i) = dis(gen);
 		goal_state(i) = dis(gen);
-    }
+      
+    } 
+    //std::cout << " start " << start_state << std::endl;
+    //std::cout << " goal " << goal_state << std::endl;
 
     // Initializations
     Dimt dimt(param.a_max);

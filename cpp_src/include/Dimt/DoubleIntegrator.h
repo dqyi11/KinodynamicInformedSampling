@@ -45,6 +45,7 @@
 #include <cmath>
 #include <Eigen/Core>
 #include <tuple>
+#include "Dimt/Interval.h"
 
 template <int dof>
 class DoubleIntegrator {
@@ -400,7 +401,7 @@ public:
 		return infeasibleInterval;
 	}
 
-	double getMinTime(const StateVector &state1, const StateVector &state2,
+	double getMinTimeA(const StateVector &state1, const StateVector &state2,
 	                  double maxTime = std::numeric_limits<double>::infinity()) const
 	{
 
@@ -431,6 +432,7 @@ public:
 		assert(minTime < std::numeric_limits<double>::infinity());
 		return minTime;
 	}
+
 
     std::tuple<double, double, double>
     getMinTimeAndIntervals(const StateVector &state1, const StateVector &state2,
@@ -464,4 +466,49 @@ public:
 		const double time = getMinTime(state1, state2);
 		return getTrajectory(state1, state2, time);
 	}
+ 
+        double getMinTime(const StateVector &state1, const StateVector &state2,
+	                  double maxTime = std::numeric_limits<double>::infinity()) const
+        {
+            //std::cout << "getMinTime" << std::endl;
+            double minTimeA = getMinTimeA(state1, state2, maxTime);
+            double minTimeB = getMinTimeB(state1, state2, maxTime);
+            if (minTimeA != minTimeB) 
+            {
+                std::cout << "minTimeA " << minTimeA << " minTimeB " << minTimeB << std::endl;
+            }
+            return minTimeA;
+        }
+
+        double getMinTimeB(const StateVector &state1, const StateVector &state2,
+	                  double maxTime = std::numeric_limits<double>::infinity()) const
+	{
+            const Vector distances = state2.template head<dof>() - state1.template head<dof>();
+            IntervalSet intervalSet;
+	    
+	    //std::pair<double, double> infeasibleIntervals[dof];
+	    Vector firstAccelerations;
+
+	    for(unsigned int i = 0; i < dof ; ++i) {
+                                const double time = getMinTime1D(state1[dof+i], state2[dof+i], distances[i], maxAccelerations_[i], maxVelocities_[i], maxTime, firstAccelerations[i]);
+                Interval i1(time, true);
+                intervalSet.insert_and(i1);
+  
+                std::pair<double, double> infeasibleInterval = getInfeasibleInterval(
+                    state1[dof+i], state2[dof+i], distances[i],
+                    firstAccelerations[i], maxAccelerations_[i], maxVelocities_[i]);
+
+              
+                Interval i2(infeasibleInterval.first, infeasibleInterval.second);
+                intervalSet.insert_and_complement(i2);
+           
+                std::cout << i << " - " << time << " " << infeasibleInterval.first << " " << infeasibleInterval.second << std::endl;
+                           
+	    }
+
+            double minTime = intervalSet.get_intervals().front().get_min();
+	    assert(minTime < std::numeric_limits<double>::infinity());
+	    return minTime;
+	}
+
 };

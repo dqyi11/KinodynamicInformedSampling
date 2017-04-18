@@ -40,6 +40,9 @@ target_link_libraries(samplerLib
 add_library(dimtLib
 			SHARED
 			 include/Dimt/Dimt.h
+                         include/Dimt/Interval.h
+                         include/Dimt/DoubleIntegrator.h
+                         src/Interval.cpp
 			)
 target_link_libraries(dimtLib
 					  ${EIGEN3_LIBRARIES}
@@ -60,28 +63,32 @@ target_link_libraries(omplwrapperLib
 # Link libraries for main file
 target_link_libraries(get_samples
 					  samplerLib
-                      omplwrapperLib
+                                          dimtLib
+                                          omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
 
 target_link_libraries(get_samples_batch
 					  samplerLib
-                      omplwrapperLib
+                                          dimtLib
+                                          omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
 
 target_link_libraries(get_samples_diff_levels
 					  samplerLib
-                      omplwrapperLib
+                                          dimtLib
+                                          omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
 
 target_link_libraries(get_samples_diff_levels_geometry
 					  samplerLib
-                      omplwrapperLib
+                                          dimtLib
+                                          omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
@@ -89,7 +96,8 @@ target_link_libraries(get_samples_diff_levels_geometry
 
 target_link_libraries(get_samples_diff_sample_no
 					  samplerLib
-                      omplwrapperLib
+                                          dimtLib
+                                          omplwrapperLib
 					  ${EIGEN3_LIBRARIES}
 					  #{OMPL_LIBRARIES}
 					  )
@@ -102,8 +110,8 @@ target_link_libraries(unit_test
 
 # Ompl Planner
 add_executable (kdp_pointmass2d src/kdp_pointmass2d.cpp)
-target_link_libraries (kdp_pointmass2d ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries (kdp_pointmass2d ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} dimtLib)
 
 # Informed Pointmass
 add_executable (informed_pointmass src/informed_pointmass.cpp)
-target_link_libraries (informed_pointmass ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} samplerLib omplwrapperLib)
+target_link_libraries (informed_pointmass ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} samplerLib dimtLib omplwrapperLib)
