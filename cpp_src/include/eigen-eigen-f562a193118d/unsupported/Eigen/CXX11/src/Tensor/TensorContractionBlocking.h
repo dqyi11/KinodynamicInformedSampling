@@ -10,47 +10,57 @@
 #ifndef EIGEN_CXX11_TENSOR_TENSOR_CONTRACTION_BLOCKING_H
 #define EIGEN_CXX11_TENSOR_TENSOR_CONTRACTION_BLOCKING_H
 
+namespace Eigen
+{
+    namespace internal
+    {
+        enum
+        {
+            ShardByRow = 0,
+            ShardByCol = 1
+        };
 
-namespace Eigen {
-namespace internal {
+        // Default Blocking Strategy
+        template <typename LhsMapper, typename RhsMapper, typename Index, int ShardingType = ShardByCol>
+        class TensorContractionBlocking
+        {
+        public:
+            typedef typename LhsMapper::Scalar LhsScalar;
+            typedef typename RhsMapper::Scalar RhsScalar;
 
-enum {
-  ShardByRow = 0,
-  ShardByCol = 1
-};
+            EIGEN_DEVICE_FUNC TensorContractionBlocking(Index k, Index m, Index n, Index num_threads = 1)
+              : kc_(k), mc_(m), nc_(n)
+            {
+                if (ShardingType == ShardByCol)
+                {
+                    computeProductBlockingSizes<LhsScalar, RhsScalar, 1>(kc_, mc_, nc_, num_threads);
+                }
+                else
+                {
+                    computeProductBlockingSizes<LhsScalar, RhsScalar, 1>(kc_, nc_, mc_, num_threads);
+                }
+            }
 
+            EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index kc() const
+            {
+                return kc_;
+            }
+            EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index mc() const
+            {
+                return mc_;
+            }
+            EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index nc() const
+            {
+                return nc_;
+            }
 
-// Default Blocking Strategy
-template <typename LhsMapper, typename RhsMapper, typename Index, int ShardingType=ShardByCol>
-class TensorContractionBlocking {
- public:
+        private:
+            Index kc_;
+            Index mc_;
+            Index nc_;
+        };
 
-  typedef typename LhsMapper::Scalar LhsScalar;
-  typedef typename RhsMapper::Scalar RhsScalar;
+    }  // end namespace internal
+}  // end namespace Eigen
 
-  EIGEN_DEVICE_FUNC TensorContractionBlocking(Index k, Index m, Index n, Index num_threads = 1) :
-      kc_(k), mc_(m), nc_(n)
-  {
-    if (ShardingType == ShardByCol) {
-      computeProductBlockingSizes<LhsScalar, RhsScalar, 1>(kc_, mc_, nc_, num_threads);
-    }
-    else {
-      computeProductBlockingSizes<LhsScalar, RhsScalar, 1>(kc_, nc_, mc_, num_threads);
-    }
-  }
-
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index kc() const { return kc_; }
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index mc() const { return mc_; }
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index nc() const { return nc_; }
-
- private:
-  Index kc_;
-  Index mc_;
-  Index nc_;
-};
-
-
-} // end namespace internal
-} // end namespace Eigen
-
-#endif // EIGEN_CXX11_TENSOR_TENSOR_CONTRACTION_BLOCKING_H
+#endif  // EIGEN_CXX11_TENSOR_TENSOR_CONTRACTION_BLOCKING_H

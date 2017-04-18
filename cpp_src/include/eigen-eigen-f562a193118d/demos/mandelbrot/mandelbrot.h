@@ -25,10 +25,13 @@ class MandelbrotThread : public QThread
     int id, max_iter;
     bool single_precision;
 
-  public:
-    MandelbrotThread(MandelbrotWidget *w, int i) : widget(w), id(i) {}
+public:
+    MandelbrotThread(MandelbrotWidget *w, int i) : widget(w), id(i)
+    {
+    }
     void run();
-    template<typename Real> void render(int img_width, int img_height);
+    template <typename Real>
+    void render(int img_width, int img_height);
 };
 
 class MandelbrotWidget : public QWidget
@@ -45,27 +48,29 @@ class MandelbrotWidget : public QWidget
     MandelbrotThread **threads;
     int threadcount;
 
-  protected:
+protected:
     void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
 
-  public:
-    MandelbrotWidget() : QWidget(), center(0,0), xradius(2),
-                         size(0), buffer(0), draft(16)
+public:
+    MandelbrotWidget() : QWidget(), center(0, 0), xradius(2), size(0), buffer(0), draft(16)
     {
-      setAutoFillBackground(false);
-      threadcount = QThread::idealThreadCount();
-      threads = new MandelbrotThread*[threadcount];
-      for(int th = 0; th < threadcount; th++) threads[th] = new MandelbrotThread(this, th);
+        setAutoFillBackground(false);
+        threadcount = QThread::idealThreadCount();
+        threads = new MandelbrotThread *[threadcount];
+        for (int th = 0; th < threadcount; th++)
+            threads[th] = new MandelbrotThread(this, th);
     }
     ~MandelbrotWidget()
     {
-      if(buffer) delete[]buffer;
-      for(int th = 0; th < threadcount; th++) delete threads[th];
-      delete[] threads;
+        if (buffer)
+            delete[] buffer;
+        for (int th = 0; th < threadcount; th++)
+            delete threads[th];
+        delete[] threads;
     }
 };
 
-#endif // MANDELBROT_H
+#endif  // MANDELBROT_H

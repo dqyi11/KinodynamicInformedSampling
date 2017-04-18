@@ -42,8 +42,7 @@ namespace ompl
 {
     namespace base
     {
-        Eigen::VectorXd GibbsSampler::getRandomSample(double min, double max,
-                                                      const int dim)
+        Eigen::VectorXd GibbsSampler::getRandomSample(double min, double max, const int dim)
         {
             std::uniform_real_distribution<> dis(min, max);
             // Updates the member variable of the class as well
@@ -63,22 +62,21 @@ namespace ompl
             Eigen::MatrixXd samples(no_samples, dim + 1);
 
             // If you want to time the sampling
-            std::chrono::high_resolution_clock::time_point t1 =
-                std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
             Eigen::VectorXd sample;
             unsigned int skip = 0, trys = 0;
             for (int i = 0; i < no_samples; i++)
             {
                 trys = 0;
-                do {
+                do
+                {
                     if (trys > 10000)
                     {
                         skip++;
                         trys = 0;
                     }
-                    sample = getRandomSample(min_vals[(i + skip) % dim],
-                             max_vals[(i + skip) % dim], (i + skip) % dim);
+                    sample = getRandomSample(min_vals[(i + skip) % dim], max_vals[(i + skip) % dim], (i + skip) % dim);
                     trys++;
                 } while (!isInLevelSet(sample));
 
@@ -88,8 +86,7 @@ namespace ompl
                 samples.row(i) = newsample;
             }
 
-            std::chrono::high_resolution_clock::time_point t2 =
-                std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
             return samples;
         }
@@ -101,8 +98,7 @@ namespace ompl
             // std::cout << "Updated Level Set" << std::endl;
         }
 
-        Eigen::MatrixXd HitAndRun::sample(const int no_samples,
-                                          std::chrono::high_resolution_clock::duration& duration)
+        Eigen::MatrixXd HitAndRun::sample(const int no_samples, std::chrono::high_resolution_clock::duration &duration)
         {
             // Get the limits of the space
             Eigen::VectorXd max_vals, min_vals;
@@ -110,7 +106,7 @@ namespace ompl
             std::tie(max_vals, min_vals) = getStateLimits();
             double diag = 0;
             for (unsigned int i = 0; i < dim; i++)
-            diag = diag + (max_vals[i] - min_vals[i]) * (max_vals[i] - min_vals[i]);
+                diag = diag + (max_vals[i] - min_vals[i]) * (max_vals[i] - min_vals[i]);
             diag = std::sqrt(diag);
 
             // Run until you get the correct number of samples
@@ -122,8 +118,7 @@ namespace ompl
             Eigen::VectorXd dir(dim);
 
             // If you want to time the sampling
-            std::chrono::high_resolution_clock::time_point t1 =
-                std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
             Eigen::VectorXd sample;
             int skip = 0, trys = 0;
@@ -151,8 +146,7 @@ namespace ompl
                         trys = 0;
                     }
                     // Generate random sample along dir
-                    std::uniform_real_distribution<> uni_dis(lamda_lower_bound,
-                                                             lamda_upper_bound);
+                    std::uniform_real_distribution<> uni_dis(lamda_lower_bound, lamda_upper_bound);
                     double lamda = uni_dis(gen_);
                     sample = prev_sample_ + lamda * dir;
                     if (!isInBound(sample))
@@ -162,13 +156,13 @@ namespace ompl
                         else
                             lamda_lower_bound = lamda;
                         retry = true;
-                    } else if (!isInLevelSet(sample))
-                    retry = true;
+                    }
+                    else if (!isInLevelSet(sample))
+                        retry = true;
                     trys++;
                     if (VERBOSE)
-                    std::cout << "Current_sample: " << i << " Trys: " << trys
-                    << " Skip: " << skip << " UB:" << lamda_upper_bound
-                    << " LB:" << lamda_lower_bound << std::endl;
+                        std::cout << "Current_sample: " << i << " Trys: " << trys << " Skip: " << skip
+                                  << " UB:" << lamda_upper_bound << " LB:" << lamda_lower_bound << std::endl;
                     // if (!problem().is_in_level_set(prev_sample_))
                     //   std::cout << "\nstart_FALSE!!!!!!!!!!!!!!!!!!"  << std::endl;
                     // else
@@ -181,10 +175,9 @@ namespace ompl
                 samples.row(i) = newsample;
             }
 
-            std::chrono::high_resolution_clock::time_point t2 =
-                std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
             return samples;
         }
-    } // namespace base
-} // namespace ompl
+    }  // namespace base
+}  // namespace ompl

@@ -37,56 +37,54 @@
 #include "Sampler/MonteCarloSamplers.h"
 
 // Standard library functions
-#include <math.h>       /* exp, tanh, log */
+#include <math.h> /* exp, tanh, log */
 #include <limits>
 #include <algorithm>
 
 namespace
 {
+    void print_out_states3(const Eigen::VectorXd &state)
+    {
+        std::cout << "[ ";
+        for (uint i = 0; i < state.size(); i++)
+        {
+            std::cout << state[i] << " ";
+        }
+        std::cout << " ]" << std::endl;
+    }
 
-void print_out_states3(const Eigen::VectorXd &state)
-{
-	std::cout << "[ ";
-	for(uint i = 0; i < state.size(); i++)
-	{
-		std::cout << state[i] << " ";
-	}
-	std::cout << " ]" << std::endl;
-}
+    // Verbose constant
+    const bool VERBOSE = false;
 
-// Verbose constant
-const bool VERBOSE = false;
+    ///
+    /// Sigmoid function
+    ///
+    /// @param x Input
+    /// @param a Controls shape of sigmoid
+    /// @param c Controls shape of sigmoid
+    /// @return Output of sigmoid function
+    ///
+    inline double sigmoid(const double &x, const double &a = 200, const double &c = 0)
+    {
+        return 1 / (1 + exp(-a * (x - c)));
+    }
 
-///
-/// Sigmoid function
-///
-/// @param x Input
-/// @param a Controls shape of sigmoid
-/// @param c Controls shape of sigmoid
-/// @return Output of sigmoid function
-///
-inline double sigmoid(const double& x, const double& a = 200, const double& c = 0)
-{
-	return 1 / (1 + exp(-a * (x - c)));
-}
+    ///
+    /// Function to get some value between 0 and 1
+    ///
+    /// @return A uniform value between 0 and 1
+    ///
+    inline double rand_uni()
+    {
+        // Set up the random number generator
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dis(0.0, 1.0);
 
-///
-/// Function to get some value between 0 and 1
-///
-/// @return A uniform value between 0 and 1
-///
-inline double rand_uni()
-{
-	// Set up the random number generator
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> dis(0.0, 1.0);
+        return dis(gen);
+    }
 
-	return dis(gen);
-}
-
-} // namespace
-
+}  // namespace
 
 namespace ompl
 {
@@ -103,9 +101,9 @@ namespace ompl
             const auto min_vals = std::get<0>(limits);
             const auto max_vals = std::get<1>(limits);
 
-            for(uint i = 0; i < sample.size(); i++)
+            for (uint i = 0; i < sample.size(); i++)
             {
-                if(sample[i] > max_vals[i] or sample[i] < min_vals[i])
+                if (sample[i] > max_vals[i] or sample[i] < min_vals[i])
                 {
                     return true;
                 }
@@ -124,16 +122,16 @@ namespace ompl
         {
             const double cost = getCost(curr_state);
             // double E_grad = tanh(cost);
-            const double E_grad = log(1+log(1+cost));
+            const double E_grad = log(1 + log(1 + cost));
             const double E_informed = 100 * sigmoid(cost - getLevelSet());
             double E_region = 0;
             std::tuple<Eigen::VectorXd, Eigen::VectorXd> limits = getStateLimits();
-            for(int i=0; i < curr_state.size(); i++)
+            for (int i = 0; i < curr_state.size(); i++)
             {
-                E_region += 100 * sigmoid(std::get<0>(limits)(i) - curr_state(i)); // Lower Limits
-                E_region += 100 * sigmoid(curr_state(i) - std::get<1>(limits)(i)); // Higher Limits
+                E_region += 100 * sigmoid(std::get<0>(limits)(i) - curr_state(i));  // Lower Limits
+                E_region += 100 * sigmoid(curr_state(i) - std::get<1>(limits)(i));  // Higher Limits
             }
-            return  E_region + E_grad + E_informed;
+            return E_region + E_grad + E_informed;
         }
 
         ///
@@ -174,10 +172,11 @@ namespace ompl
 
             int size = getSpaceDimension();
             Eigen::VectorXd sample(size);
-            for(int i = 0; i < size; i++)
+            for (int i = 0; i < size; i++)
             {
                 // Get a random distribution between the values of the joint
-                double min = min_vals(i); double max = max_vals(i);
+                double min = min_vals(i);
+                double max = max_vals(i);
                 std::uniform_real_distribution<> dis(min, max);
 
                 sample(i) = dis(gen);
@@ -196,9 +195,8 @@ namespace ompl
         Eigen::MatrixXd concatenate_matrix_and_vector(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
         {
             // Concatenate to results matrix
-            Eigen::MatrixXd new_results(matrix.rows()+1, matrix.cols());
-            new_results << matrix,
-                           vector.transpose();
+            Eigen::MatrixXd new_results(matrix.rows() + 1, matrix.cols());
+            new_results << matrix, vector.transpose();
             return new_results;
         }
 
@@ -251,23 +249,25 @@ namespace ompl
             double prev_cost = cost;
 
             int steps = 0;
-            while(cost > getLevelSet())
+            while (cost > getLevelSet())
             {
                 Eigen::VectorXd grad = getGradient(start);
                 start = start - alpha * grad;
 
                 cost = getCost(start);
 
-                if(VERBOSE) std::cout << cost << std::endl;
+                if (VERBOSE)
+                    std::cout << cost << std::endl;
 
                 steps++;
 
                 // If the number of steps reaches some threshold, start over
                 const double thresh = 20;
                 // if(steps > thresh || cost > prev_cost)
-                if(steps > thresh || cost > 10*getLevelSet() || grad.norm() < 0.001)
+                if (steps > thresh || cost > 10 * getLevelSet() || grad.norm() < 0.001)
                 {
-                    if(VERBOSE) std::cout << "Restarting!" << std::endl;
+                    if (VERBOSE)
+                        std::cout << "Restarting!" << std::endl;
                     // recursing gives segfaults so just change the start position instead
                     // return grad_descent(alpha);
                     start = MonteCarloSampler::getRandomSample();
@@ -291,7 +291,7 @@ namespace ompl
             double cost = getCost(end);
 
             int steps = 0;
-            while(cost > getLevelSet())
+            while (cost > getLevelSet())
             {
                 double last_cost = cost;
                 Eigen::VectorXd inv_jacobian = getInvJacobian(end);
@@ -301,7 +301,7 @@ namespace ompl
 
                 // If the number of steps reaches some threshold, start over
                 const double trap_threshold = 0.0001;
-                if( last_cost - cost < trap_threshold )
+                if (last_cost - cost < trap_threshold)
                 {
                     end = MonteCarloSampler::getRandomSample();
                     cost = getCost(end);
@@ -325,7 +325,7 @@ namespace ompl
 
             int size = getSpaceDimension();
             Eigen::VectorXd sample(size);
-            for(int i = 0; i < size; i++)
+            for (int i = 0; i < size; i++)
             {
                 sample(i) = dis(gen);
             }
@@ -340,7 +340,7 @@ namespace ompl
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-                for(unsigned int i=0;i<no_samples;i++)
+            for (unsigned int i = 0; i < no_samples; i++)
             {
                 Eigen::VectorXd newsample = sampleMemorized();
                 samples = concatenate_matrix_and_vector(samples, newsample);
@@ -356,15 +356,15 @@ namespace ompl
         {
             // last sample
             Eigen::VectorXd q = Eigen::VectorXd(getStartState().size());
-            for(unsigned int i = 0; i < getStartState().size(); i++)
+            for (unsigned int i = 0; i < getStartState().size(); i++)
             {
                 q[i] = lastSample_[i];
             }
 
-            if(getCurrentStep() < 0 )
+            if (getCurrentStep() < 0)
             {
                 Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
-                //q = newton_raphson(start);
+                // q = newton_raphson(start);
                 q = gradDescent(getAlpha());
             }
             updateCurrentStep();
@@ -374,16 +374,19 @@ namespace ompl
             Eigen::VectorXd p = MonteCarloSampler::sampleNormal(0, getSigma());
             Eigen::VectorXd p_last = p;
 
-            if(VERBOSE) std::cout << "Sampled the momentum" << std::endl;
+            if (VERBOSE)
+                std::cout << "Sampled the momentum" << std::endl;
 
             // Make a half step for momentum at the beginning
             Eigen::VectorXd grad = getGradient(q);
-            if(VERBOSE) std::cout << "Got the gradient" << std::endl;
+            if (VERBOSE)
+                std::cout << "Got the gradient" << std::endl;
 
             // Ensure that the gradient isn't two large
-            while(grad.maxCoeff() > 1e2)
+            while (grad.maxCoeff() > 1e2)
             {
-                if(VERBOSE) std::cout << "WARNING: Gradient too high" << std::endl;
+                if (VERBOSE)
+                    std::cout << "WARNING: Gradient too high" << std::endl;
 
                 Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
                 q = newtonRaphson(start);
@@ -393,14 +396,15 @@ namespace ompl
             p = p - getEpsilon() * grad / 2;
 
             // Alternate Full steps for q and p
-            for(int i = 0; i < getL(); i++)
+            for (int i = 0; i < getL(); i++)
             {
                 q = q + getEpsilon() * p;
-                if(i != getL()) p = p - getEpsilon() * grad;
+                if (i != getL())
+                    p = p - getEpsilon() * grad;
             }
 
-            if(VERBOSE) std::cout << "Integrated Along momentum" << std::endl;
-
+            if (VERBOSE)
+                std::cout << "Integrated Along momentum" << std::endl;
 
             // Make a half step for momentum at the end
             p = p - getEpsilon() * grad / 2;
@@ -415,10 +419,11 @@ namespace ompl
             double U_proposed = getEnergy(q);
             double K_proposed = p_last.norm() / 2;
 
-            if(VERBOSE) std::cout << "Got energies" << std::endl;
+            if (VERBOSE)
+                std::cout << "Got energies" << std::endl;
 
             // Accept or reject the state at the end of trajectory
-            double alpha = std::min(1.0, std::exp(U_last-U_proposed+K_last-K_proposed));
+            double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
             if (rand_uni() > alpha)
             {
                 q = q_last;
@@ -444,16 +449,19 @@ namespace ompl
         /// Get a series of samples for the problem space
         ///
         /// @param no_samples Number of samples to get
-        /// @param time Boolean that determines if the time to run the proccess is displayed
+        /// @param time Boolean that determines if the time to run the proccess is
+        /// displayed
         /// @return A series of samples of shape (number of samples, sample dimension)
         ///
-        Eigen::MatrixXd HMCSampler::sample(const int no_samples,
-                                           std::chrono::high_resolution_clock::duration &duration)
+        Eigen::MatrixXd HMCSampler::sample(const int no_samples, std::chrono::high_resolution_clock::duration &duration)
         {
-            if(VERBOSE) std::cout << "Number of samples: " << no_samples << std::endl;
-            if(VERBOSE) std::cout << "Surfing" << std::endl;
+            if (VERBOSE)
+                std::cout << "Number of samples: " << no_samples << std::endl;
+            if (VERBOSE)
+                std::cout << "Surfing" << std::endl;
             Eigen::VectorXd q = HMCSampler::gradDescent(getAlpha());
-            if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
+            if (VERBOSE)
+                std::cout << "Got Through Gradient Descent" << std::endl;
 
             // Store the samples
             Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
@@ -463,45 +471,51 @@ namespace ompl
             int rejected = 0;
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-            while(accepted < no_samples)
+            while (accepted < no_samples)
             {
-                if(VERBOSE) std::cout << "New start!" << std::endl;
+                if (VERBOSE)
+                    std::cout << "New start!" << std::endl;
                 Eigen::VectorXd q = HMCSampler::gradDescent(getAlpha());
-                if(VERBOSE) std::cout << "Got Through Gradient Descent in loop" << std::endl;
+                if (VERBOSE)
+                    std::cout << "Got Through Gradient Descent in loop" << std::endl;
 
                 int curr_rejections = 0;
                 int curr_step = 0;
-                while(curr_rejections < 10 and accepted < no_samples and curr_step < getSteps())
+                while (curr_rejections < 10 and accepted < no_samples and curr_step < getSteps())
                 {
                     // Sample the momentum and set up the past and current state and momentum
                     Eigen::VectorXd q_last = q;
                     Eigen::VectorXd p = MonteCarloSampler::sampleNormal(0, getSigma());
                     Eigen::VectorXd p_last = p;
 
-                    if(VERBOSE) std::cout << "Sampled the momentum" << std::endl;
+                    if (VERBOSE)
+                        std::cout << "Sampled the momentum" << std::endl;
 
                     // Make a half step for momentum at the beginning
                     Eigen::VectorXd grad = getGradient(q);
-                    if(VERBOSE) std::cout << "Got the gradient" << std::endl;
+                    if (VERBOSE)
+                        std::cout << "Got the gradient" << std::endl;
 
                     // Ensure that the gradient isn't two large
-                    if(grad.maxCoeff() > 1e2)
+                    if (grad.maxCoeff() > 1e2)
                     {
-                        if(VERBOSE) std::cout << "WARNING: Gradient too high" << std::endl;
+                        if (VERBOSE)
+                            std::cout << "WARNING: Gradient too high" << std::endl;
                         break;
                     }
 
                     p = p - getEpsilon() * grad / 2;
 
                     // Alternate Full steps for q and p
-                    for(int i = 0; i < getL(); i++)
+                    for (int i = 0; i < getL(); i++)
                     {
                         q = q + getEpsilon() * p;
-                        if(i != getL()) p = p - getEpsilon() * grad;
+                        if (i != getL())
+                            p = p - getEpsilon() * grad;
                     }
 
-                    if(VERBOSE) std::cout << "Integrated Along momentum" << std::endl;
-
+                    if (VERBOSE)
+                        std::cout << "Integrated Along momentum" << std::endl;
 
                     // Make a half step for momentum at the end
                     p = p - getEpsilon() * grad / 2;
@@ -516,11 +530,11 @@ namespace ompl
                     double U_proposed = getEnergy(q);
                     double K_proposed = p_last.norm() / 2;
 
-                    if(VERBOSE) std::cout << "Got energies" << std::endl;
-
+                    if (VERBOSE)
+                        std::cout << "Got energies" << std::endl;
 
                     // Accept or reject the state at the end of trajectory
-                    double alpha = std::min(1.0, std::exp(U_last-U_proposed+K_last-K_proposed));
+                    double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
                     if (rand_uni() <= alpha)
                     {
                         Eigen::VectorXd newsample(getStartState().size() + 1);
@@ -537,17 +551,20 @@ namespace ompl
                     }
 
                     curr_step++;
-                    if(VERBOSE) std::cout << "Decided on rejection / acceptance" << std::endl;
-                    if(VERBOSE) std::cout << "Number Accepted: " << accepted << std::endl;
-                    if(VERBOSE) std::cout << "Number Accepted: " << accepted << std::endl;
-
+                    if (VERBOSE)
+                        std::cout << "Decided on rejection / acceptance" << std::endl;
+                    if (VERBOSE)
+                        std::cout << "Number Accepted: " << accepted << std::endl;
+                    if (VERBOSE)
+                        std::cout << "Number Accepted: " << accepted << std::endl;
                 }
             }
 
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
 
-            if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
+            if (VERBOSE)
+                std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected + accepted) << std::endl;
 
             return samples;
         }
@@ -560,16 +577,20 @@ namespace ompl
         /// Get a series of samples for the problem space
         ///
         /// @param no_samples Number of samples to get
-        /// @param time Boolean that determines if the time to run the proccess is displayed
+        /// @param time Boolean that determines if the time to run the proccess is
+        /// displayed
         /// @return A series of samples of shape (number of samples, sample dimension)
         ///
         Eigen::MatrixXd MCMCSampler::sample(const int no_samples,
                                             std::chrono::high_resolution_clock::duration &duration)
         {
-            if(VERBOSE) std::cout << "Number of samples: " << no_samples << std::endl;
-            if(VERBOSE) std::cout << "Surfing" << std::endl;
+            if (VERBOSE)
+                std::cout << "Number of samples: " << no_samples << std::endl;
+            if (VERBOSE)
+                std::cout << "Surfing" << std::endl;
             Eigen::VectorXd q = MCMCSampler::gradDescent(getAlpha());
-            if(VERBOSE) std::cout << "Got Through Gradient Descent" << std::endl;
+            if (VERBOSE)
+                std::cout << "Got Through Gradient Descent" << std::endl;
 
             // Store the samples
             Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
@@ -579,18 +600,20 @@ namespace ompl
             int rejected = 0;
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-            while(accepted < no_samples)
+            while (accepted < no_samples)
             {
-                if(samples.rows() > 1)
+                if (samples.rows() > 1)
                 {
-                    if(VERBOSE) std::cout << "New start!" << std::endl;
+                    if (VERBOSE)
+                        std::cout << "New start!" << std::endl;
                     Eigen::VectorXd q = MCMCSampler::gradDescent(getAlpha());
-                    if(VERBOSE) std::cout << "Got Through Gradient Descent in loop" << std::endl;
+                    if (VERBOSE)
+                        std::cout << "Got Through Gradient Descent in loop" << std::endl;
                 }
 
                 int curr_rejections = 0;
                 int curr_step = 0;
-                while(curr_rejections < 10 and accepted < no_samples and curr_step < getSteps())
+                while (curr_rejections < 10 and accepted < no_samples and curr_step < getSteps())
                 {
                     Eigen::VectorXd q_proposed = q + sampleNormal(0, getSigma());
                     double prob_proposed = getProb(q_proposed);
@@ -598,7 +621,7 @@ namespace ompl
 
                     // if(prob_proposed / prob_before >= rand_uni() and
                     //    // !any_dimensions_in_violation(q_proposed))
-                    if(prob_proposed / prob_before >= rand_uni())
+                    if (prob_proposed / prob_before >= rand_uni())
                     {
                         Eigen::VectorXd newsample(getStartState().size() + 1);
                         newsample << q_proposed, getCost(q_proposed);
@@ -608,24 +631,29 @@ namespace ompl
                     }
                     else
                     {
-                        rejected++; curr_rejections++;
-                        if(VERBOSE) std::cout << "Rejected!" << std::endl;
+                        rejected++;
+                        curr_rejections++;
+                        if (VERBOSE)
+                            std::cout << "Rejected!" << std::endl;
                     }
                     curr_step++;
                 }
 
-                if(VERBOSE) std::cout << "Number of accepted: " << accepted << std::endl;
+                if (VERBOSE)
+                    std::cout << "Number of accepted: " << accepted << std::endl;
             }
 
-            if(VERBOSE) std::cout << "Number of accepted: " << accepted << std::endl;
+            if (VERBOSE)
+                std::cout << "Number of accepted: " << accepted << std::endl;
 
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
 
-            if(VERBOSE) std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected+accepted) << std::endl;
+            if (VERBOSE)
+                std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected + accepted) << std::endl;
 
             return samples;
         }
 
-    } // base
-} // ompl
+    }  // base
+}  // ompl

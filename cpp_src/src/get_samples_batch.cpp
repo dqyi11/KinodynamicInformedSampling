@@ -30,9 +30,9 @@ using Eigen::VectorXd;
 //
 #include <algorithm>
 
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
+char *getCmdOption(char **begin, char **end, const std::string &option)
 {
-    char ** itr = std::find(begin, end, option);
+    char **itr = std::find(begin, end, option);
     if (itr != end && ++itr != end)
     {
         return *itr;
@@ -40,109 +40,112 @@ char* getCmdOption(char ** begin, char ** end, const std::string & option)
     return 0;
 }
 
-bool cmdOptionExists(char** begin, char** end, const std::string& option)
+bool cmdOptionExists(char **begin, char **end, const std::string &option)
 {
     return std::find(begin, end, option) != end;
 }
 
-std::tuple<bool, std::vector<int>> handle_arguments(int argc, char * argv[])
+std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
 {
-	if(cmdOptionExists(argv, argv+argc, "-h"))
+    if (cmdOptionExists(argv, argv + argc, "-h"))
     {
-		std::cout << "________________________________________________" << std::endl;
-		std::cout << "Main function for sampling" << std::endl;
-		std::cout << "________________________________________________" << std::endl;
-		std::cout << "Arguments:" << std::endl;
-                std::cout << "\t -batch - NUmber of batches to run" << std::endl;
-		std::cout << "\t -samples - Number of samples to get" << std::endl;
-		std::cout << "\t -time - Boolean (0,1)" << std::endl;
-		std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
-		std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
-		std::cout << "\t -rej - Boolean (0,1)" << std::endl;
+        std::cout << "________________________________________________" << std::endl;
+        std::cout << "Main function for sampling" << std::endl;
+        std::cout << "________________________________________________" << std::endl;
+        std::cout << "Arguments:" << std::endl;
+        std::cout << "\t -batch - NUmber of batches to run" << std::endl;
+        std::cout << "\t -samples - Number of samples to get" << std::endl;
+        std::cout << "\t -time - Boolean (0,1)" << std::endl;
+        std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
+        std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
+        std::cout << "\t -rej - Boolean (0,1)" << std::endl;
         std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
-		std::cout << "\t -filename - Filename to save the samples to" << std::endl;
-		std::cout << "________________________________________________" << std::endl;
-		return std::make_tuple(false, std::vector<int>{});
+        std::cout << "\t -filename - Filename to save the samples to" << std::endl;
+        std::cout << "________________________________________________" << std::endl;
+        return std::make_tuple(false, std::vector<int>{});
     }
     else
     {
-    	std::vector<int> args;
+        std::vector<int> args;
 
-    	// Get the number of samples
-    	if(cmdOptionExists(argv, argv+argc, "-samples"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-samples")));
-    	else
-    		args.push_back(100); // Default to 100 samples
-        // Get the batch number
-    	if(cmdOptionExists(argv, argv+argc, "-batch"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-batch")));
-    	else
-    		args.push_back(20); // Default to 20 batches
-
-    	// Get the boolean to determine if we should time
-    	if(cmdOptionExists(argv, argv+argc, "-time"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-time")));
-    	else
-    		args.push_back(0); // Default to not print time
-
-    	// Get the boolean to determine if we run hmc
-		if(cmdOptionExists(argv, argv+argc, "-hmc"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-hmc")));
-    	else
-    		args.push_back(1); // Default to run hmc
-
-    	// Get the boolean to determine if we run mcmc
-		if(cmdOptionExists(argv, argv+argc, "-mcmc"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-mcmc")));
-    	else
-    		args.push_back(1); // Default to run mcmc
-
-    	// Get the boolean to determine if we run rej
-		if(cmdOptionExists(argv, argv+argc, "-rej"))
-    		args.push_back(atoi(getCmdOption(argv, argv+argc, "-rej")));
-    	else
-    		args.push_back(1); // Default to run rej
-
-        // Get the boolean to determine if we run geometric hierarchical rejection sampling
-        if(cmdOptionExists(argv, argv+argc, "-ghrej"))
-            args.push_back(atoi(getCmdOption(argv, argv+argc, "-ghrej")));
+        // Get the number of samples
+        if (cmdOptionExists(argv, argv + argc, "-samples"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-samples")));
         else
-            args.push_back(1); // Default to run rej
+            args.push_back(100);  // Default to 100 samples
+                                  // Get the batch number
+        if (cmdOptionExists(argv, argv + argc, "-batch"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-batch")));
+        else
+            args.push_back(20);  // Default to 20 batches
 
-    	return std::make_tuple(true, args);
+        // Get the boolean to determine if we should time
+        if (cmdOptionExists(argv, argv + argc, "-time"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-time")));
+        else
+            args.push_back(0);  // Default to not print time
+
+        // Get the boolean to determine if we run hmc
+        if (cmdOptionExists(argv, argv + argc, "-hmc"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-hmc")));
+        else
+            args.push_back(1);  // Default to run hmc
+
+        // Get the boolean to determine if we run mcmc
+        if (cmdOptionExists(argv, argv + argc, "-mcmc"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-mcmc")));
+        else
+            args.push_back(1);  // Default to run mcmc
+
+        // Get the boolean to determine if we run rej
+        if (cmdOptionExists(argv, argv + argc, "-rej"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-rej")));
+        else
+            args.push_back(1);  // Default to run rej
+
+        // Get the boolean to determine if we run geometric hierarchical rejection
+        // sampling
+        if (cmdOptionExists(argv, argv + argc, "-ghrej"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-ghrej")));
+        else
+            args.push_back(1);  // Default to run rej
+
+        return std::make_tuple(true, args);
     }
 }
 
-std::tuple<bool, std::string> get_filename(int argc, char * argv[])
+std::tuple<bool, std::string> get_filename(int argc, char *argv[])
 {
-	if(cmdOptionExists(argv, argv+argc, "-filename"))
-		return std::make_tuple(true, std::string(getCmdOption(argv, argv+argc, "-filename")));
-	else
-		return std::make_tuple(false, "none");
+    if (cmdOptionExists(argv, argv + argc, "-filename"))
+        return std::make_tuple(true, std::string(getCmdOption(argv, argv + argc, "-filename")));
+    else
+        return std::make_tuple(false, "none");
 }
 
-std::vector<double> get_random_vector(const double& max, const double& min, const int& num_dim)
+std::vector<double> get_random_vector(const double &max, const double &min, const int &num_dim)
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> dis(min, max);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(min, max);
 
-	std::vector<double> vec;
+    std::vector<double> vec;
 
-	for(int i = 0; i < num_dim; i++)
-	{
-		vec.push_back(dis(gen));
-	}
+    for (int i = 0; i < num_dim; i++)
+    {
+        vec.push_back(dis(gen));
+    }
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
     //
     // Example for how to use the above sampler
     //
-    bool run; std::vector<int> args;
+    bool run;
+    std::vector<int> args;
     std::tie(run, args) = handle_arguments(argc, argv);
-    if(!run) return 0;
+    if (!run)
+        return 0;
 
     int no_samples = args[0];
     int no_batch = args[1];
@@ -152,18 +155,20 @@ int main(int argc, char * argv[])
     bool run_rej = (args[5] == 1) ? true : false;
     bool run_ghrej = (args[6] == 1) ? true : false;
 
-    std::string filename; bool save;
+    std::string filename;
+    bool save;
     std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
     int num_dim = 12;
-    double maxval = 25; double minval = -25;
+    double maxval = 25;
+    double minval = -25;
     VectorXd start_state(num_dim);
     VectorXd goal_state(num_dim);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis(-25, 25);
-    for(int i = 0; i < num_dim; i++)
+    for (int i = 0; i < num_dim; i++)
     {
         start_state(i) = dis(gen);
         goal_state(i) = dis(gen);
@@ -195,14 +200,14 @@ int main(int argc, char * argv[])
     // Set custom start and goal
     ompl::base::State *start_s = space->allocState();
     ompl::base::State *goal_s = space->allocState();
-    for (int i=0; i<param.dimensions; i++)
+    for (int i = 0; i < param.dimensions; i++)
     {
-        if (i%2==0) // position
+        if (i % 2 == 0)  // position
         {
             start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
             goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
         }
-        else // velocity
+        else  // velocity
         {
             start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
             goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
@@ -215,57 +220,64 @@ int main(int argc, char * argv[])
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    const ompl::base::OptimizationObjectivePtr opt =
-        ompl::base::OptimizationObjectivePtr(new ompl::base::DimtObjective<param.dof>(si,
-                                                                                      start_state,
-                                                                                      goal_state,
-                                                                                      double_integrator));
+    const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
+        new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, double_integrator));
     pdef->setOptimizationObjective(opt);
 
     std::vector<high_resolution_clock::duration> times(5 * no_batch);
-    for(unsigned int i=0; i < no_batch; i++)
+    for (unsigned int i = 0; i < no_batch; i++)
     {
         std::cout << "BATCH " << i << std::endl;
 
         {
             MatrixXd hmc_samples;
-            double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+            double alpha = 0.5;
+            double L = 5;
+            double epsilon = 0.1;
+            double sigma = 1;
+            int max_steps = 20;
             ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
             hmc_samples = hmc_s.sample(no_samples, times[i]);
         }
 
         {
             MatrixXd hmc_samples;
-            double alpha = 0.5; double L = 5; double epsilon = 0.1; double sigma = 1;  int max_steps = 20;
+            double alpha = 0.5;
+            double L = 5;
+            double epsilon = 0.1;
+            double sigma = 1;
+            int max_steps = 20;
             ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
-            hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times[no_batch+i]);
+            hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times[no_batch + i]);
         }
 
         {
             MatrixXd mcmc_samples;
-            double sigma = 5; int max_steps = 20; double alpha = 0.5;
+            double sigma = 5;
+            int max_steps = 20;
+            double alpha = 0.5;
             ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
-            mcmc_samples = mcmc_s.sample(no_samples, times[2*no_batch+i]);
+            mcmc_samples = mcmc_s.sample(no_samples, times[2 * no_batch + i]);
         }
 
         {
             MatrixXd rej_samples;
             ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
-            rej_samples = rej_s.sample(no_samples, times[3*no_batch+i]);
+            rej_samples = rej_s.sample(no_samples, times[3 * no_batch + i]);
         }
     }
 
-    if(save)
+    if (save)
     {
         std::cout << "START SAVING" << std::endl;
         std::ofstream time_file(filename + "_time.log");
         if (time_file.is_open())
         {
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
-                for(int j=0;j<no_batch;j++)
+                for (int j = 0; j < no_batch; j++)
                 {
-                    time_file << duration_cast<milliseconds>( times[i*no_batch+j] ).count() << " ";
+                    time_file << duration_cast<milliseconds>(times[i * no_batch + j]).count() << " ";
                 }
                 time_file << std::endl;
             }

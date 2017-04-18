@@ -18,33 +18,40 @@
 
 // global pointer to set different attribute state for a class
 template <class T>
-struct MakeGlobalPointer {
-  typedef typename cl::sycl::global_ptr<T>::pointer_t Type;
+struct MakeGlobalPointer
+{
+    typedef typename cl::sycl::global_ptr<T>::pointer_t Type;
 };
 
 // global pointer to set different attribute state for a class
 template <class T>
-struct MakeLocalPointer {
-  typedef typename cl::sycl::local_ptr<T>::pointer_t Type;
+struct MakeLocalPointer
+{
+    typedef typename cl::sycl::local_ptr<T>::pointer_t Type;
 };
 
+namespace Eigen
+{
+    namespace TensorSycl
+    {
+        namespace internal
+        {
+            /// This struct is used for special expression nodes with no operations (for
+            /// example assign and selectOP).
+            struct NoOP;
 
-namespace Eigen {
-namespace TensorSycl {
-namespace internal {
-
-/// This struct is used for special expression nodes with no operations (for example assign and selectOP).
-  struct NoOP;
-
-template<bool IsConst, typename T> struct GetType{
-  typedef const T Type;
-};
-template<typename T> struct GetType<false, T>{
-  typedef T Type;
-};
-
-}
-}
+            template <bool IsConst, typename T>
+            struct GetType
+            {
+                typedef const T Type;
+            };
+            template <typename T>
+            struct GetType<false, T>
+            {
+                typedef T Type;
+            };
+        }
+    }
 }
 
 // tuple construction

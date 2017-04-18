@@ -21,9 +21,9 @@
 
 class RenderingWidget : public QGLWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 
-    typedef std::map<float,Frame> TimeLine;
+    typedef std::map<float, Frame> TimeLine;
     TimeLine m_timeline;
     Frame lerpFrame(float t);
 
@@ -31,24 +31,32 @@ class RenderingWidget : public QGLWidget
     bool mAnimate;
     float m_alpha;
 
-    enum TrackMode {
-      TM_NO_TRACK=0, TM_ROTATE_AROUND, TM_ZOOM,
-      TM_LOCAL_ROTATE, TM_FLY_Z, TM_FLY_PAN
+    enum TrackMode
+    {
+        TM_NO_TRACK = 0,
+        TM_ROTATE_AROUND,
+        TM_ZOOM,
+        TM_LOCAL_ROTATE,
+        TM_FLY_Z,
+        TM_FLY_PAN
     };
 
-    enum NavMode {
-      NavTurnAround,
-      NavFly
+    enum NavMode
+    {
+        NavTurnAround,
+        NavFly
     };
 
-    enum LerpMode {
-      LerpQuaternion,
-      LerpEulerAngles
+    enum LerpMode
+    {
+        LerpQuaternion,
+        LerpEulerAngles
     };
 
-    enum RotationMode {
-      RotationStable,
-      RotationStandard
+    enum RotationMode
+    {
+        RotationStable,
+        RotationStandard
     };
 
     Camera mCamera;
@@ -67,7 +75,7 @@ class RenderingWidget : public QGLWidget
     std::vector<Vector3f> mNormals;
     std::vector<int> mIndices;
 
-  protected slots:
+protected slots:
 
     virtual void animate(void);
     virtual void drawScene(void);
@@ -80,35 +88,37 @@ class RenderingWidget : public QGLWidget
     virtual void setRotationMode(int);
     virtual void resetCamera();
 
-  protected:
-
+protected:
     virtual void initializeGL();
     virtual void resizeGL(int width, int height);
     virtual void paintGL();
-    
+
     //--------------------------------------------------------------------------------
-    virtual void mousePressEvent(QMouseEvent * e);
-    virtual void mouseReleaseEvent(QMouseEvent * e);
-    virtual void mouseMoveEvent(QMouseEvent * e);
-    virtual void keyPressEvent(QKeyEvent * e);
+    virtual void mousePressEvent(QMouseEvent *e);
+    virtual void mouseReleaseEvent(QMouseEvent *e);
+    virtual void mouseMoveEvent(QMouseEvent *e);
+    virtual void keyPressEvent(QKeyEvent *e);
     //--------------------------------------------------------------------------------
 
-  public: 
+public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    
-    RenderingWidget();
-    ~RenderingWidget() { }
 
-    QWidget* createNavigationControlWidget();
+    RenderingWidget();
+    ~RenderingWidget()
+    {
+    }
+
+    QWidget *createNavigationControlWidget();
 };
 
 class QuaternionDemo : public QMainWindow
 {
-  Q_OBJECT
-  public:
+    Q_OBJECT
+public:
     QuaternionDemo();
-  protected:
-    RenderingWidget* mRenderingWidget;
+
+protected:
+    RenderingWidget *mRenderingWidget;
 };
 
-#endif // EIGEN_QUATERNION_DEMO_H
+#endif  // EIGEN_QUATERNION_DEMO_H

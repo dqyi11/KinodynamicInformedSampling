@@ -52,7 +52,7 @@ namespace ompl
 {
     namespace base
     {
-        class MonteCarloSampler: public MyInformedSampler
+        class MonteCarloSampler : public MyInformedSampler
         {
         public:
             ///
@@ -67,19 +67,19 @@ namespace ompl
             /// batch of samples is gotten
             /// @param alpha Step size of gradient descent
             ///
-            MonteCarloSampler(const SpaceInformationPtr &si,
-                              const ProblemDefinitionPtr &problem,
-                              const double levelSet,
-                              const unsigned int maxNumberCalls,
-                              const int sampleBatchSize,
-                              const double alpha)
-                : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize), alpha_(alpha)
-            { }
+            MonteCarloSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
+                              const unsigned int maxNumberCalls, const int sampleBatchSize, const double alpha)
+              : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize), alpha_(alpha)
+            {
+            }
 
             ///
             /// Get alpha - learning rate for gradient descent
             ///
-            double getAlpha() const { return alpha_; }
+            double getAlpha() const
+            {
+                return alpha_;
+            }
 
             ///
             /// Surf down the cost function to get to the levelset
@@ -148,9 +148,9 @@ namespace ompl
             /// @return Boolean that is true if any are in violation
             ///
             bool anyDimensionInViolation(const Eigen::VectorXd &sample) const;
-        }; // MonteCarloSampler
+        };  // MonteCarloSampler
 
-        class HMCSampler: public MonteCarloSampler
+        class HMCSampler : public MonteCarloSampler
         {
         public:
             ///
@@ -169,68 +169,89 @@ namespace ompl
             /// @param sigma Sampling the momentum as a normal distribution
             /// @param steps Number of steps to run HMC for each chain
             ///
-            HMCSampler(const SpaceInformationPtr &si,
-                       const ProblemDefinitionPtr &problem,
-                       const double levelSet,
-                       const unsigned int maxNumberCalls,
-                       const int sampleBatchSize,
-                       const double& alpha,
-                       const double& L,
-                       const double& epsilon,
-                       const double& sigma,
-                       const int& steps)
-                : MonteCarloSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize, alpha),
-                  L_(L), epsilon_(epsilon), sigma_(sigma),
-                  steps_(steps), currentStep_(-1)
-                {
-                    lastSample_ = Eigen::VectorXd(getStartState().size()+1);
-                }
+            HMCSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
+                       const unsigned int maxNumberCalls, const int sampleBatchSize, const double &alpha,
+                       const double &L, const double &epsilon, const double &sigma, const int &steps)
+              : MonteCarloSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize, alpha)
+              , L_(L)
+              , epsilon_(epsilon)
+              , sigma_(sigma)
+              , steps_(steps)
+              , currentStep_(-1)
+            {
+                lastSample_ = Eigen::VectorXd(getStartState().size() + 1);
+            }
 
             ///
             /// Get L - Distance of integration for HMC step
             ///
-            double getL() const { return L_; }
+            double getL() const
+            {
+                return L_;
+            }
 
             ///
             /// Get epsilon - Integration constant for HMC
             ///
-            double getEpsilon() const { return epsilon_; }
+            double getEpsilon() const
+            {
+                return epsilon_;
+            }
 
             ///
             /// Get sigma - Sampling the momentum as a normal distribution
             ///
-            double getSigma() const { return sigma_; }
+            double getSigma() const
+            {
+                return sigma_;
+            }
 
             ///
             /// Get steps - Number of steps to run HMC for each chain
             ///
-            double getSteps() const { return steps_; }
+            double getSteps() const
+            {
+                return steps_;
+            }
 
             ///
             /// Get current step
             ///
-            int getCurrentStep() const { return currentStep_; }
+            int getCurrentStep() const
+            {
+                return currentStep_;
+            }
 
             ///
             /// Get last sample
             ///
-            Eigen::VectorXd getLastSample() const { return lastSample_; }
+            Eigen::VectorXd getLastSample() const
+            {
+                return lastSample_;
+            }
 
             ///
             /// Update current step
             ///
-            void updateCurrentStep(int currentStep) { currentStep_ = currentStep; }
+            void updateCurrentStep(int currentStep)
+            {
+                currentStep_ = currentStep;
+            }
 
             ///
             /// Update current step
             ///
-            void updateCurrentStep() { currentStep_++; }
+            void updateCurrentStep()
+            {
+                currentStep_++;
+            }
 
             ///
             /// Get a series of samples for the problem space
             ///
             /// @param noSamples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is displayed
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const int noSamples,
@@ -259,7 +280,7 @@ namespace ompl
             Eigen::VectorXd lastSample_;
         };
 
-        class MCMCSampler: public MonteCarloSampler
+        class MCMCSampler : public MonteCarloSampler
         {
         public:
             ///
@@ -276,23 +297,21 @@ namespace ompl
             /// @param sigma Sigma for sampling the step
             /// @param steps Number of steps to run MCMC for each chain
             ///
-            MCMCSampler(const SpaceInformationPtr &si,
-                        const ProblemDefinitionPtr &problem,
-                        const double levelSet,
-                        const unsigned int maxNumberCalls,
-                        const int sampleBatchSize,
-                        const double alpha,
-                        const double sigma,
-                        const double steps)
-            : MonteCarloSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize, alpha),
-              sigma_(sigma), steps_(steps)
-            { }
+            MCMCSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
+                        const unsigned int maxNumberCalls, const int sampleBatchSize, const double alpha,
+                        const double sigma, const double steps)
+              : MonteCarloSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize, alpha)
+              , sigma_(sigma)
+              , steps_(steps)
+            {
+            }
 
             ///
             /// Get a series of samples for the problem space
             ///
             /// @param no_samples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is displayed
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const int no_samples,
@@ -301,12 +320,18 @@ namespace ompl
             ///
             /// Get Sigma for sampling the step
             ///
-            double getSigma() const { return sigma_; }
+            double getSigma() const
+            {
+                return sigma_;
+            }
 
             ///
             /// Get number of steps to run for each MCMC chain
             ///
-            double getSteps() const { return steps_; }
+            double getSteps() const
+            {
+                return steps_;
+            }
 
         private:
             // Sigma for sampling the step
@@ -315,7 +340,7 @@ namespace ompl
             // Number of steps to run MCMC for each chain
             double steps_;
         };
-    } // base
-} // ompl
+    }  // base
+}  // ompl
 
 // #endif // OMPL_BASE_SAMPLERS_INFORMED_MONTE_CARLO_SAMPLERS_

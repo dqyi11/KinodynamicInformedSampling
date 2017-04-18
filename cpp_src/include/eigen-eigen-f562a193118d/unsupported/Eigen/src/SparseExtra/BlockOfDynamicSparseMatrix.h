@@ -10,8 +10,8 @@
 #ifndef EIGEN_SPARSE_BLOCKFORDYNAMICMATRIX_H
 #define EIGEN_SPARSE_BLOCKFORDYNAMICMATRIX_H
 
-namespace Eigen { 
-
+namespace Eigen
+{
 #if 0
 
 // NOTE Have to be reimplemented as a specialization of BlockImpl< DynamicSparseMatrix<_Scalar, _Options, _Index>, ... >
@@ -117,6 +117,6 @@ class SparseInnerVectorSet<DynamicSparseMatrix<_Scalar, _Options, _Index>, Size>
 
 #endif
 
-} // end namespace Eigen
+}  // end namespace Eigen
 
-#endif // EIGEN_SPARSE_BLOCKFORDYNAMICMATRIX_H
+#endif  // EIGEN_SPARSE_BLOCKFORDYNAMICMATRIX_H

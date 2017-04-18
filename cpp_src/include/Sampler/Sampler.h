@@ -122,16 +122,13 @@ namespace ompl
             /// @param sample_batch_size How many samples to get each time a new
             /// batch of samples is gotten
             ///
-            MyInformedSampler(const SpaceInformationPtr &si,
-                              const ProblemDefinitionPtr &problem,
-                              const double levelSet,
-                              const unsigned int maxNumberCalls,
-                              const int sampleBatchSize)
-                : InformedSampler(problem, maxNumberCalls),
-                  si_(si),
-                  problem_(problem),
-                  levelSet_(levelSet),
-                  sampleBatchSize_(sampleBatchSize)
+            MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
+                              const unsigned int maxNumberCalls, const int sampleBatchSize)
+              : InformedSampler(problem, maxNumberCalls)
+              , si_(si)
+              , problem_(problem)
+              , levelSet_(levelSet)
+              , sampleBatchSize_(sampleBatchSize)
             {
                 started_ = false;
             }
@@ -174,7 +171,8 @@ namespace ompl
             /// Get a series of samples for the problem space
             ///
             /// @param no_samples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is displayed
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const int no_samples,
@@ -185,21 +183,30 @@ namespace ompl
             ///
             /// @return The problem definition
             ///
-            ompl::base::ProblemDefinitionPtr problem() const { return problem_; }
+            ompl::base::ProblemDefinitionPtr problem() const
+            {
+                return problem_;
+            }
 
             ///
             /// Get the space information pointer for the problem
             ///
             /// @return The space information
             ///
-            ompl::base::SpaceInformationPtr si() const { return si_; }
+            ompl::base::SpaceInformationPtr si() const
+            {
+                return si_;
+            }
 
             ///
             /// Update the level set of the problem definition
             ///
             /// @param levelSet The new level set
             ///
-            virtual void updateLevelSet(const double levelSet) { levelSet_ = levelSet; }
+            virtual void updateLevelSet(const double levelSet)
+            {
+                levelSet_ = levelSet;
+            }
 
             ///
             /// Get the state limits of the space
@@ -227,14 +234,20 @@ namespace ompl
             ///
             /// @return Get the level set of the cost function you want to sample from
             ///
-            double getLevelSet() const { return levelSet_; }
+            double getLevelSet() const
+            {
+                return levelSet_;
+            }
 
             ///
             /// Get the dimension of the space
             ///
             /// @return Get the level set of the cost function you want to sample from
             ///
-            uint getSpaceDimension() const { return si_->getStateSpace()->getDimension(); }
+            uint getSpaceDimension() const
+            {
+                return si_->getStateSpace()->getDimension();
+            }
 
             ///
             /// Get the cost for a specific state
@@ -250,13 +263,17 @@ namespace ompl
             /// @param state State to test
             /// @return Boolean that is true if it is in the level set
             ///
-            virtual bool isInLevelSet(const Eigen::VectorXd &state) const { return getCost(state) <= levelSet_; }
+            virtual bool isInLevelSet(const Eigen::VectorXd &state) const
+            {
+                return getCost(state) <= levelSet_;
+            }
 
             ///
             /// Get the gradient of the cost function at a specific state
             ///
             /// @param curr_state Current state to get the cost for
-            /// @return Gradient of the function at the current state (same dimension as current state)
+            /// @return Gradient of the function at the current state (same dimension as
+            /// current state)
             ///
             virtual Eigen::VectorXd getGradient(const Eigen::VectorXd &curr_state) const;
 
@@ -264,10 +281,10 @@ namespace ompl
             /// Get the Inverse Jacobian of the cost function at a specific state
             ///
             /// @param curr_state Current state to get the cost for
-            /// @return Inverse Jacobian of the function at the current state (same dimension as current state)
+            /// @return Inverse Jacobian of the function at the current state (same
+            /// dimension as current state)
             ///
             virtual Eigen::VectorXd getInvJacobian(const Eigen::VectorXd &curr_state) const;
-
 
             ///
             /// Determines if a sample is within the boundaries of the space
@@ -276,12 +293,10 @@ namespace ompl
             /// @return Boolean that is true if it is in the boundaries of the space
             ///
             virtual bool isInBound(const Eigen::VectorXd &state) const;
-        }; // MyInformedSampler
+        };  // MyInformedSampler
 
         using MyInformedSamplerPtr = std::shared_ptr<ompl::base::MyInformedSampler>;
-    } // base
-} // ompl
-
+    }  // base
+}  // ompl
 
 // #endif // OMPL_BASE_SAMPLERS_INFORMED_SAMPLER_
-

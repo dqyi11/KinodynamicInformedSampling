@@ -51,35 +51,34 @@
 
 namespace
 {
-
-bool same_cost(double a, double b)
-{
-    return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
-}
-
-void print_out_states2(ompl::base::State *statePtr)
-{
-    double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
-
-    std::cout << "Printing sample of size: " << param.dimensions << " | Vec: [ ";
-    for(uint i = 0; i < param.dimensions; i++)
+    bool same_cost(double a, double b)
     {
-        std::cout << val[i] << " ";
+        return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
     }
-    std::cout << "]" << std::endl;
-}
 
-void print_out_states2(const Eigen::VectorXd &state)
-{
-    std::cout << "[ ";
-    for(uint i = 0; i < state.size(); i++)
+    void print_out_states2(ompl::base::State *statePtr)
     {
-        std::cout << state[i] << " ";
-    }
-    std::cout << " ]" << std::endl;
-}
+        double *val = static_cast<ompl::base::RealVectorStateSpace::StateType *>(statePtr)->values;
 
-} // namespace
+        std::cout << "Printing sample of size: " << param.dimensions << " | Vec: [ ";
+        for (uint i = 0; i < param.dimensions; i++)
+        {
+            std::cout << val[i] << " ";
+        }
+        std::cout << "]" << std::endl;
+    }
+
+    void print_out_states2(const Eigen::VectorXd &state)
+    {
+        std::cout << "[ ";
+        for (uint i = 0; i < state.size(); i++)
+        {
+            std::cout << state[i] << " ";
+        }
+        std::cout << " ]" << std::endl;
+    }
+
+}  // namespace
 
 namespace ompl
 {
@@ -131,12 +130,13 @@ namespace ompl
 
             // Loop through and calculate the gradients
             VectorXd grad(curr_state.size());
-            for(int dim = 0; dim < curr_state.size(); dim++)
+            for (int dim = 0; dim < curr_state.size(); dim++)
             {
-                VectorXd state_plus = curr_state; VectorXd state_min = curr_state;
+                VectorXd state_plus = curr_state;
+                VectorXd state_min = curr_state;
                 state_plus(dim) = curr_state(dim) + h;
                 state_min(dim) = curr_state(dim) - h;
-                grad(dim) = (getCost(state_plus) - getCost(state_min)) / (2*h);
+                grad(dim) = (getCost(state_plus) - getCost(state_min)) / (2 * h);
             }
 
             return grad;
@@ -152,20 +152,21 @@ namespace ompl
 
             // Loop through and calculate the gradients
             Eigen::VectorXd inv_jacobian(curr_state.size());
-            for(int dim = 0; dim < curr_state.size(); dim++)
+            for (int dim = 0; dim < curr_state.size(); dim++)
             {
-                VectorXd state_plus = curr_state; VectorXd state_min = curr_state;
+                VectorXd state_plus = curr_state;
+                VectorXd state_min = curr_state;
                 state_plus(dim) = curr_state(dim) + h;
                 state_min(dim) = curr_state(dim) - h;
                 double delta = getCost(state_plus) - getCost(state_min);
-                //std::cout << "DELTA " << delta << std::endl;
-                if(delta == 0.0)
+                // std::cout << "DELTA " << delta << std::endl;
+                if (delta == 0.0)
                 {
                     inv_jacobian(dim) = 0.0;
                 }
                 else
                 {
-                    inv_jacobian(dim) = (2*h) / (delta);
+                    inv_jacobian(dim) = (2 * h) / (delta);
                 }
             }
 
@@ -183,17 +184,16 @@ namespace ompl
             // Assert that the problem definition has an optimization objective defined
             assert(problem_->hasOptimizationObjective());
 
-            const ompl::base::State* start_state = problem_->getStartState(0);
-            const ompl::base::State* goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
+            const ompl::base::State *start_state = problem_->getStartState(0);
+            const ompl::base::State *goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
 
             const auto space = si_->getStateSpace()->as<ompl::base::RealVectorStateSpace>();
 
-            const ompl::base::State* state = get_ompl_state(curr_state, space);
+            const ompl::base::State *state = get_ompl_state(curr_state, space);
 
             const ompl::base::OptimizationObjectivePtr optim_obj = problem_->getOptimizationObjective();
 
-            return optim_obj->motionCost(start_state, state).value() +
-                   optim_obj->motionCost(state, goal_state).value();
+            return optim_obj->motionCost(start_state, state).value() + optim_obj->motionCost(state, goal_state).value();
         }
 
         // Can implement as many private functions as you want to help do the sampling
@@ -219,8 +219,8 @@ namespace ompl
             Eigen::VectorXd max_vals, min_vals;
             std::tie(max_vals, min_vals) = getStateLimits();
 
-            double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
-            for(int i = 0; i < param.dimensions; i++)
+            double *val = static_cast<ompl::base::RealVectorStateSpace::StateType *>(statePtr)->values;
+            for (int i = 0; i < param.dimensions; i++)
             {
                 val[i] = getRandomDimension(max_vals[i], min_vals[i]);
             }
@@ -236,7 +236,7 @@ namespace ompl
         ///
         bool MyInformedSampler::sampleInformedSpace(State *statePtr, const Cost maxCost)
         {
-            if(started_ == false) // Set the timer when the function is called for the first time
+            if (started_ == false)  // Set the timer when the function is called for the first time
             {
                 started_ = true;
                 // set time
@@ -253,9 +253,10 @@ namespace ompl
                 costVec_.push_back(maxCost.value());
             }
 
-            if(!same_cost(maxCost.value(), prevCost_) or sampleIndex_ >= sampleBatchSize_)
+            if (!same_cost(maxCost.value(), prevCost_) or sampleIndex_ >= sampleBatchSize_)
             {
-                if(maxCost.value() != prevCost_) updateLevelSet(maxCost.value());
+                if (maxCost.value() != prevCost_)
+                    updateLevelSet(maxCost.value());
 
                 std::chrono::high_resolution_clock::duration duration;
                 batchSamples_ = sample(sampleBatchSize_, duration);
@@ -266,8 +267,8 @@ namespace ompl
 
             auto sample = batchSamples_.row(sampleIndex_);
 
-            double * val = static_cast<ompl::base::RealVectorStateSpace::StateType*>(statePtr)->values;
-            for(int i = 0; i < sample.size() - 1; i++)
+            double *val = static_cast<ompl::base::RealVectorStateSpace::StateType *>(statePtr)->values;
+            for (int i = 0; i < sample.size() - 1; i++)
             {
                 val[i] = sample(i);
             }
@@ -286,7 +287,7 @@ namespace ompl
         ///
         bool MyInformedSampler::sampleUniform(State *statePtr, const Cost &maxCost)
         {
-            if(maxCost.value() == std::numeric_limits<double>::infinity())
+            if (maxCost.value() == std::numeric_limits<double>::infinity())
             {
                 return sampleFullSpace(statePtr);
             }
@@ -304,9 +305,7 @@ namespace ompl
         /// @param minCost Minimum cost of the informed subspace
         /// @return true if a sample is gotten false, if not
         ///
-        bool MyInformedSampler::sampleUniform(State *statePtr,
-                                              const Cost &minCost,
-                                              const Cost &maxCost)
+        bool MyInformedSampler::sampleUniform(State *statePtr, const Cost &minCost, const Cost &maxCost)
         {
             return sampleUniform(statePtr, maxCost);
         }
@@ -342,11 +341,11 @@ namespace ompl
         {
             Eigen::VectorXd state_max, state_min;
             std::tie(state_min, state_max) = getStateLimits();
-            for (unsigned int i=0; i<state.size(); i++)
+            for (unsigned int i = 0; i < state.size(); i++)
                 if (state(i) > state_max(i) || state(i) < state_min(i))
                     return false;
             return true;
         }
 
-    } // base
-} // oml
+    }  // base
+}  // oml

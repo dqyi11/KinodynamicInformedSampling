@@ -26,12 +26,11 @@ using StateCostFxn = std::function<double(VectorXd)>;
 ///
 namespace ompl
 {
-	namespace base
-	{
-		class MyOptimizationObjective: public OptimizationObjective
-		{
-		private:
-
+    namespace base
+    {
+        class MyOptimizationObjective : public OptimizationObjective
+        {
+        private:
             // Pointer to informed sampler
             MyInformedSamplerPtr sampler_ = nullptr;
 
@@ -40,8 +39,7 @@ namespace ompl
             // objective
             OptimizationObjectivePtr opt_ = nullptr;
 
-		public:
-
+        public:
             ///
             /// Constructor
             ///
@@ -52,49 +50,50 @@ namespace ompl
             /// @param stateCostFn Cost function for a single point in space
             /// @param motionCostFn Cost function between two states
             ///
-            MyOptimizationObjective(const SpaceInformationPtr &si,
-                                    const MyInformedSamplerPtr sampler)
-            : OptimizationObjective(si),
-              sampler_(sampler),
-              opt_(sampler_->problem()->getOptimizationObjective())
-            { }
+            MyOptimizationObjective(const SpaceInformationPtr &si, const MyInformedSamplerPtr sampler)
+              : OptimizationObjective(si), sampler_(sampler), opt_(sampler_->problem()->getOptimizationObjective())
+            {
+            }
 
-			///
-			/// Return the cost of the state at this point
-			///
-			/// @param s State to get the cost for
-			/// @return Cost of the state
-			///
-			virtual Cost stateCost(const State *s) const override;
+            ///
+            /// Return the cost of the state at this point
+            ///
+            /// @param s State to get the cost for
+            /// @return Cost of the state
+            ///
+            virtual Cost stateCost(const State *s) const override;
 
-			///
-			/// Return the cost of moving from s1 to s2
-			///
-			/// @param s1 Start state
-			/// @param s2 Goal state
-			/// @return Cost of going from s1 to s2
-			///
-			virtual Cost motionCost(const State *s1, const State *s2) const override;
+            ///
+            /// Return the cost of moving from s1 to s2
+            ///
+            /// @param s1 Start state
+            /// @param s2 Goal state
+            /// @return Cost of going from s1 to s2
+            ///
+            virtual Cost motionCost(const State *s1, const State *s2) const override;
 
-			///
-			/// Function to get the informed sampler pointer
-			///
-			/// @param probDefn Problem definition pointer (OMPL)
-			/// @param maxNumberCalls Maximum number of sampling calls
-			/// @return Infromed sampler
-			///
-			virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn,
-																 unsigned int maxNumberCalls) const override;
+            ///
+            /// Function to get the informed sampler pointer
+            ///
+            /// @param probDefn Problem definition pointer (OMPL)
+            /// @param maxNumberCalls Maximum number of sampling calls
+            /// @return Infromed sampler
+            ///
+            virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn,
+                                                                 unsigned int maxNumberCalls) const override;
 
             ///
             /// Function to provide and informed sampler
             ///
             /// @param sampler
             ///
-            virtual void setInformedStateSampler(const MyInformedSamplerPtr &sampler) { sampler_ = sampler; }
-		};
+            virtual void setInformedStateSampler(const MyInformedSamplerPtr &sampler)
+            {
+                sampler_ = sampler;
+            }
+        };
 
-        class GeometricObjective: public OptimizationObjective
+        class GeometricObjective : public OptimizationObjective
         {
         private:
             const Eigen::VectorXd startState_;
@@ -102,7 +101,6 @@ namespace ompl
             const Eigen::VectorXd goalState_;
 
         public:
-
             ///
             /// Constructor
             ///
@@ -110,13 +108,11 @@ namespace ompl
             /// @param startState Start state of the problem
             /// @param goalState Goal state of the problem
             ///
-            GeometricObjective(const SpaceInformationPtr &si,
-                               const Eigen::VectorXd &startState,
+            GeometricObjective(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
                                const Eigen::VectorXd &goalState)
-                : OptimizationObjective(si),
-                  startState_(startState),
-                  goalState_(goalState)
-            { }
+              : OptimizationObjective(si), startState_(startState), goalState_(goalState)
+            {
+            }
 
             ///
             /// Return the cost of the state at this point
@@ -146,7 +142,7 @@ namespace ompl
         };
 
         template <int dof>
-        class DimtObjective: public OptimizationObjective
+        class DimtObjective : public OptimizationObjective
         {
         private:
             const Eigen::VectorXd startState_;
@@ -155,13 +151,13 @@ namespace ompl
 
             const DoubleIntegrator<dof> di_;
 
-            Eigen::VectorXd get_eigen_vector(const ompl::base::State* s) const
+            Eigen::VectorXd get_eigen_vector(const ompl::base::State *s) const
             {
-                double * val = static_cast<const ompl::base::RealVectorStateSpace::StateType*>(s)->values;
+                double *val = static_cast<const ompl::base::RealVectorStateSpace::StateType *>(s)->values;
 
                 Eigen::VectorXd v(param.dimensions);
 
-                for(uint i = 0; i < param.dimensions; i++)
+                for (uint i = 0; i < param.dimensions; i++)
                 {
                     v[i] = val[i];
                 }
@@ -170,7 +166,6 @@ namespace ompl
             }
 
         public:
-
             ///
             /// Constructor
             ///
@@ -179,15 +174,11 @@ namespace ompl
             /// @param goalState Goal state of the problem
             /// @param di Double Integrator model
             ///
-            DimtObjective<dof>(const SpaceInformationPtr &si,
-                               const Eigen::VectorXd &startState,
-                               const Eigen::VectorXd &goalState,
-                               const DoubleIntegrator<dof> di)
-                : OptimizationObjective(si),
-                  startState_(startState),
-                  goalState_(goalState),
-                  di_(di)
-            { }
+            DimtObjective<dof>(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
+                               const Eigen::VectorXd &goalState, const DoubleIntegrator<dof> di)
+              : OptimizationObjective(si), startState_(startState), goalState_(goalState), di_(di)
+            {
+            }
 
             ///
             /// Return the cost of the state at this point
@@ -225,5 +216,5 @@ namespace ompl
                 return Cost(std::max(c1.value(), c2.value()));
             }
         };
-	}
+    }
 }

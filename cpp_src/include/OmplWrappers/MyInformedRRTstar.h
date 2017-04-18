@@ -3,7 +3,7 @@
 // OMPL
 #include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 
-class MyInformedRRTstar: public ompl::geometric::InformedRRTstar
+class MyInformedRRTstar : public ompl::geometric::InformedRRTstar
 {
 public:
     MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si);

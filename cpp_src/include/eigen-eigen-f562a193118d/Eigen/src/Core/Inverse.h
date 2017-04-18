@@ -10,108 +10,120 @@
 #ifndef EIGEN_INVERSE_H
 #define EIGEN_INVERSE_H
 
-namespace Eigen { 
-
-template<typename XprType,typename StorageKind> class InverseImpl;
-
-namespace internal {
-
-template<typename XprType>
-struct traits<Inverse<XprType> >
-  : traits<typename XprType::PlainObject>
+namespace Eigen
 {
-  typedef typename XprType::PlainObject PlainObject;
-  typedef traits<PlainObject> BaseTraits;
-  enum {
-    Flags = BaseTraits::Flags & RowMajorBit
-  };
-};
+    template <typename XprType, typename StorageKind>
+    class InverseImpl;
 
-} // end namespace internal
+    namespace internal
+    {
+        template <typename XprType>
+        struct traits<Inverse<XprType>> : traits<typename XprType::PlainObject>
+        {
+            typedef typename XprType::PlainObject PlainObject;
+            typedef traits<PlainObject> BaseTraits;
+            enum
+            {
+                Flags = BaseTraits::Flags & RowMajorBit
+            };
+        };
 
-/** \class Inverse
-  *
-  * \brief Expression of the inverse of another expression
-  *
-  * \tparam XprType the type of the expression we are taking the inverse
-  *
-  * This class represents an abstract expression of A.inverse()
-  * and most of the time this is the only way it is used.
-  *
-  */
-template<typename XprType>
-class Inverse : public InverseImpl<XprType,typename internal::traits<XprType>::StorageKind>
-{
-public:
-  typedef typename XprType::StorageIndex StorageIndex;
-  typedef typename XprType::PlainObject                       PlainObject;
-  typedef typename internal::ref_selector<XprType>::type      XprTypeNested;
-  typedef typename internal::remove_all<XprTypeNested>::type  XprTypeNestedCleaned;
-  typedef typename internal::ref_selector<Inverse>::type Nested;
-  typedef typename internal::remove_all<XprType>::type NestedExpression;
-  
-  explicit EIGEN_DEVICE_FUNC Inverse(const XprType &xpr)
-    : m_xpr(xpr)
-  {}
+    }  // end namespace internal
 
-  EIGEN_DEVICE_FUNC Index rows() const { return m_xpr.rows(); }
-  EIGEN_DEVICE_FUNC Index cols() const { return m_xpr.cols(); }
+    /** \class Inverse
+      *
+      * \brief Expression of the inverse of another expression
+      *
+      * \tparam XprType the type of the expression we are taking the inverse
+      *
+      * This class represents an abstract expression of A.inverse()
+      * and most of the time this is the only way it is used.
+      *
+      */
+    template <typename XprType>
+    class Inverse : public InverseImpl<XprType, typename internal::traits<XprType>::StorageKind>
+    {
+    public:
+        typedef typename XprType::StorageIndex StorageIndex;
+        typedef typename XprType::PlainObject PlainObject;
+        typedef typename internal::ref_selector<XprType>::type XprTypeNested;
+        typedef typename internal::remove_all<XprTypeNested>::type XprTypeNestedCleaned;
+        typedef typename internal::ref_selector<Inverse>::type Nested;
+        typedef typename internal::remove_all<XprType>::type NestedExpression;
 
-  EIGEN_DEVICE_FUNC const XprTypeNestedCleaned& nestedExpression() const { return m_xpr; }
+        explicit EIGEN_DEVICE_FUNC Inverse(const XprType &xpr) : m_xpr(xpr)
+        {
+        }
 
-protected:
-  XprTypeNested m_xpr;
-};
+        EIGEN_DEVICE_FUNC Index rows() const
+        {
+            return m_xpr.rows();
+        }
+        EIGEN_DEVICE_FUNC Index cols() const
+        {
+            return m_xpr.cols();
+        }
 
-// Generic API dispatcher
-template<typename XprType, typename StorageKind>
-class InverseImpl
-  : public internal::generic_xpr_base<Inverse<XprType> >::type
-{
-public:
-  typedef typename internal::generic_xpr_base<Inverse<XprType> >::type Base;
-  typedef typename XprType::Scalar Scalar;
-private:
+        EIGEN_DEVICE_FUNC const XprTypeNestedCleaned &nestedExpression() const
+        {
+            return m_xpr;
+        }
 
-  Scalar coeff(Index row, Index col) const;
-  Scalar coeff(Index i) const;
-};
+    protected:
+        XprTypeNested m_xpr;
+    };
 
-namespace internal {
+    // Generic API dispatcher
+    template <typename XprType, typename StorageKind>
+    class InverseImpl : public internal::generic_xpr_base<Inverse<XprType>>::type
+    {
+    public:
+        typedef typename internal::generic_xpr_base<Inverse<XprType>>::type Base;
+        typedef typename XprType::Scalar Scalar;
 
-/** \internal
-  * \brief Default evaluator for Inverse expression.
-  * 
-  * This default evaluator for Inverse expression simply evaluate the inverse into a temporary
-  * by a call to internal::call_assignment_no_alias.
-  * Therefore, inverse implementers only have to specialize Assignment<Dst,Inverse<...>, ...> for
-  * there own nested expression.
-  *
-  * \sa class Inverse
-  */
-template<typename ArgType>
-struct unary_evaluator<Inverse<ArgType> >
-  : public evaluator<typename Inverse<ArgType>::PlainObject>
-{
-  typedef Inverse<ArgType> InverseType;
-  typedef typename InverseType::PlainObject PlainObject;
-  typedef evaluator<PlainObject> Base;
-  
-  enum { Flags = Base::Flags | EvalBeforeNestingBit };
+    private:
+        Scalar coeff(Index row, Index col) const;
+        Scalar coeff(Index i) const;
+    };
 
-  unary_evaluator(const InverseType& inv_xpr)
-    : m_result(inv_xpr.rows(), inv_xpr.cols())
-  {
-    ::new (static_cast<Base*>(this)) Base(m_result);
-    internal::call_assignment_no_alias(m_result, inv_xpr);
-  }
-  
-protected:
-  PlainObject m_result;
-};
-  
-} // end namespace internal
+    namespace internal
+    {
+        /** \internal
+          * \brief Default evaluator for Inverse expression.
+          *
+          * This default evaluator for Inverse expression simply evaluate the inverse
+          *into a temporary
+          * by a call to internal::call_assignment_no_alias.
+          * Therefore, inverse implementers only have to specialize
+          *Assignment<Dst,Inverse<...>, ...> for
+          * there own nested expression.
+          *
+          * \sa class Inverse
+          */
+        template <typename ArgType>
+        struct unary_evaluator<Inverse<ArgType>> : public evaluator<typename Inverse<ArgType>::PlainObject>
+        {
+            typedef Inverse<ArgType> InverseType;
+            typedef typename InverseType::PlainObject PlainObject;
+            typedef evaluator<PlainObject> Base;
 
-} // end namespace Eigen
+            enum
+            {
+                Flags = Base::Flags | EvalBeforeNestingBit
+            };
 
-#endif // EIGEN_INVERSE_H
+            unary_evaluator(const InverseType &inv_xpr) : m_result(inv_xpr.rows(), inv_xpr.cols())
+            {
+                ::new (static_cast<Base *>(this)) Base(m_result);
+                internal::call_assignment_no_alias(m_result, inv_xpr);
+            }
+
+        protected:
+            PlainObject m_result;
+        };
+
+    }  // end namespace internal
+
+}  // end namespace Eigen
+
+#endif  // EIGEN_INVERSE_H

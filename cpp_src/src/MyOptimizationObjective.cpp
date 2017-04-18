@@ -24,11 +24,12 @@ using Eigen::VectorXd;
 ///
 ompl::base::Cost ompl::base::MyOptimizationObjective::stateCost(const ompl::base::State *s) const
 {
-    if(sampler_ == nullptr or opt_ == nullptr)
+    if (sampler_ == nullptr or opt_ == nullptr)
     {
-        throw std::runtime_error("An informed sampler with optimization objective must be provided or set.");
+        throw std::runtime_error("An informed sampler with optimization objective "
+                                 "must be provided or set.");
     }
-	return opt_->stateCost(s);
+    return opt_->stateCost(s);
 }
 
 ///
@@ -39,13 +40,14 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::stateCost(const ompl::base
 /// @return Cost of going from s1 to s2
 ///
 ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::base::State *s1,
-										 			             const ompl::base::State *s2) const
+                                                                 const ompl::base::State *s2) const
 {
-    if(sampler_ == nullptr)
+    if (sampler_ == nullptr)
     {
-        throw std::runtime_error("An informed sampler with optimization objective must be provided or set.");
+        throw std::runtime_error("An informed sampler with optimization objective "
+                                 "must be provided or set.");
     }
-	return opt_->motionCost(s1, s2);
+    return opt_->motionCost(s1, s2);
 }
 
 ///
@@ -56,13 +58,14 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::bas
 /// @return Infromed sampler
 ///
 ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInformedStateSampler(
-	const ProblemDefinitionPtr probDefn, unsigned int maxNumberCalls) const
+    const ProblemDefinitionPtr probDefn, unsigned int maxNumberCalls) const
 {
-    if(sampler_ == nullptr)
+    if (sampler_ == nullptr)
     {
-        throw std::runtime_error("An informed sampler with optimization objective must be provided or set.");
+        throw std::runtime_error("An informed sampler with optimization objective "
+                                 "must be provided or set.");
     }
-	return sampler_;
+    return sampler_;
 }
 
 namespace ompl
@@ -71,8 +74,7 @@ namespace ompl
     {
         Cost GeometricObjective::stateCost(const State *s) const
         {
-            return Cost((startState_ - get_eigen_vector(s)).norm() +
-                        (goalState_ - get_eigen_vector(s)).norm());
+            return Cost((startState_ - get_eigen_vector(s)).norm() + (goalState_ - get_eigen_vector(s)).norm());
         }
 
         Cost GeometricObjective::motionCost(const State *s1, const State *s2) const
@@ -84,5 +86,5 @@ namespace ompl
         {
             return Cost(c1.value() + c2.value());
         }
-    } // namespace base
-} // namespace ompl
+    }  // namespace base
+}  // namespace ompl

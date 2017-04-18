@@ -3,10 +3,9 @@
 using namespace Eigen;
 
 template <typename Derived>
-void print_size(const EigenBase<Derived>& b)
+void print_size(const EigenBase<Derived> &b)
 {
-  std::cout << "size (rows, cols): " << b.size() << " (" << b.rows()
-            << ", " << b.cols() << ")" << std::endl;
+    std::cout << "size (rows, cols): " << b.size() << " (" << b.rows() << ", " << b.cols() << ")" << std::endl;
 }
 
 int main()

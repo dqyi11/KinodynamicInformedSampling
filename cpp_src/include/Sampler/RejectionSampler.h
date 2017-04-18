@@ -61,7 +61,7 @@ namespace ompl
 {
     namespace base
     {
-        class RejectionSampler: public MyInformedSampler
+        class RejectionSampler : public MyInformedSampler
         {
         public:
             ///
@@ -75,13 +75,11 @@ namespace ompl
             /// @param sample_batch_size How many samples to get each time a new
             /// batch of samples is gotten
             ///
-            RejectionSampler(const SpaceInformationPtr &si,
-                             const ProblemDefinitionPtr &problem,
-                             const double levelSet,
-                             const unsigned int maxNumberCalls,
-                             const int sampleBatchSize)
-                : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
-            { }
+            RejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
+                             const unsigned int maxNumberCalls, const int sampleBatchSize)
+              : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+            {
+            }
 
             // Only function that you must implement
             virtual Eigen::MatrixXd sample(const int no_samples,
@@ -94,7 +92,7 @@ namespace ompl
         ///
         /// Heirarchical Rejection Sampler
         ///
-        class HierarchicalRejectionSampler: public RejectionSampler
+        class HierarchicalRejectionSampler : public RejectionSampler
         {
         public:
             ///
@@ -108,19 +106,19 @@ namespace ompl
             /// @param sample_batch_size How many samples to get each time a new
             /// batch of samples is gotten
             ///
-            HierarchicalRejectionSampler(const SpaceInformationPtr &si,
-                                         const ProblemDefinitionPtr &problem,
-                                         const double levelSet,
-                                         const unsigned int maxNumberCalls,
+            HierarchicalRejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
+                                         const double levelSet, const unsigned int maxNumberCalls,
                                          const int sampleBatchSize)
-                : RejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
-            { }
+              : RejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+            {
+            }
 
             ///
             /// Get a series of samples for the problem space
             ///
             /// @param no_samples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is displayed
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const int no_samples,
@@ -128,15 +126,15 @@ namespace ompl
 
         private:
             ///
-            /// Get one sample using a recursive algorithm of heirarchical rejection sampling
+            /// Get one sample using a recursive algorithm of heirarchical rejection
+            /// sampling
             ///
             /// @param start_index Start index of the hierarchical sample
             /// @param end_index End index of the hierarchical sample
             /// @param sample Reference to a sample that gets changed in place
             /// @return (c_start, c_goal)
             ///
-            virtual std::tuple<double, double>
-                HRS(const int start_index, const int end_index, Eigen::VectorXd &sample);
+            virtual std::tuple<double, double> HRS(const int start_index, const int end_index, Eigen::VectorXd &sample);
 
             ///
             /// Calculates the cost of a leaf node
@@ -160,13 +158,8 @@ namespace ompl
             /// @param c2 Cost two
             /// @return Combination of the costs
             ///
-            virtual double combineCosts(const Eigen::VectorXd &x1,
-                                        const Eigen::VectorXd &x2,
-                                        const int i,
-                                        const int m,
-                                        const int j,
-                                        const double c1,
-                                        const double c2) const = 0;
+            virtual double combineCosts(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, const int i, const int m,
+                                        const int j, const double c1, const double c2) const = 0;
 
             ///
             /// How to sample a leaf (ex: geometric is one dimension and kino is 2)
@@ -183,10 +176,12 @@ namespace ompl
             /// @param cost Cost to get final form of
             /// @return Final cost of the aggregation
             ///
-            virtual double Cost(const double cost) const { return cost; }
+            virtual double Cost(const double cost) const
+            {
+                return cost;
+            }
 
         protected:
-
             /// Dimension of the space
             uint dimension_;
         };
@@ -194,7 +189,7 @@ namespace ompl
         ///
         /// Geometric Heirarchical Rejection Sampler
         ///
-        class GeometricHierarchicalRejectionSampler: public HierarchicalRejectionSampler
+        class GeometricHierarchicalRejectionSampler : public HierarchicalRejectionSampler
         {
         public:
             ///
@@ -208,12 +203,10 @@ namespace ompl
             /// @param sample_batch_size How many samples to get each time a new
             /// batch of samples is gotten
             ///
-            GeometricHierarchicalRejectionSampler(const SpaceInformationPtr &si,
-                                                  const ProblemDefinitionPtr &problem,
-                                                  const double levelSet,
-                                                  const unsigned int maxNumberCalls,
+            GeometricHierarchicalRejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
+                                                  const double levelSet, const unsigned int maxNumberCalls,
                                                   const int sampleBatchSize)
-                : HierarchicalRejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+              : HierarchicalRejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
             {
                 // Get the limits of the state
                 std::tie(min_, max_) = getStateLimits();
@@ -249,13 +242,8 @@ namespace ompl
             /// @param c2 Cost two
             /// @return Combination of the costs
             ///
-            virtual double combineCosts(const Eigen::VectorXd &x1,
-                                        const Eigen::VectorXd &x2,
-                                        const int i,
-                                        const int m,
-                                        const int j,
-                                        const double c1,
-                                        const double c2) const override;
+            virtual double combineCosts(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, const int i, const int m,
+                                        const int j, const double c1, const double c2) const override;
 
             ///
             /// How to sample a leaf (ex: geometric is one dimension and kino is 2)
@@ -272,7 +260,10 @@ namespace ompl
             /// @param cost Cost to get final form of
             /// @return Final cost of the aggregation
             ///
-            virtual double Cost(const double cost) const override { return std::sqrt(cost); }
+            virtual double Cost(const double cost) const override
+            {
+                return std::sqrt(cost);
+            }
 
             // Random number generator
             std::mt19937 gen_;
@@ -285,7 +276,7 @@ namespace ompl
         ///
         /// Dimt Hierarchical Rejection Sampler
         ///
-        class DimtHierarchicalRejectionSampler: public HierarchicalRejectionSampler
+        class DimtHierarchicalRejectionSampler : public HierarchicalRejectionSampler
         {
         public:
             ///
@@ -300,16 +291,14 @@ namespace ompl
             /// batch of samples is gotten
             /// @param double_integrator_1dof A 1DOF double integrator model
             ///
-            DimtHierarchicalRejectionSampler(const SpaceInformationPtr &si,
-                                             const ProblemDefinitionPtr &problem,
-                                             const double levelSet,
-                                             const unsigned int maxNumberCalls,
+            DimtHierarchicalRejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
+                                             const double levelSet, const unsigned int maxNumberCalls,
                                              const int sampleBatchSize,
                                              const DoubleIntegrator<1> double_integrator_1dof)
-                : HierarchicalRejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize),
-                  double_integrator_1dof_(double_integrator_1dof),
-                  infeasible_intervals_(param.dof, std::make_pair(0.0, 0.0)),
-                  costs_(param.dof, 0.0)
+              : HierarchicalRejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+              , double_integrator_1dof_(double_integrator_1dof)
+              , infeasible_intervals_(param.dof, std::make_pair(0.0, 0.0))
+              , costs_(param.dof, 0.0)
             {
                 // Get the limits of the state
                 std::tie(min_, max_) = getStateLimits();
@@ -345,13 +334,8 @@ namespace ompl
             /// @param c2 Cost two
             /// @return Combination of the costs
             ///
-            virtual double combineCosts(const Eigen::VectorXd &x1,
-                                        const Eigen::VectorXd &x2,
-                                        const int i,
-                                        const int m,
-                                        const int j,
-                                        const double c1,
-                                        const double c2) const override;
+            virtual double combineCosts(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, const int i, const int m,
+                                        const int j, const double c1, const double c2) const override;
 
             ///
             /// How to sample a leaf (ex: geometric is one dimension and kino is 2)
@@ -368,7 +352,10 @@ namespace ompl
             /// @param cost Cost to get final form of
             /// @return Final cost of the aggregation
             ///
-            virtual double Cost(const double cost) const override { return cost; }
+            virtual double Cost(const double cost) const override
+            {
+                return cost;
+            }
 
             // Random number generator
             std::mt19937 gen_;
@@ -386,8 +373,7 @@ namespace ompl
             // Costs for the dofs
             std::vector<double> costs_;
         };
-    } // namespace base
-} // namespace ompl
-
+    }  // namespace base
+}  // namespace ompl
 
 // #endif // OMPL_BASE_SAMPLERS_INFORMED_REJECTION_SAMPLER_
