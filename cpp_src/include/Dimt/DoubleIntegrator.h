@@ -589,11 +589,14 @@ public:
                 getInfeasibleInterval(state1[dof + i], state2[dof + i], distances[i], firstAccelerations[i],
                                       maxAccelerations_[i], maxVelocities_[i]);
 
-            Interval i2(infeasibleInterval.first, infeasibleInterval.second);
-            intervalSet.insert_and_complement(i2);
+            if(infeasibleInterval.first < std::numeric_limits<double>::infinity())
+            {
+                Interval i2(infeasibleInterval.first, infeasibleInterval.second);
+                intervalSet.insert_and_complement(i2);
+            }
 
             std::cout << i << " - " << time << " " << infeasibleInterval.first << " " << infeasibleInterval.second
-                      << std::endl;
+                     << std::endl;
         }
 
         double minTime = intervalSet.get_intervals().front().get_min();

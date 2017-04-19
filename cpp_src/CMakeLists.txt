@@ -10,108 +10,23 @@ project(GetKinoSamples)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
-add_executable(get_samples ${PROJECT_SOURCE_DIR}/src/get_samples.cpp)
-add_executable(get_samples_batch ${PROJECT_SOURCE_DIR}/src/get_samples_batch.cpp)
-add_executable(get_samples_diff_levels ${PROJECT_SOURCE_DIR}/src/get_samples_diff_levels.cpp)
-add_executable(get_samples_diff_levels_geometry ${PROJECT_SOURCE_DIR}/src/get_samples_diff_levels_geometry.cpp)
-add_executable(get_samples_diff_sample_no ${PROJECT_SOURCE_DIR}/src/get_samples_diff_sample_no.cpp)
-add_executable(unit_test ${PROJECT_SOURCE_DIR}/src/Test.cpp)
-include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Find Eigen OMPL and Boost
-include_directories(${PROJECT_SOURCE_DIR}/include/eigen-eigen-f562a193118d)
+#include_directories(${PROJECT_SOURCE_DIR}/include/eigen-eigen-f562a193118d)
 find_package(OMPL REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
+find_package(EIGEN3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIRS})
 
-# Add library for sampler class
-add_library(samplerLib
-			SHARED
-			 src/Sampler.cpp
-			 src/MonteCarloSamplers.cpp
-			 src/RejectionSampler.cpp
-			 src/HitAndRun.cpp
-			)
-target_link_libraries(samplerLib
-					  ${EIGEN3_LIBRARIES}
-					  ${OMPL_LIBRARIES}
-					 )
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# Add library for dimt class
-add_library(dimtLib
-			SHARED
-			 include/Dimt/Dimt.h
-                         include/Dimt/Interval.h
-                         include/Dimt/DoubleIntegrator.h
-                         src/Interval.cpp
-			)
-target_link_libraries(dimtLib
-					  ${EIGEN3_LIBRARIES}
-					 )
-set_target_properties(dimtLib PROPERTIES LINKER_LANGUAGE CXX)
-
-# Add library for OMPL wrappers
-add_library(omplwrapperLib
-			SHARED
-			 src/MyOptimizationObjective.cpp
-			 src/MyInformedRRTstar.cpp
-             src/OmplHelpers.cpp
-			)
-target_link_libraries(omplwrapperLib
-					  ${OMPL_LIBRARIES}
-					  )
-
-# Link libraries for main file
-target_link_libraries(get_samples
-					  samplerLib
-                                          dimtLib
-                                          omplwrapperLib
-					  ${EIGEN3_LIBRARIES}
-					  #{OMPL_LIBRARIES}
-					  )
-
-target_link_libraries(get_samples_batch
-					  samplerLib
-                                          dimtLib
-                                          omplwrapperLib
-					  ${EIGEN3_LIBRARIES}
-					  #{OMPL_LIBRARIES}
-					  )
-
-target_link_libraries(get_samples_diff_levels
-					  samplerLib
-                                          dimtLib
-                                          omplwrapperLib
-					  ${EIGEN3_LIBRARIES}
-					  #{OMPL_LIBRARIES}
-					  )
-
-target_link_libraries(get_samples_diff_levels_geometry
-					  samplerLib
-                                          dimtLib
-                                          omplwrapperLib
-					  ${EIGEN3_LIBRARIES}
-					  #{OMPL_LIBRARIES}
-					  )
+add_subdirectory("src")
+add_subdirectory("test")
 
 
-target_link_libraries(get_samples_diff_sample_no
-					  samplerLib
-                                          dimtLib
-                                          omplwrapperLib
-					  ${EIGEN3_LIBRARIES}
-					  #{OMPL_LIBRARIES}
-					  )
 
-target_link_libraries(unit_test
-					  dimtLib
-					  samplerLib
-					  ${EIGEN3_LIBRARIES}
-					  )
 
-# Ompl Planner
-add_executable (kdp_pointmass2d src/kdp_pointmass2d.cpp)
-target_link_libraries (kdp_pointmass2d ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} dimtLib)
 
-# Informed Pointmass
-add_executable (informed_pointmass src/informed_pointmass.cpp)
-target_link_libraries (informed_pointmass ${OMPL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} samplerLib dimtLib omplwrapperLib)
+
+
+
