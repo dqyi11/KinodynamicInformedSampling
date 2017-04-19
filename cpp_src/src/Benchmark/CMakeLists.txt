@@ -5,8 +5,6 @@ target_link_libraries(get_samples
                       samplerLib
                       dimtLib
                       omplwrapperLib
-                      ${EIGEN3_LIBRARIES}
-                      #{OMPL_LIBRARIES}
                       )
 
 add_executable(get_samples_batch 
@@ -16,8 +14,6 @@ target_link_libraries(get_samples_batch
                       samplerLib
                       dimtLib
                       omplwrapperLib
-                      ${EIGEN3_LIBRARIES}
-                      #{OMPL_LIBRARIES}
                      )
 
 add_executable(get_samples_diff_levels 
@@ -27,8 +23,6 @@ target_link_libraries(get_samples_diff_levels
                       samplerLib
                       dimtLib
                       omplwrapperLib
-                      ${EIGEN3_LIBRARIES}
-                      #{OMPL_LIBRARIES}
                      )
 
 add_executable(get_samples_diff_levels_geometry 
@@ -38,8 +32,6 @@ target_link_libraries(get_samples_diff_levels_geometry
                       samplerLib
                       dimtLib
                       omplwrapperLib
-                      ${EIGEN3_LIBRARIES}
-                      #{OMPL_LIBRARIES}
                      )
 
 add_executable(get_samples_diff_sample_no 
@@ -49,6 +41,4 @@ target_link_libraries(get_samples_diff_sample_no
                       samplerLib
                       dimtLib
                       omplwrapperLib
-                      ${EIGEN3_LIBRARIES}
-                      #{OMPL_LIBRARIES}
                      )

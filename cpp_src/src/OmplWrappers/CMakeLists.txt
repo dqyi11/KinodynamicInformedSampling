@@ -6,5 +6,5 @@ add_library(omplwrapperLib SHARED
            )
 
 target_link_libraries(omplwrapperLib
-                      ${OMPL_LIBRARIES}
+                      #${OMPL_LIBRARIES}
                      )

@@ -6,6 +6,5 @@ add_library(samplerLib SHARED
             HitAndRun.cpp
            )
 target_link_libraries(samplerLib
-                      ${EIGEN3_LIBRARIES}
                       ${OMPL_LIBRARIES}
                      )

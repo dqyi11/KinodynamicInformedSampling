@@ -5,6 +5,6 @@ add_executable(unit_test
 target_link_libraries(unit_test
                       dimtLib
                       samplerLib
-                      ${EIGEN3_LIBRARIES}
+
                      )
 

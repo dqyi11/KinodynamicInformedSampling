@@ -4,7 +4,6 @@ add_library(dimtLib SHARED
            )
 
 target_link_libraries(dimtLib 
-                      ${EIGEN3_LIBRARIES}
                      )
 
 set_target_properties(dimtLib PROPERTIES LINKER_LANGUAGE CXX)
