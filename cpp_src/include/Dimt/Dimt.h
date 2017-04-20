@@ -9,6 +9,13 @@
 
 // Eigen
 #include <Eigen/Dense>
+#ifdef ENABLE_BENCHMARK
+#include "Benchmark/TimeBenchmark.h"
+#endif
+
+
+#include "Dimt/Interval.h"
+
 using Eigen::VectorXd;
 
 // VERBOSE constant
@@ -65,19 +72,35 @@ public:
     // @return T Maximum time
     double get_min_time(const VectorXd x1, const VectorXd x2) const
     {
+#ifdef ENABLE_BENCHMARK
+        std::chrono::high_resolution_clock::time_point tAs = std::chrono::high_resolution_clock::now();
+#endif
+
         double minTimeA = get_min_timeA(x1, x2);
+#ifdef ENABLE_BENCHMARK
+        std::chrono::high_resolution_clock::time_point tAe = std::chrono::high_resolution_clock::now();
+        std::chrono::high_resolution_clock::duration  durationA = tAe - tAs;
+        std::chrono::high_resolution_clock::time_point tBs = std::chrono::high_resolution_clock::now();
+#endif
         double minTimeB = get_min_timeB(x1, x2);
-        if (minTimeA != minTimeB)
+#ifdef ENABLE_BENCHMARK
+        std::chrono::high_resolution_clock::time_point tBe = std::chrono::high_resolution_clock::now();
+        std::chrono::high_resolution_clock::duration  durationB = tBe - tBs;
+
+        std::cout << "get_min_timeA ";
+        printTime(durationA, std::cout);
+        std::cout << std::endl;
+
+        std::cout << "get_min_timeB ";
+        printTime(durationB, std::cout);
+        std::cout << std::endl;
+#endif
+        //if (minTimeA != minTimeB)
         {
             std::cout << "minTimeA " << minTimeA << " minTimeB " << minTimeB << std::endl;
         }
+
         return minTimeA;
-    }
-
-    double get_min_timeB(const VectorXd x1, const VectorXd x2) const
-    {
-
-        return 0.0;
     }
 
     double get_min_timeA(const VectorXd x1, const VectorXd x2) const
@@ -145,6 +168,31 @@ public:
             std::cout << "Finished getting min time" << std::endl;
 
         return min_time;
+    }
+
+    double get_min_timeB(const VectorXd x1, const VectorXd x2) const
+    {
+        int joint = 0;
+        IntervalSet intervalSet;
+
+        if (VERBOSE)
+            std::cout << "Getting min time." << std::endl;
+        while (joint < x1.size())
+        {
+            const double time = get_min_time_1dof(x1(joint), x1(joint + 1), x2(joint), x2(joint + 1));
+            std::pair<double, double> infeasible_interval = get_infeasible_time_interval(x1(joint), x1(joint + 1), x2(joint), x2(joint + 1));
+
+            Interval i1(time, true);
+            intervalSet.insert_and(i1);
+
+            if(infeasible_interval.first < std::numeric_limits<double>::infinity())
+            {
+                Interval i2(infeasible_interval.first, infeasible_interval.second);
+                intervalSet.insert_and_complement(i2);
+            }
+            joint += 2;
+        }
+        return intervalSet.get_intervals().front().get_min();
     }
 
     // returns the minimum time between 3 points ([x1,y1] -> [xi,yi] -> [x2,y2])

@@ -3,9 +3,8 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
-#include <chrono>
 #include <limits>
-using namespace std::chrono;
+
 
 // Eigen
 #include <Eigen/Dense>
@@ -23,7 +22,7 @@ using Eigen::MatrixXd;
 #include "Dimt/DoubleIntegrator.h"
 #include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
-
+#include "Benchmark/TimeBenchmark.h"
 
 //
 // From stackoverflow:
@@ -140,7 +139,7 @@ int main(int argc, char *argv[])
 
     const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
     // const double level_set = 1.4 * (goal_state - start_state).norm();
-    high_resolution_clock::duration duration;
+    std::chrono::high_resolution_clock::duration duration;
     std::cout << "Level set: " << level_set << std::endl;
 
     // Construct the state space we are planning in
@@ -179,11 +178,11 @@ int main(int argc, char *argv[])
     int sample_num_sets_num = sizeof(sample_num_sets) / sizeof(int);
     std::cout << "sample set num " << sample_num_sets_num << std::endl;
 
-    std::vector<high_resolution_clock::duration> times_hmc1(sample_num_sets_num * no_batch);
-    std::vector<high_resolution_clock::duration> times_hmc2(sample_num_sets_num * no_batch);
-    std::vector<high_resolution_clock::duration> times_mcmc(sample_num_sets_num * no_batch);
-    std::vector<high_resolution_clock::duration> times_rs(sample_num_sets_num * no_batch);
-    std::vector<high_resolution_clock::duration> times_hrs(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> times_hmc1(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> times_hmc2(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> times_mcmc(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> times_rs(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> times_hrs(sample_num_sets_num * no_batch);
     for (unsigned int j = 0; j < sample_num_sets_num; j++)
     {
         no_samples = sample_num_sets[j];
@@ -241,73 +240,18 @@ int main(int argc, char *argv[])
     {
         std::cout << "START SAVING" << std::endl;
         std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
-        if (time1_file.is_open())
-        {
-            for (int i = 0; i < sample_num_sets_num; i++)
-            {
-                for (int j = 0; j < no_batch; j++)
-                {
-                    time1_file << duration_cast<milliseconds>(times_hmc1[i * no_batch + j]).count() << " ";
-                }
-                time1_file << std::endl;
-            }
-        }
-        time1_file.close();
+        printTimeToFile(times_hmc1, no_batch, sample_num_sets_num, time1_file);
 
         std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
-        if (time2_file.is_open())
-        {
-            for (int i = 0; i < sample_num_sets_num; i++)
-            {
-                for (int j = 0; j < no_batch; j++)
-                {
-                    time2_file << duration_cast<milliseconds>(times_hmc2[i * no_batch + j]).count() << " ";
-                }
-                time2_file << std::endl;
-            }
-        }
-        time2_file.close();
+        printTimeToFile(times_hmc2, no_batch, sample_num_sets_num, time2_file);
 
         std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
-        if (time3_file.is_open())
-        {
-            for (int i = 0; i < sample_num_sets_num; i++)
-            {
-                for (int j = 0; j < no_batch; j++)
-                {
-                    time3_file << duration_cast<milliseconds>(times_mcmc[i * no_batch + j]).count() << " ";
-                }
-                time3_file << std::endl;
-            }
-        }
-        time3_file.close();
+        printTimeToFile(times_mcmc, no_batch, sample_num_sets_num, time3_file);
 
         std::ofstream time4_file(filename + "_time_lvl_rs.log");
-        if (time4_file.is_open())
-        {
-            for (int i = 0; i < sample_num_sets_num; i++)
-            {
-                for (int j = 0; j < no_batch; j++)
-                {
-                    time4_file << duration_cast<milliseconds>(times_rs[i * no_batch + j]).count() << " ";
-                }
-                time4_file << std::endl;
-            }
-        }
-        time4_file.close();
+        printTimeToFile(times_rs, no_batch, sample_num_sets_num, time4_file);
 
         std::ofstream time5_file(filename + "_time_lvl_hrs.log");
-        if (time5_file.is_open())
-        {
-            for (int i = 0; i < sample_num_sets_num; i++)
-            {
-                for (int j = 0; j < no_batch; j++)
-                {
-                    time5_file << duration_cast<milliseconds>(times_hrs[i * no_batch + j]).count() << " ";
-                }
-                time5_file << std::endl;
-            }
-        }
-        time5_file.close();
+        printTimeToFile(times_hrs, no_batch, sample_num_sets_num, time5_file);
     }
 }

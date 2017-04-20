@@ -2,9 +2,6 @@
 #include <iostream>
 #include <tuple>
 #include <vector>
-#include <fstream>
-#include <chrono>
-using namespace std::chrono;
 
 // Eigen
 #include <Eigen/Dense>
@@ -26,6 +23,8 @@ using Eigen::VectorXd;
 #include "Dimt/DoubleIntegrator.h"
 #include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
+#include "Benchmark/TimeBenchmark.h"
+#include "Benchmark/SampleBenchmark.h"
 
 //
 // From stackoverflow:
@@ -41,19 +40,6 @@ char *getCmdOption(char **begin, char **end, const std::string &option)
         return *itr;
     }
     return 0;
-}
-
-void printTime(high_resolution_clock::duration &duration)
-{
-    auto duration_s = duration_cast<seconds>(duration).count();
-    auto duration_ms = duration_cast<milliseconds>(duration).count();
-    auto duration_us = duration_cast<microseconds>(duration).count();
-    if (duration_s != 0)
-        std::cout << "Total Sampling Time: " << duration_s << "s" << std::endl;
-    else if (duration_ms != 0)
-        std::cout << "Total Sampling Time: " << duration_ms << "ms" << std::endl;
-    else
-        std::cout << "Total Sampling Time: " << duration_us << "us" << std::endl;
 }
 
 bool cmdOptionExists(char **begin, char **end, const std::string &option)
@@ -222,7 +208,7 @@ int main(int argc, char *argv[])
     DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
 
     const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-    high_resolution_clock::duration duration;
+    std::chrono::high_resolution_clock::duration duration;
     std::cout << "Level set: " << level_set << std::endl;
 
     // Construct the state space we are planning in
@@ -277,13 +263,17 @@ int main(int argc, char *argv[])
         hmc_samples = hmc_s.sample(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
         std::cout << "Running HMC2 Sampling..." << std::endl;
         hmc_samples2 = hmc_s.sampleBatchMemorized(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
     }
 
@@ -298,7 +288,9 @@ int main(int argc, char *argv[])
         mcmc_samples = mcmc_s.sample(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
     }
 
@@ -310,7 +302,9 @@ int main(int argc, char *argv[])
         rej_samples = rej_s.sample(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
     }
 
@@ -353,7 +347,9 @@ int main(int argc, char *argv[])
         dimthrs_samples = dimthrs_s.sample(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
     }
 
@@ -365,7 +361,9 @@ int main(int argc, char *argv[])
         gibbs_samples = gibbs_s.sample(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
     }
 
@@ -377,7 +375,9 @@ int main(int argc, char *argv[])
         gibbs_samples = hitnrun_s.sample(no_samples, duration);
         if (time)
         {
-            printTime(duration);
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
         }
     }
 
@@ -387,101 +387,45 @@ int main(int argc, char *argv[])
         if (run_hmc)
         {
             std::ofstream hmc_file(filename + "_hmc.log");
-            if (hmc_file.is_open())
-            {
-                for (int i = 0; i < hmc_samples.rows(); i++)
-                {
-                    hmc_file << hmc_samples.row(i) << std::endl;
-                }
-            }
-            hmc_file.close();
+            printSampleToFile(hmc_samples, hmc_file);
             std::ofstream hmc2_file(filename + "_hmc2.log");
-            if (hmc2_file.is_open())
-            {
-                for (int i = 0; i < hmc_samples2.rows(); i++)
-                {
-                    hmc2_file << hmc_samples2.row(i) << std::endl;
-                }
-            }
-            hmc2_file.close();
+            printSampleToFile(hmc2_samples, hmc2_file);
         }
 
         if (run_mcmc)
         {
             std::ofstream mcmc_file(filename + "_mcmc.log");
-            if (mcmc_file.is_open())
-            {
-                for (int i = 0; i < mcmc_samples.rows(); i++)
-                {
-                    mcmc_file << mcmc_samples.row(i) << std::endl;
-                }
-            }
-            mcmc_file.close();
+            printSampleToFile(mcmc_samples, mcmc_file);
         }
 
         if (run_rej)
         {
             std::ofstream rej_file(filename + "_rej.log");
-            if (rej_file.is_open())
-            {
-                for (int i = 0; i < rej_samples.rows(); i++)
-                {
-                    rej_file << rej_samples.row(i) << std::endl;
-                }
-            }
-            rej_file.close();
+            printSampleToFile(rej_samples, rej_file);
         }
 
         if (run_ghrej)
         {
             std::ofstream ghrej_file(filename + "_ghrej.log");
-            if (ghrej_file.is_open())
-            {
-                for (int i = 0; i < ghrej_samples.rows(); i++)
-                {
-                    ghrej_file << ghrej_samples.row(i) << std::endl;
-                }
-            }
-            ghrej_file.close();
+            printSampleToFile(ghrej_samples, ghrej_file);
         }
 
         if (run_dimthrs)
         {
             std::ofstream dimthrs_file(filename + "_dimthrs.log");
-            if (dimthrs_file.is_open())
-            {
-                for (int i = 0; i < dimthrs_samples.rows(); i++)
-                {
-                    dimthrs_file << dimthrs_samples.row(i) << std::endl;
-                }
-            }
-            dimthrs_file.close();
+            printSampleToFile(dimthrs_samples, dimthrs_file);
         }
 
         if (run_gibbs)
         {
             std::ofstream gibbs_file(filename + "_gibbs.log");
-            if (gibbs_file.is_open())
-            {
-                for (int i = 0; i < gibbs_samples.rows(); i++)
-                {
-                    gibbs_file << gibbs_samples.row(i) << std::endl;
-                }
-            }
-            gibbs_file.close();
+            printSampleToFile(gibbs_samples, gibbs_file);
         }
 
         if (run_hitnrun)
         {
             std::ofstream hitnrun_file(filename + "_hitnrun.log");
-            if (hitnrun_file.is_open())
-            {
-                for (int i = 0; i < hitnrun_samples.rows(); i++)
-                {
-                    hitnrun_file << hitnrun_samples.row(i) << std::endl;
-                }
-            }
-            hitnrun_file.close();
+            printSampleToFile(hitnrun_samples, hitnrun_file);
         }
 
         std::cout << "Saved samples and costs to " << filename << std::endl;

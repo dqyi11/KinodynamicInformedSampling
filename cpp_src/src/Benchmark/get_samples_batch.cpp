@@ -3,8 +3,6 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
-#include <chrono>
-using namespace std::chrono;
 
 // Eigen
 #include <Eigen/Dense>
@@ -23,6 +21,7 @@ using Eigen::VectorXd;
 #include "Dimt/DoubleIntegrator.h"
 #include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
+#include "Benchmark/TimeBenchmark.h"
 
 //
 // From stackoverflow:
@@ -185,7 +184,7 @@ int main(int argc, char *argv[])
     DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
 
     const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
-    high_resolution_clock::duration duration;
+    std::chrono::high_resolution_clock::duration duration;
     std::cout << "Level set: " << level_set << std::endl;
 
     // Construct the state space we are planning in
@@ -224,7 +223,7 @@ int main(int argc, char *argv[])
         new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, double_integrator));
     pdef->setOptimizationObjective(opt);
 
-    std::vector<high_resolution_clock::duration> times(5 * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> times(5 * no_batch);
     for (unsigned int i = 0; i < no_batch; i++)
     {
         std::cout << "BATCH " << i << std::endl;
@@ -271,17 +270,6 @@ int main(int argc, char *argv[])
     {
         std::cout << "START SAVING" << std::endl;
         std::ofstream time_file(filename + "_time.log");
-        if (time_file.is_open())
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                for (int j = 0; j < no_batch; j++)
-                {
-                    time_file << duration_cast<milliseconds>(times[i * no_batch + j]).count() << " ";
-                }
-                time_file << std::endl;
-            }
-        }
-        time_file.close();
+        printTimeToFile(times, no_batch, 5, time_file);
     }
 }
