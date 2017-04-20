@@ -65,6 +65,23 @@ public:
     // @return T Maximum time
     double get_min_time(const VectorXd x1, const VectorXd x2) const
     {
+        double minTimeA = get_min_timeA(x1, x2);
+        double minTimeB = get_min_timeB(x1, x2);
+        if (minTimeA != minTimeB)
+        {
+            std::cout << "minTimeA " << minTimeA << " minTimeB " << minTimeB << std::endl;
+        }
+        return minTimeA;
+    }
+
+    double get_min_timeB(const VectorXd x1, const VectorXd x2) const
+    {
+
+        return 0.0;
+    }
+
+    double get_min_timeA(const VectorXd x1, const VectorXd x2) const
+    {
         int joint = 0;
 
         double min_time = -1;

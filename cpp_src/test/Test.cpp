@@ -17,8 +17,7 @@ int main()
     std::cout << "Error = " << dimt.get_min_time(start_state, goal_state, state) - 1.7025 << std::endl;
 
     // Double_Integrator Test
-    //  std::cout << "Time = " << dimt.get_min_time(start_state, goal_state,
-    //  state) << std::endl;
+    //  std::cout << "Time = " << dimt.get_min_time(start_state, goal_state,  state) << std::endl;
     DoubleIntegrator<2>::Vector maxAccelerations, maxVelocities;
     for (unsigned int i = 0; i < 2; ++i)
     {
