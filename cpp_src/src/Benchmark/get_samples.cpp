@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
     // Initialize the sampler
     // HMC parameters
     MatrixXd hmc_samples;
-    MatrixXd hmc_samples2;
+    MatrixXd hmc2_samples;
     if (run_hmc)
     {
         double alpha = 0.5;
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
             std::cout << std::endl;
         }
         std::cout << "Running HMC2 Sampling..." << std::endl;
-        hmc_samples2 = hmc_s.sampleBatchMemorized(no_samples, duration);
+        hmc2_samples = hmc_s.sampleBatchMemorized(no_samples, duration);
         if (time)
         {
             std::cout << "Total time ";
