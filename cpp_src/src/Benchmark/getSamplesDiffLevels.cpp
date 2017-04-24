@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, doubleIntegrator));
+        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, dimt));
     pdef->setOptimizationObjective(opt);
 
     double levelSetRatios[] = {1.6, 1.5, 1.4, 1.3, 1.2, 1.1};

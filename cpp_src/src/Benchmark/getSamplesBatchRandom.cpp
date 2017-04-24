@@ -25,7 +25,7 @@ using Eigen::VectorXd;
 #include "Benchmark/SampleBenchmark.h"
 #include "Benchmark/TimeBenchmark.h"
 #include "Benchmark/OptionParse.h"
-#include "Benchmark/ProblemGeneration.h"
+#include "Dimt/ProblemGeneration.h"
 
 std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
 {
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     VectorXd goalVec(numDim);
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(-25, 25);
+    std::uniform_real_distribution<double> dis(minval, maxval);
     std::uniform_real_distribution<double> dis01(0.0, 1.0);
 
     // Initializations
@@ -100,27 +100,21 @@ int main(int argc, char *argv[])
     }
     DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
 
-    // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, dof.dimensions));
-    ompl::base::RealVectorBounds bounds(dof.dimensions);
-    bounds.setLow(minval);
-    bounds.setHigh(maxval);
-    space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-    ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
-    si->setup();
-
+    // create space information
+    ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, doubleIntegrator,
+                                                                    minval, maxval);
     std::ofstream logFile(filename + ".log");
     if(!logFile.is_open())
     {
         throw std::runtime_error("file not opened");
     }
 
-    int numSamplers = 4;
-    std::vector<std::chrono::high_resolution_clock::duration> times(numSamplers);
-    std::vector<double> rejectionRatios(numbatch);
+    int numSamplers = 5;
+
     for (unsigned int i = 0; i < numbatch; i++)
     {
-        std::cout << "BATCH " << i << std::endl;
+        std::vector<std::chrono::high_resolution_clock::duration> times(numSamplers);
+        double rejectionRatio = 1.0;
 
         // sample new start and goal
         for (int d = 0; d < numDim; d++)
@@ -129,40 +123,15 @@ int main(int argc, char *argv[])
             goalVec(d) = dis(gen);
         }
 
-        // Set custom start and goal
-        ompl::base::State *startState = space->allocState();
-        ompl::base::State *goalState = space->allocState();
-        for (int d = 0; d < dof.dimensions; d++)
-        {
-            if (d % 2 == 0)  // position
-            {
-                startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = startVec[d];
-                goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = goalVec[d];
-            }
-            else  // velocity
-            {
-                startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = startVec[d];
-                goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = goalVec[d];
-            }
-        }
-        ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, startState);
-        ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goalState);
-
         // create a level set
         double rndNum = 0.5*dis01(gen)+1;
         const double levelSet = rndNum * dimt.get_min_time(startVec, goalVec);
-        //std::chrono::high_resolution_clock::duration duration;
-        //std::cout << "Level set: " << levelSet << std::endl;
+
+        std::cout << "BATCH " << i <<  " ratio " << rndNum << std::endl;
 
         // create new problem definition
-        ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
-        pdef->setStartAndGoalStates(start, goal);
-
-        const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-            new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, doubleIntegrator));
-        pdef->setOptimizationObjective(opt);
-
-
+        ompl::base::ProblemDefinitionPtr pdef =
+                createDimtProblem(startVec, goalVec, si, dimt);
 
         int curr=0;
 
@@ -208,7 +177,7 @@ int main(int argc, char *argv[])
             MatrixXd rejSamples;
             ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
             rejSamples = rejSampler.sample(numSamples, times[curr]);
-            rejectionRatios[i] = rejSampler.getRejectionRatio();
+            rejectionRatio = rejSampler.getRejectionRatio();
         }
 
         curr++;
@@ -219,7 +188,7 @@ int main(int argc, char *argv[])
             for (unsigned int i = 0; i < 1; ++i)
             {
                 maxVelocities1[i] = 10;
-                maxAccelerations1[i] = dof.a_max;
+                maxAccelerations1[i] = param.a_max;
             }
             DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
             ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet, 100, 100, doubleIntegrator1dof);
@@ -243,7 +212,7 @@ int main(int argc, char *argv[])
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
         }
 
-        appendTimeAndRatioToFile(times, rejectionRatios[i], numSamples, logFile);
+        appendTimeAndRatioToFile(times, rejectionRatio, numSamples, logFile);
     }
 
     logFile.close();

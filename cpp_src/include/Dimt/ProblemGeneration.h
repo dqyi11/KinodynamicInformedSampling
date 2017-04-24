@@ -6,7 +6,9 @@
 #include <ompl/base/ProblemDefinition.h>
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/base/samplers/InformedStateSampler.h>
+#include <ompl/base/spaces/RealVectorBounds.h>
 #include "Dimt/Params.h"
+#include "Dimt/Dimt.h"
 #include "Dimt/DoubleIntegrator.h"
 
 template< class RNG >
@@ -26,14 +28,30 @@ void sampleStartAndGoal(Eigen::VectorXd& startVec, Eigen::VectorXd& goalVec,
     }
 }
 
-
-ompl::base::ProblemDefinitionPtr createProblemDefinition(const Eigen::VectorXd& startVec,
-                                                         const Eigen::VectorXd& goalVec,
-                                                         ompl::base::StateSpacePtr space,
-                                                         ompl::base::SpaceInformationPtr si,
-                                                         DoubleIntegrator& doubleIntegrator
-                                                         )
+ompl::base::SpaceInformationPtr createDimtSpaceInformation(Dimt& dimt,
+                                                           DoubleIntegrator<param.dof>& doubleIntegrator,
+                                                           int minval,
+                                                           int maxval
+                                                           )
 {
+    // Construct the state space we are planning in
+    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, param.dimensions));
+    ompl::base::RealVectorBounds bounds(param.dimensions);
+    bounds.setLow(minval);
+    bounds.setHigh(maxval);
+    space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
+    ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
+    si->setup();
+    return si;
+}
+
+ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startVec,
+                                                   const Eigen::VectorXd& goalVec,
+                                                   ompl::base::SpaceInformationPtr si,
+                                                   Dimt& dimt
+                                                  )
+{
+    ompl::base::StateSpacePtr space = si->getStateSpace();
     // Set custom start and goal
     auto startState = space->allocState();
     auto goalState = space->allocState();
@@ -58,7 +76,7 @@ ompl::base::ProblemDefinitionPtr createProblemDefinition(const Eigen::VectorXd& 
     pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, doubleIntegrator));
+        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, dimt));
     pdef->setOptimizationObjective(opt);
 
     return pdef;

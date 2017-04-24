@@ -146,7 +146,7 @@ void planWithSimpleSetup(void)
     base_pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr base_opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, double_integrator));
+        new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, dimt));
     base_pdef->setOptimizationObjective(base_opt);
 
     if (MAIN_VERBOSE)

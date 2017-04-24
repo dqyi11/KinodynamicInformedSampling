@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, doubleIntegrator));
+        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, dimt));
     pdef->setOptimizationObjective(opt);
 
     // Initialize the sampler

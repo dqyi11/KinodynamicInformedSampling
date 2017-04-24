@@ -14,8 +14,8 @@ using Eigen::VectorXd;
 
 // Internal packages
 #include <Sampler/Sampler.h>
-#include <Dimt/DoubleIntegrator.h>
 #include <Dimt/Params.h>
+#include <Dimt/Dimt.h>
 #include <OmplWrappers/OmplHelpers.h>
 
 using MotionCostFxn = std::function<double(VectorXd, VectorXd)>;
@@ -149,7 +149,7 @@ namespace ompl
 
             const Eigen::VectorXd goalState_;
 
-            const DoubleIntegrator<dof> di_;
+            const Dimt di_;
 
             Eigen::VectorXd get_eigen_vector(const ompl::base::State *s) const
             {
@@ -175,7 +175,7 @@ namespace ompl
             /// @param di Double Integrator model
             ///
             DimtObjective<dof>(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
-                               const Eigen::VectorXd &goalState, const DoubleIntegrator<dof> di)
+                               const Eigen::VectorXd &goalState, const Dimt di)
               : OptimizationObjective(si), startState_(startState), goalState_(goalState), di_(di)
             {
             }
@@ -188,8 +188,8 @@ namespace ompl
             ///
             virtual Cost stateCost(const State *s) const override
             {
-                return Cost(di_.getMinTime(startState_, get_eigen_vector(s)) +
-                            di_.getMinTime(get_eigen_vector(s), goalState_));
+                return Cost(di_.get_min_time(startState_, get_eigen_vector(s)) +
+                            di_.get_min_time(get_eigen_vector(s), goalState_));
             }
 
             ///
@@ -201,7 +201,7 @@ namespace ompl
             ///
             virtual Cost motionCost(const State *s1, const State *s2) const override
             {
-                return Cost(di_.getMinTime(get_eigen_vector(s1), get_eigen_vector(s2)));
+                return Cost(di_.get_min_time(get_eigen_vector(s1), get_eigen_vector(s2)));
             }
 
             ///

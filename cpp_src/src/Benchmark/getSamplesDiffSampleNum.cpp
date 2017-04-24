@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         std::cout << "NO SAMPLE " << no_samples << std::endl;
 
         const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-            new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, double_integrator));
+            new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, dimt));
 
         pdef->setOptimizationObjective(opt);
 
