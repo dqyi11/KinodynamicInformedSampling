@@ -1,5 +1,5 @@
 add_executable(get_samples 
-               get_samples.cpp
+               getSamples.cpp
               )
 target_link_libraries(get_samples
                       samplerLib
@@ -8,7 +8,7 @@ target_link_libraries(get_samples
                       )
 
 add_executable(get_samples_batch 
-               get_samples_batch.cpp
+               getSamplesBatch.cpp
               )
 target_link_libraries(get_samples_batch
                       samplerLib
@@ -17,7 +17,7 @@ target_link_libraries(get_samples_batch
                      )
 
 add_executable(get_samples_diff_levels 
-               get_samples_diff_levels.cpp
+               getSamplesDiffLevels.cpp
               )
 target_link_libraries(get_samples_diff_levels
                       samplerLib
@@ -26,7 +26,7 @@ target_link_libraries(get_samples_diff_levels
                      )
 
 add_executable(get_samples_diff_levels_geometry 
-               get_samples_diff_levels_geometry.cpp
+               getSamplesDiffLevelsGeometry.cpp
               )
 target_link_libraries(get_samples_diff_levels_geometry
                       samplerLib
@@ -34,10 +34,10 @@ target_link_libraries(get_samples_diff_levels_geometry
                       omplwrapperLib
                      )
 
-add_executable(get_samples_diff_sample_no 
-               get_samples_diff_sample_no.cpp
+add_executable(get_samples_diff_sample_num 
+               getSamplesDiffSampleNum.cpp
               )
-target_link_libraries(get_samples_diff_sample_no
+target_link_libraries(get_samples_diff_sample_num
                       samplerLib
                       dimtLib
                       omplwrapperLib

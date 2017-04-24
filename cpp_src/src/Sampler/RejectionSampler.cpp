@@ -52,7 +52,7 @@ namespace ompl
         /// displayed
         /// @return A series of samples of shape (number of samples, sample dimension)
         ///
-        Eigen::MatrixXd RejectionSampler::sample(const int no_samples,
+        Eigen::MatrixXd RejectionSampler::sample(const int numSamples,
                                                  std::chrono::high_resolution_clock::duration &duration)
         {
             // Get the limits of the space
@@ -62,13 +62,13 @@ namespace ompl
             double min = min_vals(0);
 
             // Run until you get the correct number of samples
-            int curr_no_samples = 0;
-            Eigen::MatrixXd samples(no_samples, getStartState().size() + 1);
+            int currNumSamples = 0;
+            Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            while (curr_no_samples < no_samples)
+            while (currNumSamples < numSamples)
             {
                 Eigen::VectorXd sample = getRandomSample(max, min, getStartState().size());
 
@@ -76,8 +76,8 @@ namespace ompl
                 {
                     Eigen::VectorXd newsample(getStartState().size() + 1);
                     newsample << sample, getCost(sample);
-                    samples.row(curr_no_samples) = newsample;
-                    curr_no_samples++;
+                    samples.row(currNumSamples) = newsample;
+                    currNumSamples++;
                 }
             }
 
@@ -117,7 +117,7 @@ namespace ompl
         /// displayed
         /// @return A series of samples of shape (number of samples, sample dimension)
         ///
-        Eigen::MatrixXd HierarchicalRejectionSampler::sample(const int no_samples,
+        Eigen::MatrixXd HierarchicalRejectionSampler::sample(const int numSamples,
                                                              std::chrono::high_resolution_clock::duration &duration)
         {
             // Get the limits of the space
@@ -128,12 +128,12 @@ namespace ompl
 
             // Run until you get the correct number of samples
             int curr_no_samples = 0;
-            Eigen::MatrixXd samples(no_samples, getStartState().size() + 1);
+            Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            while (curr_no_samples < no_samples)
+            while (curr_no_samples < numSamples)
             {
                 Eigen::VectorXd sample(getStartState().size());
                 HRS(0, dimension_ - 1, sample);
@@ -163,44 +163,44 @@ namespace ompl
         /// @param sample Reference to a sample that gets changed in place
         /// @return (c_start, c_goal)
         ///
-        std::tuple<double, double> HierarchicalRejectionSampler::HRS(const int start_index, const int end_index,
+        std::tuple<double, double> HierarchicalRejectionSampler::HRS(const int startIndex, const int endIndex,
                                                                      Eigen::VectorXd &sample)
         {
             // Initialize the costs
-            double c_start = std::numeric_limits<double>::infinity();
-            double c_goal = std::numeric_limits<double>::infinity();
+            double cStart = std::numeric_limits<double>::infinity();
+            double cGoal = std::numeric_limits<double>::infinity();
 
             // std::cout << " [ " << sample[0] << ", " << sample[1] <<  ", " <<
             //     sample[2] << ", " << sample[3] << " ]" << std::endl;
 
-            if (start_index == end_index)
+            if (startIndex == endIndex)
             {
-                while (Cost(c_start) + Cost(c_goal) > getLevelSet())
+                while (Cost(cStart) + Cost(cGoal) > getLevelSet())
                 {
-                    sampleLeaf(sample, start_index);
+                    sampleLeaf(sample, startIndex);
 
-                    c_start = calculateLeaf(getStartState(), sample, start_index);
-                    c_goal = calculateLeaf(sample, getGoalState(), start_index);
+                    cStart = calculateLeaf(getStartState(), sample, startIndex);
+                    cGoal = calculateLeaf(sample, getGoalState(), startIndex);
                 }
             }
             else
             {
-                int mid_index = std::floor(start_index + end_index) / 2;
+                int mid_index = std::floor(startIndex + endIndex) / 2;
                 double c_dash_start = std::numeric_limits<double>::infinity();
                 double c_dash_goal = std::numeric_limits<double>::infinity();
 
-                while (Cost(c_start) + Cost(c_goal) > getLevelSet())
+                while (Cost(cStart) + Cost(cGoal) > getLevelSet())
                 {
-                    std::tie(c_start, c_goal) = HRS(start_index, mid_index, sample);
-                    std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, end_index, sample);
-                    c_start =
-                        combineCosts(getStartState(), sample, start_index, mid_index, end_index, c_start, c_dash_start);
-                    c_goal =
-                        combineCosts(sample, getGoalState(), start_index, mid_index, end_index, c_goal, c_dash_goal);
+                    std::tie(cStart, cGoal) = HRS(startIndex, mid_index, sample);
+                    std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, endIndex, sample);
+                    cStart =
+                        combineCosts(getStartState(), sample, startIndex, mid_index, endIndex, cStart, c_dash_start);
+                    cGoal =
+                        combineCosts(sample, getGoalState(), startIndex, mid_index, endIndex, cGoal, c_dash_goal);
                 }
             }
 
-            return std::make_tuple(c_start, c_goal);
+            return std::make_tuple(cStart, cGoal);
         }
 
         ///

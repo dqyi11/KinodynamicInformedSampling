@@ -23,29 +23,9 @@ using Eigen::MatrixXd;
 #include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
 #include "Benchmark/TimeBenchmark.h"
+#include "Benchmark/OptionParse.h"
 
-//
-// From stackoverflow:
-// http://stackoverflow.com/questions/865668/how-to-parse-command-line-arguments-in-c
-//
-#include <algorithm>
-
-char *getCmdOption(char **begin, char **end, const std::string &option)
-{
-    char **itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
-        return *itr;
-    }
-    return 0;
-}
-
-bool cmdOptionExists(char **begin, char **end, const std::string &option)
-{
-    return std::find(begin, end, option) != end;
-}
-
-std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
+std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
 {
     if (cmdOptionExists(argv, argv + argc, "-h"))
     {
@@ -72,28 +52,6 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
     }
 }
 
-std::tuple<bool, std::string> get_filename(int argc, char *argv[])
-{
-    if (cmdOptionExists(argv, argv + argc, "-filename"))
-        return std::make_tuple(true, std::string(getCmdOption(argv, argv + argc, "-filename")));
-    else
-        return std::make_tuple(false, "none");
-}
-
-std::vector<double> get_random_vector(const double &max, const double &min, const int &num_dim)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(min, max);
-
-    std::vector<double> vec;
-
-    for (int i = 0; i < num_dim; i++)
-    {
-        vec.push_back(dis(gen));
-    }
-}
-
 int main(int argc, char *argv[])
 {
     //
@@ -101,7 +59,7 @@ int main(int argc, char *argv[])
     //
     bool run;
     std::vector<int> args;
-    std::tie(run, args) = handle_arguments(argc, argv);
+    std::tie(run, args) = handleArguments(argc, argv);
     if (!run)
         return 0;
 
@@ -178,11 +136,11 @@ int main(int argc, char *argv[])
     int sample_num_sets_num = sizeof(sample_num_sets) / sizeof(int);
     std::cout << "sample set num " << sample_num_sets_num << std::endl;
 
-    std::vector<std::chrono::high_resolution_clock::duration> times_hmc1(sample_num_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_hmc2(sample_num_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_mcmc(sample_num_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_rs(sample_num_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_hrs(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesHmc1(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesHmc2(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesMcmc(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesRs(sample_num_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesHrs(sample_num_sets_num * no_batch);
     for (unsigned int j = 0; j < sample_num_sets_num; j++)
     {
         no_samples = sample_num_sets[j];
@@ -205,7 +163,7 @@ int main(int argc, char *argv[])
                 double sigma = 1;
                 int max_steps = 20;
                 ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
-                hmc_samples = hmc_s.sample(no_samples, times_hmc1[j * no_batch + i]);
+                hmc_samples = hmc_s.sample(no_samples, timesHmc1[j * no_batch + i]);
             }
 
             {
@@ -216,22 +174,23 @@ int main(int argc, char *argv[])
                 double sigma = 1;
                 int max_steps = 20;
                 ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
-                hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times_hmc2[j * no_batch + i]);
+                hmc_samples = hmc_s.sampleBatchMemorized(no_samples, timesHmc2[j * no_batch + i]);
             }
 
             {
-                MatrixXd mcmc_samples;
+                MatrixXd mcmcSamples;
                 double sigma = 5;
                 int max_steps = 20;
                 double alpha = 0.5;
-                ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
-                mcmc_samples = mcmc_s.sample(no_samples, times_mcmc[j * no_batch + i]);
+                ompl::base::MCMCSampler mcmcSampler(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
+                mcmcSamples = mcmcSampler.sample(no_samples, timesMcmc[j * no_batch + i]);
             }
 
             {
-                MatrixXd rej_samples;
-                ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
-                rej_samples = rej_s.sample(no_samples, times_rs[j * no_batch + i]);
+                MatrixXd rejSamples;
+                double rejectionRatio = 0.0;
+                ompl::base::RejectionSampler rejSampler(si, pdef, level_set, 100, 100);
+                rejSamples = rejSampler.sample(no_samples, timesRs[j * no_batch + i]);
             }
         }
     }
@@ -240,18 +199,18 @@ int main(int argc, char *argv[])
     {
         std::cout << "START SAVING" << std::endl;
         std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
-        printTimeToFile(times_hmc1, no_batch, sample_num_sets_num, time1_file);
+        printTimeToFile(timesHmc1, no_batch, sample_num_sets_num, time1_file);
 
         std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
-        printTimeToFile(times_hmc2, no_batch, sample_num_sets_num, time2_file);
+        printTimeToFile(timesHmc2, no_batch, sample_num_sets_num, time2_file);
 
         std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
-        printTimeToFile(times_mcmc, no_batch, sample_num_sets_num, time3_file);
+        printTimeToFile(timesMcmc, no_batch, sample_num_sets_num, time3_file);
 
         std::ofstream time4_file(filename + "_time_lvl_rs.log");
-        printTimeToFile(times_rs, no_batch, sample_num_sets_num, time4_file);
+        printTimeToFile(timesRs, no_batch, sample_num_sets_num, time4_file);
 
         std::ofstream time5_file(filename + "_time_lvl_hrs.log");
-        printTimeToFile(times_hrs, no_batch, sample_num_sets_num, time5_file);
+        printTimeToFile(timesHrs, no_batch, sample_num_sets_num, time5_file);
     }
 }

@@ -25,29 +25,9 @@ using Eigen::VectorXd;
 #include "Dimt/Params.h"
 #include "Benchmark/TimeBenchmark.h"
 #include "Benchmark/SampleBenchmark.h"
+#include "Benchmark/OptionParse.h"
 
-//
-// From stackoverflow:
-// http://stackoverflow.com/questions/865668/how-to-parse-command-line-arguments-in-c
-//
-#include <algorithm>
-
-char *getCmdOption(char **begin, char **end, const std::string &option)
-{
-    char **itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
-        return *itr;
-    }
-    return 0;
-}
-
-bool cmdOptionExists(char **begin, char **end, const std::string &option)
-{
-    return std::find(begin, end, option) != end;
-}
-
-std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
+std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
 {
     if (cmdOptionExists(argv, argv + argc, "-h"))
     {
@@ -132,28 +112,6 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
     }
 }
 
-std::tuple<bool, std::string> get_filename(int argc, char *argv[])
-{
-    if (cmdOptionExists(argv, argv + argc, "-filename"))
-        return std::make_tuple(true, std::string(getCmdOption(argv, argv + argc, "-filename")));
-    else
-        return std::make_tuple(false, "none");
-}
-
-std::vector<double> get_random_vector(const double &max, const double &min, const int &num_dim)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(min, max);
-
-    std::vector<double> vec;
-
-    for (int i = 0; i < num_dim; i++)
-    {
-        vec.push_back(dis(gen));
-    }
-}
-
 int main(int argc, char *argv[])
 {
     //
@@ -161,38 +119,38 @@ int main(int argc, char *argv[])
     //
     bool run;
     std::vector<int> args;
-    std::tie(run, args) = handle_arguments(argc, argv);
+    std::tie(run, args) = handleArguments(argc, argv);
     if (!run)
         return 0;
 
-    int no_samples = args[0];
+    int numSamples = args[0];
     bool time = (args[1] == 1) ? true : false;
-    bool run_hmc = (args[2] == 1) ? true : false;
-    bool run_mcmc = (args[3] == 1) ? true : false;
-    bool run_rej = (args[4] == 1) ? true : false;
-    bool run_ghrej = (args[5] == 1) ? true : false;
-    bool run_dimthrs = (args[6] == 1) ? true : false;
-    bool run_gibbs = (args[7] == 1) ? true : false;
-    bool run_hitnrun = (args[8] == 1) ? true : false;
+    bool runHmc = (args[2] == 1) ? true : false;
+    bool runMcmc = (args[3] == 1) ? true : false;
+    bool runRej = (args[4] == 1) ? true : false;
+    bool runGhrej = (args[5] == 1) ? true : false;
+    bool runDimthrs = (args[6] == 1) ? true : false;
+    bool runGibbs = (args[7] == 1) ? true : false;
+    bool runHitnrun = (args[8] == 1) ? true : false;
 
     std::string filename;
     bool save;
     std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
-    int num_dim = 12;
+    int numDim = 12;
     double maxval = 25;
     double minval = -25;
-    VectorXd start_state(num_dim);
-    VectorXd goal_state(num_dim);
+    VectorXd startVec(numDim);
+    VectorXd goalVec(numDim);
     std::random_device rd;
     std::mt19937 gen(rd());
     gen.seed(1); /* TODO remove */
     std::uniform_real_distribution<double> dis(-25, 25);
-    for (int i = 0; i < num_dim; i++)
+    for (int i = 0; i < numDim; i++)
     {
-        start_state(i) = dis(gen);
-        goal_state(i) = dis(gen);
+        startVec(i) = dis(gen);
+        goalVec(i) = dis(gen);
     }
     // std::cout << " start " << start_state << std::endl;
     // std::cout << " goal " << goal_state << std::endl;
@@ -205,14 +163,14 @@ int main(int argc, char *argv[])
         maxVelocities[i] = 10;
         maxAccelerations[i] = param.a_max;
     }
-    DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
+    DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
 
-    const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
+    const double levelSet = 1.4 * dimt.get_min_time(startVec, goalVec);
     std::chrono::high_resolution_clock::duration duration;
-    std::cout << "Level set: " << level_set << std::endl;
+    std::cout << "Level set: " << levelSet << std::endl;
 
     // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
+    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, param.dimensions));
     ompl::base::RealVectorBounds bounds(param.dimensions);
     bounds.setLow(minval);
     bounds.setHigh(maxval);
@@ -221,46 +179,46 @@ int main(int argc, char *argv[])
     si->setup();
 
     // Set custom start and goal
-    ompl::base::State *start_s = space->allocState();
-    ompl::base::State *goal_s = space->allocState();
+    ompl::base::State *startState = space->allocState();
+    ompl::base::State *goalState = space->allocState();
     for (int i = 0; i < param.dimensions; i++)
     {
         if (i % 2 == 0)  // position
         {
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
+            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
         }
         else  // velocity
         {
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
+            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
         }
     }
 
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
+    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, startState);
+    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goalState);
 
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, double_integrator));
+        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, doubleIntegrator));
     pdef->setOptimizationObjective(opt);
 
     // Initialize the sampler
     // HMC parameters
-    MatrixXd hmc_samples;
-    MatrixXd hmc2_samples;
-    if (run_hmc)
+    MatrixXd hmcSamples;
+    MatrixXd hmc2Samples;
+    if (runHmc)
     {
         double alpha = 0.5;
         double L = 5;
         double epsilon = 0.1;
         double sigma = 1;
-        int max_steps = 20;
-        ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
+        int maxSteps = 20;
+        ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
         std::cout << "Running HMC Sampling..." << std::endl;
-        hmc_samples = hmc_s.sample(no_samples, duration);
+        hmcSamples = hmcSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -268,7 +226,7 @@ int main(int argc, char *argv[])
             std::cout << std::endl;
         }
         std::cout << "Running HMC2 Sampling..." << std::endl;
-        hmc2_samples = hmc_s.sampleBatchMemorized(no_samples, duration);
+        hmc2Samples = hmcSampler.sampleBatchMemorized(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -277,15 +235,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd mcmc_samples;
-    if (run_mcmc)
+    MatrixXd mcmcSamples;
+    if (runMcmc)
     {
         double sigma = 5;
-        int max_steps = 20;
+        int maxSteps = 20;
         double alpha = 0.5;
-        ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
+        ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, maxSteps);
         std::cout << "Running MCMC Sampling..." << std::endl;
-        mcmc_samples = mcmc_s.sample(no_samples, duration);
+        mcmcSamples = mcmcSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -294,12 +252,13 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd rej_samples;
-    if (run_rej)
+    MatrixXd rejSamples;
+    if (runRej)
     {
-        ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
+        ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
+        double rejectionRatio = 0.0;
         std::cout << "Running Rejection Sampling..." << std::endl;
-        rej_samples = rej_s.sample(no_samples, duration);
+        rejSamples = rejSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -308,8 +267,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd ghrej_samples;
-    if (run_ghrej)
+    MatrixXd ghrejSamples;
+    if (runGhrej)
     {
         //   	ProblemDefinition geo_prob = ProblemDefinition(start_state,
         //   goal_state, state_min,
@@ -320,19 +279,19 @@ int main(int argc, char *argv[])
         //       state).norm();
         //   	});
 
-        //   	GeometricHierarchicalRejectionSampler ghrej_s =
+        //   	GeometricHierarchicalRejectionSampler ghrejSampler =
         //       		GeometricHierarchicalRejectionSampler(geo_prob);
         //   	std::cout << "Running Geometric Hierarchical Rejection
         //   Sampling..." << std::endl;
-        //   	ghrej_samples = ghrej_s.sample(no_samples, duration);
+        //   	ghrejSamples = ghrejSampler.sample(no_samples, duration);
         //   	if(time)
         //   	{
         //   		printTime(duration);
         // }
     }
 
-    MatrixXd dimthrs_samples;
-    if (run_dimthrs)
+    MatrixXd dimthrsSamples;
+    if (runDimthrs)
     {
         DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
         for (unsigned int i = 0; i < 1; ++i)
@@ -340,11 +299,12 @@ int main(int argc, char *argv[])
             maxVelocities1[i] = 10;
             maxAccelerations1[i] = param.a_max;
         }
-        DoubleIntegrator<1> double_integrator_1dof(maxAccelerations1, maxVelocities1);
+        DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
 
-        ompl::base::DimtHierarchicalRejectionSampler dimthrs_s(si, pdef, level_set, 100, 100, double_integrator_1dof);
+        ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet, 100, 100, doubleIntegrator1dof);
+        double rejectionRatio = 0.0;
         std::cout << "Running DIMT HRS..." << std::endl;
-        dimthrs_samples = dimthrs_s.sample(no_samples, duration);
+        dimthrsSamples = dimthrsSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -353,12 +313,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd gibbs_samples;
-    if (run_gibbs)
+    MatrixXd gibbsSamples;
+    if (runGibbs)
     {
-        ompl::base::GibbsSampler gibbs_s(si, pdef, level_set, 100, 100);
+        ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
         std::cout << "Running Gibbs Sampler..." << std::endl;
-        gibbs_samples = gibbs_s.sample(no_samples, duration);
+        gibbsSamples = gibbsSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -367,12 +327,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd hitnrun_samples;
-    if (run_hitnrun)
+    MatrixXd hitnrunSamples;
+    if (runHitnrun)
     {
-        ompl::base::HitAndRun hitnrun_s(si, pdef, level_set, 100, 100);
+        ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100);
         std::cout << "Running Hit and Run Sampler..." << std::endl;
-        gibbs_samples = hitnrun_s.sample(no_samples, duration);
+        hitnrunSamples = hitnrunSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -384,48 +344,48 @@ int main(int argc, char *argv[])
     if (save)
     {
         std::cout << "START SAVING" << std::endl;
-        if (run_hmc)
+        if (runHmc)
         {
-            std::ofstream hmc_file(filename + "_hmc.log");
-            printSampleToFile(hmc_samples, hmc_file);
-            std::ofstream hmc2_file(filename + "_hmc2.log");
-            printSampleToFile(hmc2_samples, hmc2_file);
+            std::ofstream hmcFile(filename + "_hmc.log");
+            printSampleToFile(hmcSamples, hmcFile);
+            std::ofstream hmc2File(filename + "_hmc2.log");
+            printSampleToFile(hmc2Samples, hmc2File);
         }
 
-        if (run_mcmc)
+        if (runMcmc)
         {
-            std::ofstream mcmc_file(filename + "_mcmc.log");
-            printSampleToFile(mcmc_samples, mcmc_file);
+            std::ofstream mcmcFile(filename + "_mcmc.log");
+            printSampleToFile(mcmcSamples, mcmcFile);
         }
 
-        if (run_rej)
+        if (runRej)
         {
-            std::ofstream rej_file(filename + "_rej.log");
-            printSampleToFile(rej_samples, rej_file);
+            std::ofstream rejFile(filename + "_rej.log");
+            printSampleToFile(rejSamples, rejFile);
         }
 
-        if (run_ghrej)
+        if (runGhrej)
         {
-            std::ofstream ghrej_file(filename + "_ghrej.log");
-            printSampleToFile(ghrej_samples, ghrej_file);
+            std::ofstream ghrejFile(filename + "_ghrej.log");
+            printSampleToFile(ghrejSamples, ghrejFile);
         }
 
-        if (run_dimthrs)
+        if (runDimthrs)
         {
-            std::ofstream dimthrs_file(filename + "_dimthrs.log");
-            printSampleToFile(dimthrs_samples, dimthrs_file);
+            std::ofstream dimthrsFile(filename + "_dimthrs.log");
+            printSampleToFile(dimthrsSamples, dimthrsFile);
         }
 
-        if (run_gibbs)
+        if (runGibbs)
         {
-            std::ofstream gibbs_file(filename + "_gibbs.log");
-            printSampleToFile(gibbs_samples, gibbs_file);
+            std::ofstream gibbsFile(filename + "_gibbs.log");
+            printSampleToFile(gibbsSamples, gibbsFile);
         }
 
-        if (run_hitnrun)
+        if (runHitnrun)
         {
-            std::ofstream hitnrun_file(filename + "_hitnrun.log");
-            printSampleToFile(hitnrun_samples, hitnrun_file);
+            std::ofstream hitnrunFile(filename + "_hitnrun.log");
+            printSampleToFile(hitnrunSamples, hitnrunFile);
         }
 
         std::cout << "Saved samples and costs to " << filename << std::endl;

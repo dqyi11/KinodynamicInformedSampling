@@ -5,7 +5,6 @@
 #include <fstream>
 #include <limits>
 
-
 // Eigen
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
@@ -15,37 +14,17 @@ using Eigen::MatrixXd;
 
 // Internal Libraries
 #include "Sampler/RejectionSampler.h"
-#include "Sampler/MonteCarloSamplers.h"
 #include "Sampler/RejectionSampler.h"
+#include "Sampler/MonteCarloSamplers.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "OmplWrappers/DimtStateSpace.h"
 #include "Dimt/DoubleIntegrator.h"
 #include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
 #include "Benchmark/TimeBenchmark.h"
+#include "Benchmark/OptionParse.h"
 
-//
-// From stackoverflow:
-// http://stackoverflow.com/questions/865668/how-to-parse-command-line-arguments-in-c
-//
-#include <algorithm>
-
-char *getCmdOption(char **begin, char **end, const std::string &option)
-{
-    char **itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
-        return *itr;
-    }
-    return 0;
-}
-
-bool cmdOptionExists(char **begin, char **end, const std::string &option)
-{
-    return std::find(begin, end, option) != end;
-}
-
-std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
+std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
 {
     if (cmdOptionExists(argv, argv + argc, "-h"))
     {
@@ -68,35 +47,13 @@ std::tuple<bool, std::vector<int>> handle_arguments(int argc, char *argv[])
             args.push_back(atoi(getCmdOption(argv, argv + argc, "-samples")));
         else
             args.push_back(100);  // Default to 100 samples
-                                  // Get the batch number
+        // Get the batch number
         if (cmdOptionExists(argv, argv + argc, "-batch"))
             args.push_back(atoi(getCmdOption(argv, argv + argc, "-batch")));
         else
             args.push_back(20);  // Default to 20 batches
 
         return std::make_tuple(true, args);
-    }
-}
-
-std::tuple<bool, std::string> get_filename(int argc, char *argv[])
-{
-    if (cmdOptionExists(argv, argv + argc, "-filename"))
-        return std::make_tuple(true, std::string(getCmdOption(argv, argv + argc, "-filename")));
-    else
-        return std::make_tuple(false, "none");
-}
-
-std::vector<double> get_random_vector(const double &max, const double &min, const int &num_dim)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(min, max);
-
-    std::vector<double> vec;
-
-    for (int i = 0; i < num_dim; i++)
-    {
-        vec.push_back(dis(gen));
     }
 }
 
@@ -107,30 +64,30 @@ int main(int argc, char *argv[])
     //
     bool run;
     std::vector<int> args;
-    std::tie(run, args) = handle_arguments(argc, argv);
+    std::tie(run, args) = handleArguments(argc, argv);
     if (!run)
         return 0;
 
-    int no_samples = args[0];
-    int no_batch = args[1];
+    int numSamples = args[0];
+    int numBatch = args[1];
 
     std::string filename;
     bool save;
     std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
-    int num_dim = 12;
+    int numDim = 12;
     double maxval = 25;
     double minval = -25;
-    VectorXd start_state(num_dim);
-    VectorXd goal_state(num_dim);
+    VectorXd startVec(numDim);
+    VectorXd goalVec(numDim);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis(-25, 25);
-    for (int i = 0; i < num_dim; i++)
+    for (int i = 0; i < numDim; i++)
     {
-        start_state(i) = dis(gen);
-        goal_state(i) = dis(gen);
+        startVec(i) = dis(gen);
+        goalVec(i) = dis(gen);
     }
 
     // Initializations
@@ -141,14 +98,12 @@ int main(int argc, char *argv[])
         maxVelocities[i] = 10;
         maxAccelerations[i] = param.a_max;
     }
-    DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
+    DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
 
-    const double level_set = 1.4 * dimt.get_min_time(start_state, goal_state);
     std::chrono::high_resolution_clock::duration duration;
-    std::cout << "Level set: " << level_set << std::endl;
 
     // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
+    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, param.dimensions));
     ompl::base::RealVectorBounds bounds(param.dimensions);
     bounds.setLow(minval);
     bounds.setHigh(maxval);
@@ -157,50 +112,48 @@ int main(int argc, char *argv[])
     si->setup();
 
     // Set custom start and goal
-    ompl::base::State *start_s = space->allocState();
-    ompl::base::State *goal_s = space->allocState();
+    ompl::base::State *startState = space->allocState();
+    ompl::base::State *goalState = space->allocState();
     for (int i = 0; i < param.dimensions; i++)
     {
         if (i % 2 == 0)  // position
         {
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
+            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
         }
         else  // velocity
         {
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
+            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
         }
     }
 
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
+    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, startState);
+    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goalState);
 
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    // const auto opt = get_geom_opt_obj(si, start_state, goal_state, no_samples);
-    const ompl::base::OptimizationObjectivePtr opt =
-        ompl::base::OptimizationObjectivePtr(new ompl::base::GeometricObjective(si, start_state, goal_state));
-
+    const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
+        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, doubleIntegrator));
     pdef->setOptimizationObjective(opt);
 
-    double level_set_ratios[] = {1.6, 1.5, 1.4, 1.3, 1.2, 1.1};
-    int level_sets_num = sizeof(level_set_ratios) / sizeof(double);
-    std::cout << "level set num " << level_sets_num << std::endl;
+    double levelSetRatios[] = {1.6, 1.5, 1.4, 1.3, 1.2, 1.1};
+    int levelSetsNum = sizeof(levelSetRatios) / sizeof(double);
+    std::cout << "level set num " << levelSetsNum << std::endl;
 
-    std::vector<std::chrono::high_resolution_clock::duration> times_hmc1(level_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_hmc2(level_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_mcmc(level_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_rs(level_sets_num * no_batch);
-    std::vector<std::chrono::high_resolution_clock::duration> times_hrs(level_sets_num * no_batch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesHmc1(levelSetsNum * numBatch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesHmc2(levelSetsNum * numBatch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesMcmc(levelSetsNum * numBatch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesRs(levelSetsNum * numBatch);
+    std::vector<std::chrono::high_resolution_clock::duration> timesHrs(levelSetsNum * numBatch);
 
-    for (unsigned int j = 0; j < level_sets_num; j++)
+    for (unsigned int j = 0; j < levelSetsNum; j++)
     {
-        double level_set = level_set_ratios[j] * (goal_state - start_state).norm();
+        double level_set = levelSetRatios[j] * (goalVec - startVec).norm();
         std::cout << "Level set: " << level_set << std::endl;
 
-        for (unsigned int i = 0; i < no_batch; i++)
+        for (unsigned int i = 0; i < numBatch; i++)
         {
             std::cout << "BATCH " << i << std::endl;
 
@@ -212,7 +165,7 @@ int main(int argc, char *argv[])
                 double sigma = 1;
                 int max_steps = 20;
                 ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
-                hmc_samples = hmc_s.sample(no_samples, times_hmc1[j * no_batch + i]);
+                hmc_samples = hmc_s.sample(numSamples, timesHmc1[j * numBatch + i]);
             }
 
             {
@@ -223,22 +176,23 @@ int main(int argc, char *argv[])
                 double sigma = 1;
                 int max_steps = 20;
                 ompl::base::HMCSampler hmc_s(si, pdef, level_set, 100, 100, alpha, L, epsilon, sigma, max_steps);
-                hmc_samples = hmc_s.sampleBatchMemorized(no_samples, times_hmc2[j * no_batch + i]);
+                hmc_samples = hmc_s.sampleBatchMemorized(numSamples, timesHmc2[j * numBatch + i]);
             }
 
             {
-                MatrixXd mcmc_samples;
+                MatrixXd mcmcSamples;
                 double sigma = 5;
                 int max_steps = 20;
                 double alpha = 0.5;
-                ompl::base::MCMCSampler mcmc_s(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
-                mcmc_samples = mcmc_s.sample(no_samples, times_mcmc[j * no_batch + i]);
+                ompl::base::MCMCSampler mcmcSampler(si, pdef, level_set, 100, 100, alpha, sigma, max_steps);
+                mcmcSamples = mcmcSampler.sample(numSamples, timesMcmc[j * numBatch + i]);
             }
 
             {
-                MatrixXd rej_samples;
-                ompl::base::RejectionSampler rej_s(si, pdef, level_set, 100, 100);
-                rej_samples = rej_s.sample(no_samples, times_rs[j * no_batch + i]);
+                MatrixXd rejSamples;
+                double rejectionRatio = 0.0;
+                ompl::base::RejectionSampler rejSampler(si, pdef, level_set, 100, 100);
+                rejSamples = rejSampler.sample(numSamples, timesRs[j * numBatch + i]);
             }
         }
     }
@@ -247,18 +201,18 @@ int main(int argc, char *argv[])
     {
         std::cout << "START SAVING" << std::endl;
         std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
-        printTimeToFile(times_hmc1, no_batch, level_sets_num, time1_file);
+        printTimeToFile(timesHmc1, numBatch, levelSetsNum, time1_file);
 
         std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
-        printTimeToFile(times_hmc2, no_batch, level_sets_num, time2_file);
+        printTimeToFile(timesHmc2, numBatch, levelSetsNum, time2_file);
 
         std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
-        printTimeToFile(times_mcmc, no_batch, level_sets_num, time3_file);
+        printTimeToFile(timesMcmc, numBatch, levelSetsNum, time3_file);
 
         std::ofstream time4_file(filename + "_time_lvl_rs.log");
-        printTimeToFile(times_rs, no_batch, level_sets_num, time4_file);
+        printTimeToFile(timesRs, numBatch, levelSetsNum, time4_file);
 
         std::ofstream time5_file(filename + "_time_lvl_hrs.log");
-        printTimeToFile(times_hrs, no_batch, level_sets_num, time5_file);
+        printTimeToFile(timesHrs, numBatch, levelSetsNum, time5_file);
     }
 }
