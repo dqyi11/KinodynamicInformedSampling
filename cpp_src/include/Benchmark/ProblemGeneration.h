@@ -6,6 +6,7 @@
 #include <ompl/base/ProblemDefinition.h>
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/base/samplers/InformedStateSampler.h>
+#include "Dimt/Params.h"
 #include "Dimt/DoubleIntegrator.h"
 
 template< class RNG >
@@ -17,7 +18,8 @@ int random_even_number( RNG &gen ) {
 void sampleStartAndGoal(Eigen::VectorXd& startVec, Eigen::VectorXd& goalVec,
                         size_t dimension )
 {
-    for (int i = 0; i < dimension; i++)
+    assert(startVec.cols()==goalVec.cols());
+    for (int i = 0; i < startVec.cols(); i++)
     {
         //startVec(i) = dist(rng);
         //goalVec(i) = dist(rng);
@@ -29,7 +31,7 @@ ompl::base::ProblemDefinitionPtr createProblemDefinition(const Eigen::VectorXd& 
                                                          const Eigen::VectorXd& goalVec,
                                                          ompl::base::StateSpacePtr space,
                                                          ompl::base::SpaceInformationPtr si,
-                                                         DoubleIntegrator doubleIntegrator
+                                                         DoubleIntegrator& doubleIntegrator
                                                          )
 {
     // Set custom start and goal
