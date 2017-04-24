@@ -45,7 +45,7 @@ void printTimeToFile(std::vector<std::chrono::high_resolution_clock::duration> d
                      unsigned int col_num, unsigned int row_num,
                      std::ofstream& fout)
 {
-    assert(durations.size()!=row_num*col_num);
+    assert(durations.size()==row_num*col_num);
     if (fout.is_open())
     {
         for (int i = 0; i < row_num; i++)
@@ -58,6 +58,18 @@ void printTimeToFile(std::vector<std::chrono::high_resolution_clock::duration> d
         }
     }
     fout.close();
+}
+
+void appendTimeAndRatioToFile(std::vector<std::chrono::high_resolution_clock::duration> durations,
+                              double ratio,
+                              int sampleNum,
+                              std::ofstream& fout)
+{
+    for (int i = 0; i < durations.size(); i++)
+    {
+        fout << std::chrono::duration_cast<std::chrono::milliseconds>(durations[i]).count() << " ";
+    }
+    fout << ratio << " " << sampleNum << std::endl;
 }
 
 void printTimeToFile(std::vector<std::chrono::high_resolution_clock::duration> durations,

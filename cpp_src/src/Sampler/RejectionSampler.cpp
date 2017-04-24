@@ -55,6 +55,8 @@ namespace ompl
         Eigen::MatrixXd RejectionSampler::sample(const int numSamples,
                                                  std::chrono::high_resolution_clock::duration &duration)
         {
+            // Reset rejection rate
+            rejectionRatio_ = 1.0;
             // Get the limits of the space
             Eigen::VectorXd max_vals, min_vals;
             std::tie(max_vals, min_vals) = getStateLimits();
@@ -62,13 +64,14 @@ namespace ompl
             double min = min_vals(0);
 
             // Run until you get the correct number of samples
-            int currNumSamples = 0;
+            int numAcceptedSamples = 0;
+            int numRejectedSamples = 0;
             Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            while (currNumSamples < numSamples)
+            while (numAcceptedSamples < numSamples)
             {
                 Eigen::VectorXd sample = getRandomSample(max, min, getStartState().size());
 
@@ -76,14 +79,20 @@ namespace ompl
                 {
                     Eigen::VectorXd newsample(getStartState().size() + 1);
                     newsample << sample, getCost(sample);
-                    samples.row(currNumSamples) = newsample;
-                    currNumSamples++;
+                    samples.row(numAcceptedSamples) = newsample;
+                    numAcceptedSamples++;
+                }
+                else
+                {
+                    numRejectedSamples++;
                 }
             }
 
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
 
+            rejectionRatio_ = static_cast<double>(numAcceptedSamples) /
+                              static_cast<double>(numAcceptedSamples+numRejectedSamples);
             return samples;
         }
 

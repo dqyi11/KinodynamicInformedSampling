@@ -81,9 +81,9 @@ public:
         std::chrono::high_resolution_clock::time_point tAe = std::chrono::high_resolution_clock::now();
         std::chrono::high_resolution_clock::duration  durationA = tAe - tAs;
         std::chrono::high_resolution_clock::time_point tBs = std::chrono::high_resolution_clock::now();
-#endif
+
         double minTimeB = get_min_timeB(x1, x2);
-#ifdef ENABLE_BENCHMARK
+
         std::chrono::high_resolution_clock::time_point tBe = std::chrono::high_resolution_clock::now();
         std::chrono::high_resolution_clock::duration  durationB = tBe - tBs;
 
@@ -94,11 +94,12 @@ public:
         std::cout << "get_min_timeB ";
         printTime(durationB, std::cout);
         std::cout << std::endl;
-#endif
-        //if (minTimeA != minTimeB)
+
+        if (minTimeA != minTimeB)
         {
             std::cout << "minTimeA " << minTimeA << " minTimeB " << minTimeB << std::endl;
         }
+#endif
 
         return minTimeA;
     }

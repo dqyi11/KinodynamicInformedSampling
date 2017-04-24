@@ -25,7 +25,6 @@ using Eigen::MatrixXd;
 #include "Benchmark/TimeBenchmark.h"
 #include "Benchmark/OptionParse.h"
 
-
 std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
 {
     if (cmdOptionExists(argv, argv + argc, "-h"))

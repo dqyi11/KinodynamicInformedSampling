@@ -152,8 +152,6 @@ int main(int argc, char *argv[])
         startVec(i) = dis(gen);
         goalVec(i) = dis(gen);
     }
-    // std::cout << " start " << start_state << std::endl;
-    // std::cout << " goal " << goal_state << std::endl;
 
     // Initializations
     Dimt dimt(param.a_max);

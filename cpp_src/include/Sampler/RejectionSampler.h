@@ -77,7 +77,8 @@ namespace ompl
             ///
             RejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                              const unsigned int maxNumberCalls, const int sampleBatchSize)
-              : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+              : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize),
+                rejectionRatio_(1.0)
             {
             }
 
@@ -87,6 +88,12 @@ namespace ompl
 
             // Can implement as many private functions as you want to help do the sampling
             virtual Eigen::VectorXd getRandomSample(const double max, const double min, const int size) const;
+
+            // Get rejection ratio
+            double getRejectionRatio() { return rejectionRatio_; }
+
+        protected:
+            double rejectionRatio_;
         };
 
         ///
