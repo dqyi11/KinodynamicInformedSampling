@@ -136,13 +136,13 @@ namespace ompl
             double min = min_vals(0);
 
             // Run until you get the correct number of samples
-            int curr_no_samples = 0;
+            int currNumSamples = 0;
             Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            while (curr_no_samples < numSamples)
+            while (currNumSamples < numSamples)
             {
                 Eigen::VectorXd sample(getStartState().size());
                 HRS(0, dimension_ - 1, sample);
@@ -151,8 +151,8 @@ namespace ompl
                 {
                     Eigen::VectorXd newsample(getStartState().size() + 1);
                     newsample << sample, getCost(sample);
-                    samples.row(curr_no_samples) = newsample;
-                    curr_no_samples++;
+                    samples.row(currNumSamples) = newsample;
+                    currNumSamples++;
                 }
             }
 
@@ -285,9 +285,9 @@ namespace ompl
 
             double cost, infeasible_min, infeasible_max;
             std::tie(cost, infeasible_min, infeasible_max) =
-                double_integrator_1dof_.getMinTimeAndIntervals(x1.segment(i, 2), x2.segment(i, 2));
+                doubleIntegrator1Dof_.getMinTimeAndIntervals(x1.segment(i, 2), x2.segment(i, 2));
 
-            infeasible_intervals_[i] = std::make_pair(infeasible_min, infeasible_max);
+            infeasibleIntervals_[i] = std::make_pair(infeasible_min, infeasible_max);
 
             costs_[i] = cost;
 
@@ -348,7 +348,7 @@ namespace ompl
             bool is_invalid = true;
             while (is_invalid)
             {
-                std::tie(is_invalid, max_val) = find_infeasible_intervals(infeasible_intervals_, max_val, i, j);
+                std::tie(is_invalid, max_val) = find_infeasible_intervals(infeasibleIntervals_, max_val, i, j);
             }
             return max_val;
         }

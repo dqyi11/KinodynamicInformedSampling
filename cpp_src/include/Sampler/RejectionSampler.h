@@ -303,8 +303,8 @@ namespace ompl
                                              const int sampleBatchSize,
                                              const DoubleIntegrator<1> double_integrator_1dof)
               : HierarchicalRejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
-              , double_integrator_1dof_(double_integrator_1dof)
-              , infeasible_intervals_(param.dof, std::make_pair(0.0, 0.0))
+              , doubleIntegrator1Dof_(double_integrator_1dof)
+              , infeasibleIntervals_(param.dof, std::make_pair(0.0, 0.0))
               , costs_(param.dof, 0.0)
             {
                 // Get the limits of the state
@@ -372,10 +372,10 @@ namespace ompl
             Eigen::VectorXd min_;
 
             // Double Integrator Model
-            DoubleIntegrator<1> double_integrator_1dof_;
+            DoubleIntegrator<1> doubleIntegrator1Dof_;
 
             // Infeasible time intervals
-            std::vector<std::pair<double, double>> infeasible_intervals_;
+            std::vector<std::pair<double, double>> infeasibleIntervals_;
 
             // Costs for the dofs
             std::vector<double> costs_;
