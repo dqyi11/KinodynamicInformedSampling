@@ -143,9 +143,7 @@ int main(int argc, char *argv[])
     double minval = -25;
     VectorXd startVec(numDim);
     VectorXd goalVec(numDim);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    gen.seed(1); /* TODO remove */
+    std::mt19937 gen( std::random_device{}());
     std::uniform_real_distribution<double> dis(-25, 25);
     for (int i = 0; i < numDim; i++)
     {
@@ -163,7 +161,7 @@ int main(int argc, char *argv[])
     }
     DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
 
-    const double levelSet = 1.4 * dimt.get_min_time(startVec, goalVec);
+    const double levelSet = 1.1 * dimt.get_min_time(startVec, goalVec);
     std::chrono::high_resolution_clock::duration duration;
     std::cout << "Level set: " << levelSet << std::endl;
 

@@ -32,8 +32,7 @@ std::tuple<bool, std::string> get_filename(int argc, char *argv[])
 
 std::vector<double> get_random_vector(const double &max, const double &min, const int &numDim)
 {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(std::random_device{}());
     std::uniform_real_distribution<double> dis(min, max);
 
     std::vector<double> vec;

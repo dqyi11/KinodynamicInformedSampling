@@ -200,8 +200,7 @@ namespace ompl
         double MyInformedSampler::getRandomDimension(const double max, const double min) const
         {
             // Set up the random number generator
-            std::random_device rd;
-            std::mt19937 gen(rd());
+            std::mt19937 gen( std::random_device{}());
             std::uniform_real_distribution<> dis(min, max);
 
             return dis(gen);

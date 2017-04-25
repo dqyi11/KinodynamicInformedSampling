@@ -74,9 +74,7 @@ namespace ompl
               : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
             {
                 // Set up the random number generator
-                std::random_device rd;
-                gen_ = std::mt19937(rd());
-                gen_.seed(1); /* TODO remove */
+                gen_ = std::mt19937(std::random_device{}());
 
                 // Use the start positions as starting point of the algorithm
                 // (This will always be inside the informed subspace)

@@ -82,9 +82,8 @@ int main(int argc, char *argv[])
     double minval = -25;
     VectorXd startVec(numDim);
     VectorXd goalVec(numDim);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(-25, 25);
+    std::mt19937 gen( std::random_device{}());
+    std::uniform_real_distribution<double> dis(minval, maxval);
     for (int i = 0; i < numDim; i++)
     {
         startVec(i) = dis(gen);

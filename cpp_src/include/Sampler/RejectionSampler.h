@@ -219,8 +219,7 @@ namespace ompl
                 std::tie(min_, max_) = getStateLimits();
 
                 // Set up the random number generator
-                std::random_device rd;
-                gen_ = std::mt19937(rd());
+                gen_ = std::mt19937(std::random_device{}());
 
                 // Figure out the dimension. For Geometric it is the size of the space
                 dimension_ = getStartState().size();
@@ -311,8 +310,7 @@ namespace ompl
                 std::tie(min_, max_) = getStateLimits();
 
                 // Set up the random number generator
-                std::random_device rd;
-                gen_ = std::mt19937(rd());
+                gen_ = std::mt19937(std::random_device{}());
 
                 // Figure out the dimension. For DIMT it is the number of joints.
                 dimension_ = param.dof;

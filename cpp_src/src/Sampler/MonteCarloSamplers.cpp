@@ -77,8 +77,7 @@ namespace
     inline double rand_uni()
     {
         // Set up the random number generator
-        std::random_device rd;
-        std::mt19937 gen(rd());
+        std::mt19937 gen( std::random_device{}());
         std::uniform_real_distribution<double> dis(0.0, 1.0);
 
         return dis(gen);
@@ -164,8 +163,7 @@ namespace ompl
         Eigen::VectorXd MonteCarloSampler::getRandomSample() const
         {
             // Set up the random number generator
-            std::random_device rd;
-            std::mt19937 gen(rd());
+            std::mt19937 gen( std::random_device{}());
             // Get the limits of the space
             Eigen::VectorXd max_vals, min_vals;
             std::tie(max_vals, min_vals) = getStateLimits();
