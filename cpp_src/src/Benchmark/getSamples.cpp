@@ -300,7 +300,6 @@ int main(int argc, char *argv[])
         DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
 
         ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet, 100, 100, doubleIntegrator1dof);
-        double rejectionRatio = 0.0;
         std::cout << "Running DIMT HRS..." << std::endl;
         dimthrsSamples = dimthrsSampler.sample(numSamples, duration);
         if (time)

@@ -16,7 +16,7 @@ using Eigen::MatrixXd;
 // Internal Libraries
 #include "Sampler/RejectionSampler.h"
 #include "Sampler/MonteCarloSamplers.h"
-#include "Sampler/RejectionSampler.h"
+#include "Sampler/HitAndRun.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "OmplWrappers/DimtStateSpace.h"
 #include "Dimt/DoubleIntegrator.h"
@@ -24,6 +24,7 @@ using Eigen::MatrixXd;
 #include "Dimt/Params.h"
 #include "Benchmark/TimeBenchmark.h"
 #include "Benchmark/OptionParse.h"
+#include "Dimt/ProblemGeneration.h"
 
 std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
 {
@@ -102,56 +103,20 @@ int main(int argc, char *argv[])
     DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
 
     const double levelSet = 1.4 * dimt.get_min_time(startVec, goalVec);
-    std::chrono::high_resolution_clock::duration duration;
     std::cout << "Level set: " << levelSet << std::endl;
 
-    // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, param.dimensions));
-    ompl::base::RealVectorBounds bounds(param.dimensions);
-    bounds.setLow(minval);
-    bounds.setHigh(maxval);
-    space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-    ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
-    si->setup();
+    ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, doubleIntegrator, minval, maxval);
 
-    // Set custom start and goal
-    ompl::base::State *startState = space->allocState();
-    ompl::base::State *goalState = space->allocState();
-    for (int i = 0; i < param.dimensions; i++)
-    {
-        if (i % 2 == 0)  // position
-        {
-            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
-            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
-        }
-        else  // velocity
-        {
-            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
-            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
-        }
-    }
-
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, startState);
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goalState);
-
-    ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
-    pdef->setStartAndGoalStates(start, goal);
-
-    // const auto opt = get_geom_opt_obj(si, start_state, goal_state, no_samples);
-    const ompl::base::OptimizationObjectivePtr opt =
-        ompl::base::OptimizationObjectivePtr(new ompl::base::GeometricObjective(si, startVec, goalVec));
-
-    pdef->setOptimizationObjective(opt);
+    ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);
 
     double levelSetRatios[] = {1.6, 1.5, 1.4, 1.3, 1.2, 1.1};
     int levelSetsNum = sizeof(levelSetRatios) / sizeof(double);
     std::cout << "level set num " << levelSetsNum << std::endl;
 
-    std::vector<std::chrono::high_resolution_clock::duration> timesHmc1(levelSetsNum * numBatch);
-    std::vector<std::chrono::high_resolution_clock::duration> timesHmc2(levelSetsNum * numBatch);
-    std::vector<std::chrono::high_resolution_clock::duration> timesMcmc(levelSetsNum * numBatch);
-    std::vector<std::chrono::high_resolution_clock::duration> timesRs(levelSetsNum * numBatch);
-    std::vector<std::chrono::high_resolution_clock::duration> timesHrs(levelSetsNum * numBatch);
+
+    int numSampler = 7;
+
+    std::ofstream timeFile(filename + ".log");
 
     for (unsigned int j = 0; j < levelSetsNum; j++)
     {
@@ -161,6 +126,10 @@ int main(int argc, char *argv[])
         for (unsigned int i = 0; i < numBatch; i++)
         {
             std::cout << "BATCH " << i << std::endl;
+            std::vector<std::chrono::high_resolution_clock::duration> times(numSampler);
+            double rejectionRatio = 1.0;
+
+            int curr = 0;
 
             {
                 MatrixXd hmcSamples;
@@ -170,8 +139,9 @@ int main(int argc, char *argv[])
                 double sigma = 1;
                 int maxSteps = 20;
                 ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-                hmcSamples = hmcSampler.sample(numSamples, timesHmc1[j * numBatch + i]);
+                hmcSamples = hmcSampler.sample(numSamples, times[curr]);
             }
+            curr ++;
 
             {
                 MatrixXd hmcSamples;
@@ -181,8 +151,9 @@ int main(int argc, char *argv[])
                 double sigma = 1;
                 int max_steps = 20;
                 ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, max_steps);
-                hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, timesHmc2[j * numBatch + i]);
+                hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, times[curr]);
             }
+            curr ++;
 
             {
                 MatrixXd mcmcSamples;
@@ -190,34 +161,52 @@ int main(int argc, char *argv[])
                 int max_steps = 20;
                 double alpha = 0.5;
                 ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, max_steps);
-                mcmcSamples = mcmcSampler.sample(numSamples, timesMcmc[j * numBatch + i]);
+                mcmcSamples = mcmcSampler.sample(numSamples, times[curr]);
             }
+            curr ++;
 
             {
                 MatrixXd rejSamples;
                 double rejectionRatio = 0.0;
                 ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
-                rejSamples = rejSampler.sample(numSamples, timesRs[j * numBatch + i]);
+                rejSamples = rejSampler.sample(numSamples, times[curr]);
             }
+            curr ++;
+
+            {
+                MatrixXd dimthrsSamples;
+                DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+                for (unsigned int i = 0; i < 1; ++i)
+                {
+                    maxVelocities1[i] = 10;
+                    maxAccelerations1[i] = param.a_max;
+                }
+                DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
+                ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet, 100, 100, doubleIntegrator1dof);
+                dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
+
+            }
+            curr++;
+
+            {
+                MatrixXd gibbsSamples;
+                ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
+                gibbsSamples = gibbsSampler.sample(numSamples, times[curr]);
+            }
+            curr++;
+
+            {
+                MatrixXd hitnrunSamples;
+                ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100);
+                hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
+            }
+
+            appendTimeAndRatioToFile(times, rejectionRatio, numSamples, timeFile);
         }
     }
 
     if (save)
     {
-        std::cout << "START SAVING" << std::endl;
-        std::ofstream time1_file(filename + "_time_lvl_hmc1.log");
-        printTimeToFile(timesHmc1, numBatch, levelSetsNum, time1_file);
-
-        std::ofstream time2_file(filename + "_time_lvl_hmc2.log");
-        printTimeToFile(timesHmc2, numBatch, levelSetsNum, time2_file);
-
-        std::ofstream time3_file(filename + "_time_lvl_mcmc.log");
-        printTimeToFile(timesMcmc, numBatch, levelSetsNum, time3_file);
-
-        std::ofstream time4_file(filename + "_time_lvl_rs.log");
-        printTimeToFile(timesRs, numBatch, levelSetsNum, time4_file);
-
-        std::ofstream time5_file(filename + "_time_lvl_hrs.log");
-        printTimeToFile(timesHrs, numBatch, levelSetsNum, time5_file);
+        timeFile.close();
     }
 }
