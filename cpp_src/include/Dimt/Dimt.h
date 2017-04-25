@@ -6,13 +6,10 @@
 #include <limits>     // std::numeric_limits::infinity()
 #include <algorithm>  // std::max and std::min
 #include <vector>     // std::vector
+#include <chrono>
 
 // Eigen
 #include <Eigen/Dense>
-#ifdef ENABLE_BENCHMARK
-#include "Benchmark/TimeBenchmark.h"
-#endif
-
 
 #include "Dimt/Interval.h"
 
@@ -25,13 +22,14 @@ class Dimt
 {
 public:
     double a_max_;
+    double v_max_;
     ///
     /// Constructor
     ///
     /// @param a_max Max Acceleration
     /// @param prob Problem Definition
     ///
-    Dimt(double a_max) : a_max_(a_max)
+    Dimt(double a_max, double v_max) : a_max_(a_max), v_max_(v_max)
     {
         // // Assert that the start, goal, and limits are the same size
         // if(!this->is_valid_constructor())
@@ -87,18 +85,14 @@ public:
         std::chrono::high_resolution_clock::time_point tBe = std::chrono::high_resolution_clock::now();
         std::chrono::high_resolution_clock::duration  durationB = tBe - tBs;
 
-        std::cout << "get_min_timeA ";
-        printTime(durationA, std::cout);
-        std::cout << std::endl;
+        if (VERBOSE)
+            std::cout << "get_min_timeA " << std::chrono::duration_cast<std::chrono::microseconds>
+                         (durationA).count() << std::endl;
+        if (VERBOSE)
+            std::cout << "get_min_timeB " << std::chrono::duration_cast<std::chrono::microseconds>
+                         (durationB).count() << std::endl;
 
-        std::cout << "get_min_timeB ";
-        printTime(durationB, std::cout);
-        std::cout << std::endl;
-
-        if (minTimeA != minTimeB)
-        {
-            std::cout << "minTimeA " << minTimeA << " minTimeB " << minTimeB << std::endl;
-        }
+        assert (minTimeA == minTimeB);
 #endif
 
         return minTimeA;
@@ -225,6 +219,27 @@ public:
         const double q = -0.5 * (b + sign(b) * std::sqrt(b * b - 4 * a * c));
         const double ta1_a = q / a;
         const double ta1_b = c / q;
+
+        const double ta2_a = (v2-v1 ) / a2 + ta1_a;
+        const double ta2_b = (v2-v1 ) / a2 + ta1_b;
+
+        if (ta1_a > 0 && ta1_b < 0)
+            ta1 = ta1_a;
+        else if (ta1_a < 0 && ta1_b > 0)
+            ta1 = ta1_b;
+        else if (ta1_a > 0 && ta1_b > 0)
+        {
+            if (ta2_a < 0)
+                ta1 = ta1_b;
+            else if (ta2_b < 0)
+                ta1 = ta1_a;
+            else //ta2_a > 0 and ta2_b > 0
+                ta1 = std::max(ta1_a, ta1_b);
+        }
+        double ta2 =  (v2 - v1) / a2 + ta1;
+        double res =  ta1 + ta2;
+
+        /*
         if (ta1_a > 0)
             ta1 = ta1_a;
         else if (ta1_b > 0)
@@ -233,7 +248,22 @@ public:
             return 0;
         else
             return -1;
-        return (v2 - v1) / a2 + 2 * ta1;
+        double orig_res = (v2 - v1) / a2 + 2 * ta1;
+        */
+
+        if( std::abs(v1 + ta1 * a1) >= v_max_ )
+        {
+            //std::cout << "DIMT violate the velocity limit " << std::abs(v1 + ta1 * a1) << std::endl;
+            double vlimit = sigma * v_max_;
+
+            ta1 = (vlimit - v1) / a1;
+            ta2 = (v2 - vlimit) / a2;
+            double tv = ( v1*v1+v2*v2 - 2 * vlimit * vlimit ) / ( 2 * vlimit * a1) + (x2 - x1) / vlimit;
+
+            res = ta1 + tv + ta2;
+        }
+
+        return res;
     }
 
     ///

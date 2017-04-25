@@ -415,6 +415,7 @@ public:
         // time = 100;
         if (time < maxTime && std::abs(startVelocity + acceleration1 * time1) >= maxVelocity)
         {
+            //std::cout << "DI violate the velocity limit " << std::abs(startVelocity + acceleration1 * time1) << std::endl;
             time = getPLPTime(startVelocity, goalVelocity, distance, maxVelocity, acceleration1);
         }
         // if(time == std::numeric_limits<double>::infinity())

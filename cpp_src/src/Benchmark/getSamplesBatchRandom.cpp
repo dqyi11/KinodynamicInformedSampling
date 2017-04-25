@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     std::uniform_real_distribution<double> dis01(0.0, 1.0);
 
     // Initializations
-    Dimt dimt(param.a_max);
+    Dimt dimt(param.a_max, param.v_max);
     DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
     for (unsigned int i = 0; i < param.dof; ++i)
     {

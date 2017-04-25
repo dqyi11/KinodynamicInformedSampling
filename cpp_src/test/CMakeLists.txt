@@ -7,3 +7,13 @@ target_link_libraries(unit_test
                       samplerLib
                      )
 
+add_executable(rnd_test 
+               RndTest.cpp)
+
+
+target_link_libraries(rnd_test
+                      dimtLib
+                      samplerLib
+                     )
+
+

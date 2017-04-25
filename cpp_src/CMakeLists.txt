@@ -16,7 +16,7 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(EIGEN3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
-#add_definitions( -DENABLE_BENCHMARK=1 )
+add_definitions( -DENABLE_BENCHMARK=1 )
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 

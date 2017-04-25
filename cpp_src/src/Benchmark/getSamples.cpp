@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
-    int numDim = 12;
+    int numDim = param.dimensions;
     double maxval = 25;
     double minval = -25;
     VectorXd startVec(numDim);
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     }
 
     // Initializations
-    Dimt dimt(param.a_max);
+    Dimt dimt(param.a_max, param.v_max);
     DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
     for (unsigned int i = 0; i < param.dof; ++i)
     {
@@ -253,6 +253,14 @@ int main(int argc, char *argv[])
     {
         ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
         std::cout << "Running Rejection Sampling..." << std::endl;
+        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
+        for (unsigned int i = 0; i < 1; ++i)
+        {
+            maxVelocities1[i] = 10;
+            maxAccelerations1[i] = param.a_max;
+        }
+        DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
+        rejSampler.doubleIntegrator1Dof_ = doubleIntegrator1dof;
         rejSamples = rejSampler.sample(numSamples, duration);
         if (time)
         {

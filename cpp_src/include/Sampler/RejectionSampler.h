@@ -78,6 +78,7 @@ namespace ompl
             RejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                              const unsigned int maxNumberCalls, const int sampleBatchSize)
               : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize),
+                doubleIntegrator1Dof_(DoubleIntegrator<1>(DoubleIntegrator<1>::Vector(), DoubleIntegrator<1>::Vector())),
                 rejectionRatio_(1.0)
             {
             }
@@ -92,8 +93,10 @@ namespace ompl
             // Get rejection ratio
             double getRejectionRatio() { return rejectionRatio_; }
 
+            DoubleIntegrator<1> doubleIntegrator1Dof_;
         protected:
             double rejectionRatio_;
+
         };
 
         ///

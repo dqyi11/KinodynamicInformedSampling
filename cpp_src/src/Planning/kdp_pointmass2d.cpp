@@ -33,7 +33,7 @@ public:
 void planWithSimpleSetup(void)
 {
     // Initializations
-    Dimt dimt(param.a_max);
+    Dimt dimt(param.a_max, param.v_max);
     DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
     for (unsigned int i = 0; i < param.dof; ++i)
     {

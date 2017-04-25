@@ -81,6 +81,19 @@ namespace ompl
                     newsample << sample, getCost(sample);
                     samples.row(numAcceptedSamples) = newsample;
                     numAcceptedSamples++;
+
+                    //debugging purposes
+                    for (int i(0); i < 2; ++i)
+                    {
+                        double cost1, cost2, infeasible_min, infeasible_max;
+                        std::tie(cost1, infeasible_min, infeasible_max) =
+                            doubleIntegrator1Dof_.getMinTimeAndIntervals(getStartState().segment(i, 2), newsample.segment(i, 2));
+                        std::tie(cost2, infeasible_min, infeasible_max) =
+                            doubleIntegrator1Dof_.getMinTimeAndIntervals(newsample.segment(i, 2), getGoalState().segment(i, 2));
+                        double cost = cost1 + cost2;
+
+                        assert (cost < levelSet_);
+                    }
                 }
                 else
                 {

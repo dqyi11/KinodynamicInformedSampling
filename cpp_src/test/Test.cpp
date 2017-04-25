@@ -7,7 +7,7 @@ int main()
 {
     // DIMT Test
     double a_max = 1;
-    Dimt dimt(a_max);
+    Dimt dimt(param.a_max, param.v_max);
     VectorXd start_state(4);
     start_state << 0, 0, 0, 0;
     VectorXd goal_state(4);
@@ -41,5 +41,23 @@ int main()
     double acceleration1 = 1;
     double_integrator.getPPTime(startVelocity, goalVelocity, distance, acceleration1, NULL, NULL, &time1, &time2);
     std::cout << "T1= " << time1 << " T2=" << time2 << std::endl;
+
+    for(int i=0;i<param.dof;i++)
+    {
+
+        std::cout << "START TO STATE ";
+        std::cout << i << " DIMT " << dimt.get_min_time_1dof(start_state[i], start_state[i+param.dof], state[i], state[i+param.dof]);
+        std::cout << " DI " << double_integrator.getMinTime1D(start_state[i+param.dof], state[i+param.dof], state[i]-start_state[i],
+                                                             maxAccelerations[i], maxVelocities[i], std::numeric_limits<double>::max(),
+                                                             acceleration1) << std::endl;
+
+
+        std::cout << "STATE TO GOAL ";
+        std::cout << i << " DIMT " << dimt.get_min_time_1dof(state[i], state[i+param.dof], goal_state[i], goal_state[i+param.dof]);
+        std::cout << " DI " << double_integrator.getMinTime1D(state[i+param.dof], goal_state[i+param.dof], goal_state[i]-state[i],
+                                                             maxAccelerations[i], maxVelocities[i], std::numeric_limits<double>::max(),
+                                                             acceleration1) << std::endl;
+    }
+
     return 0;
 }
