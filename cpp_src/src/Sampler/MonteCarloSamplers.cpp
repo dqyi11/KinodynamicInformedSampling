@@ -581,11 +581,11 @@ namespace ompl
         /// displayed
         /// @return A series of samples of shape (number of samples, sample dimension)
         ///
-        Eigen::MatrixXd MCMCSampler::sample(const int no_samples,
+        Eigen::MatrixXd MCMCSampler::sample(const int numSamples,
                                             std::chrono::high_resolution_clock::duration &duration)
         {
             if (VERBOSE)
-                std::cout << "Number of samples: " << no_samples << std::endl;
+                std::cout << "Number of samples: " << numSamples << std::endl;
             if (VERBOSE)
                 std::cout << "Surfing" << std::endl;
             Eigen::VectorXd q = MCMCSampler::gradDescent(getAlpha());
@@ -600,7 +600,7 @@ namespace ompl
             int rejected = 0;
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-            while (accepted < no_samples)
+            while (accepted < numSamples)
             {
                 if (samples.rows() > 1)
                 {
@@ -613,7 +613,7 @@ namespace ompl
 
                 int curr_rejections = 0;
                 int curr_step = 0;
-                while (curr_rejections < 10 and accepted < no_samples and curr_step < getSteps())
+                while (curr_rejections < 10 and accepted < numSamples and curr_step < getSteps())
                 {
                     Eigen::VectorXd q_proposed = q + sampleNormal(0, getSigma());
                     double prob_proposed = getProb(q_proposed);
