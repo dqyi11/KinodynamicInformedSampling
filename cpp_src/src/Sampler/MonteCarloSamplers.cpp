@@ -333,14 +333,14 @@ namespace ompl
             return sample;
         }
 
-        Eigen::MatrixXd HMCSampler::sampleBatchMemorized(const int no_samples,
+        Eigen::MatrixXd HMCSampler::sampleBatchMemorized(const int numSamples,
                                                          std::chrono::high_resolution_clock::duration &duration)
         {
             Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            for (unsigned int i = 0; i < no_samples; i++)
+            for (int i = 0; i < numSamples; i++)
             {
                 Eigen::VectorXd newsample = sampleMemorized();
                 samples = concatenate_matrix_and_vector(samples, newsample);
@@ -453,10 +453,10 @@ namespace ompl
         /// displayed
         /// @return A series of samples of shape (number of samples, sample dimension)
         ///
-        Eigen::MatrixXd HMCSampler::sample(const int no_samples, std::chrono::high_resolution_clock::duration &duration)
+        Eigen::MatrixXd HMCSampler::sample(const int numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
             if (VERBOSE)
-                std::cout << "Number of samples: " << no_samples << std::endl;
+                std::cout << "Number of samples: " << numSamples << std::endl;
             if (VERBOSE)
                 std::cout << "Surfing" << std::endl;
             Eigen::VectorXd q = HMCSampler::gradDescent(getAlpha());
@@ -471,7 +471,7 @@ namespace ompl
             int rejected = 0;
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-            while (accepted < no_samples)
+            while (accepted < numSamples)
             {
                 if (VERBOSE)
                     std::cout << "New start!" << std::endl;
@@ -481,7 +481,7 @@ namespace ompl
 
                 int curr_rejections = 0;
                 int curr_step = 0;
-                while (curr_rejections < 10 and accepted < no_samples and curr_step < getSteps())
+                while (curr_rejections < 10 and accepted < numSamples and curr_step < getSteps())
                 {
                     // Sample the momentum and set up the past and current state and momentum
                     Eigen::VectorXd q_last = q;

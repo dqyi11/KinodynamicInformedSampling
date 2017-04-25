@@ -23,7 +23,7 @@ void printVectorToFile(std::vector<double> vec,
 {
     if (fout.is_open())
     {
-        for (int i = 0; i < vec.size(); i++)
+        for (unsigned int i = 0; i < vec.size(); i++)
         {
             fout << vec[i] << std::endl;
         }

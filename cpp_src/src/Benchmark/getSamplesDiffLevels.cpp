@@ -113,13 +113,13 @@ int main(int argc, char *argv[])
 
     int samplerNum = 7;
 
-    for (unsigned int j = 0; j < levelSetsNum; j++)
+    for (int j = 0; j < levelSetsNum; j++)
     {
         double levelSet = levelSetRatios[j] * (goalVec - startVec).norm();
         std::cout << "Level set: " << levelSet << std::endl;
 
 
-        for (unsigned int i = 0; i < numBatch; i++)
+        for (int i = 0; i < numBatch; i++)
         {
             std::cout << "BATCH " << i << std::endl;
 

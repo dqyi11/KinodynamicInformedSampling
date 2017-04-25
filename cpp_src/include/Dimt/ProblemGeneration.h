@@ -55,7 +55,7 @@ ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startV
     // Set custom start and goal
     auto startState = space->allocState();
     auto goalState = space->allocState();
-    for (int d = 0; d < space->getDimension(); d++)
+    for (unsigned int d = 0; d < space->getDimension(); d++)
     {
         if (d % 2 == 0)  // position
         {

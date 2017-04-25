@@ -110,9 +110,9 @@ int main(int argc, char *argv[])
     }
 
     int numSamplers = 5;
-
-    for (unsigned int i = 0; i < numbatch; i++)
+    for (int i = 0; i < numbatch; i++)
     {
+        std::cout << "BATCH " << i;
         std::vector<std::chrono::high_resolution_clock::duration> times(numSamplers);
         double rejectionRatio = 1.0;
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         double rndNum = 0.5*dis01(gen)+1;
         const double levelSet = rndNum * dimt.get_min_time(startVec, goalVec);
 
-        std::cout << "BATCH " << i <<  " ratio " << rndNum << std::endl;
+        std::cout <<  " ratio " << rndNum << " ";
 
         // create new problem definition
         ompl::base::ProblemDefinitionPtr pdef =
@@ -162,6 +162,7 @@ int main(int argc, char *argv[])
 
         curr++;
         */
+        std::cout << " MCMC ";
         {
             MatrixXd mcmcSamples;
             double sigma = 5;
@@ -170,18 +171,18 @@ int main(int argc, char *argv[])
             ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, maxSteps);
             mcmcSamples = mcmcSampler.sample(numSamples, times[curr]);
         }
-
         curr++;
 
+        std::cout << " REJ ";
         {
             MatrixXd rejSamples;
             ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
             rejSamples = rejSampler.sample(numSamples, times[curr]);
             rejectionRatio = rejSampler.getRejectionRatio();
         }
-
         curr++;
 
+        std::cout << " HRS ";
         {
             MatrixXd dimthrsSamples;
             DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
@@ -195,17 +196,17 @@ int main(int argc, char *argv[])
             dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
 
         }
-
         curr++;
 
+        std::cout << " GIBBS ";
         {
             MatrixXd gibbsSamples;
             ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
             gibbsSamples = gibbsSampler.sample(numSamples, times[curr]);
         }
-
         curr++;
 
+        std::cout << " H&R ";
         {
             MatrixXd hitnrunSamples;
             ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100);
@@ -213,6 +214,8 @@ int main(int argc, char *argv[])
         }
 
         appendTimeAndRatioToFile(times, rejectionRatio, numSamples, logFile);
+
+        std::cout << std::endl;
     }
 
     logFile.close();

@@ -118,12 +118,12 @@ int main(int argc, char *argv[])
 
     std::ofstream timeFile(filename + ".log");
 
-    for (unsigned int j = 0; j < levelSetsNum; j++)
+    for (int j = 0; j < levelSetsNum; j++)
     {
         double levelSet = levelSetRatios[j] * (goalVec - startVec).norm();
         std::cout << "Level set: " << levelSet << std::endl;
 
-        for (unsigned int i = 0; i < numBatch; i++)
+        for (int i = 0; i < numBatch; i++)
         {
             std::cout << "BATCH " << i << std::endl;
             std::vector<std::chrono::high_resolution_clock::duration> times(numSampler);
@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
 
             {
                 MatrixXd rejSamples;
-                double rejectionRatio = 0.0;
                 ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
                 rejSamples = rejSampler.sample(numSamples, times[curr]);
             }

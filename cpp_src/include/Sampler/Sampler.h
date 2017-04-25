@@ -125,10 +125,10 @@ namespace ompl
             MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                               const unsigned int maxNumberCalls, const int sampleBatchSize)
               : InformedSampler(problem, maxNumberCalls)
+              , sampleBatchSize_(sampleBatchSize)
               , si_(si)
               , problem_(problem)
-              , levelSet_(levelSet)
-              , sampleBatchSize_(sampleBatchSize)
+              , levelSet_(levelSet)              
             {
                 started_ = false;
             }

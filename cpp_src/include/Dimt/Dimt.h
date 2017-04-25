@@ -250,7 +250,6 @@ public:
     {
         // Calculate a1 and a2 with reverse signs as descussed in the paper:
         // http://www.tobiaskunz.net/pubs/KunzIROS14-DimtRrt.pdf
-        double ta1;
         const double dp_acc = 0.5 * (v1 + v2) * std::abs(v2 - v1) / a_max_;
         const double distance = x2 - x1 - dp_acc;
         const double sigma = sign(distance);

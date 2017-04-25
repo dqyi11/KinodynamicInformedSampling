@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     int numSampler = 7;
     std::ofstream timeFile(filename + ".log");
 
-    for (unsigned int j = 0; j < sampleNumSetsNum; j++)
+    for (int j = 0; j < sampleNumSetsNum; j++)
     {
         int numSamples = sampleNumSets[j];
         std::cout << "NO SAMPLE " << numSamples << std::endl;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
         pdef->setOptimizationObjective(opt);
 
-        for (unsigned int i = 0; i < numBatch; i++)
+        for (int i = 0; i < numBatch; i++)
         {
             std::cout << "BATCH " << i << std::endl;
             std::vector<std::chrono::high_resolution_clock::duration> times(numSampler);

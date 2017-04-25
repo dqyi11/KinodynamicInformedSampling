@@ -17,14 +17,13 @@ namespace ompl
             DoubleIntegrator<param.dof> double_integrator_;
 
         public:
-            DimtStateSpace(Dimt dimt, DoubleIntegrator<param.dof> double_integrator, unsigned int dim = 0)
-              : dimt_(dimt), double_integrator_(double_integrator), RealVectorStateSpace(dim)
+            DimtStateSpace(const Dimt& dimt, const DoubleIntegrator<param.dof>& double_integrator, unsigned int dim = 0)
+              : RealVectorStateSpace(dim), dimt_(dimt), double_integrator_(double_integrator)
             {
             }
 
             virtual double distance(const State *state1, const State *state2) const
             {
-                double dist = 0.0;
                 const double *s1 = static_cast<const StateType *>(state1)->values;
                 const double *s2 = static_cast<const StateType *>(state2)->values;
                 // Eigen::VectorXd eig_s1(dimension_);

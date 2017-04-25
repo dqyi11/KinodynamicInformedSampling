@@ -35,11 +35,6 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         std::cout << "Arguments:" << std::endl;
         std::cout << "\t -batch - NUmber of batches to run" << std::endl;
         std::cout << "\t -samples - Number of samples to get" << std::endl;
-        std::cout << "\t -time - Boolean (0,1)" << std::endl;
-        std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
-        std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
-        std::cout << "\t -rej - Boolean (0,1)" << std::endl;
-        std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
         std::cout << "\t -filename - Filename to save the samples to" << std::endl;
         std::cout << "________________________________________________" << std::endl;
         return std::make_tuple(false, std::vector<int>{});
@@ -59,37 +54,6 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         else
             args.push_back(20);  // Default to 20 batches
 
-        // Get the boolean to determine if we should time
-        if (cmdOptionExists(argv, argv + argc, "-time"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-time")));
-        else
-            args.push_back(0);  // Default to not print time
-
-        // Get the boolean to determine if we run hmc
-        if (cmdOptionExists(argv, argv + argc, "-hmc"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-hmc")));
-        else
-            args.push_back(1);  // Default to run hmc
-
-        // Get the boolean to determine if we run mcmc
-        if (cmdOptionExists(argv, argv + argc, "-mcmc"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-mcmc")));
-        else
-            args.push_back(1);  // Default to run mcmc
-
-        // Get the boolean to determine if we run rej
-        if (cmdOptionExists(argv, argv + argc, "-rej"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-rej")));
-        else
-            args.push_back(1);  // Default to run rej
-
-        // Get the boolean to determine if we run geometric hierarchical rejection
-        // sampling
-        if (cmdOptionExists(argv, argv + argc, "-ghrej"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-ghrej")));
-        else
-            args.push_back(1);  // Default to run rej
-
         return std::make_tuple(true, args);
     }
 }
@@ -107,11 +71,6 @@ int main(int argc, char *argv[])
 
     int numSamples = args[0];
     int numbatch = args[1];
-    bool time = (args[2] == 1) ? true : false;
-    bool runHmc = (args[3] == 1) ? true : false;
-    bool runMcmc = (args[4] == 1) ? true : false;
-    bool runRej = (args[5] == 1) ? true : false;
-    bool runGhrej = (args[6] == 1) ? true : false;
 
     std::string filename;
     bool save;
@@ -156,7 +115,7 @@ int main(int argc, char *argv[])
     }
 
     int samplerNum = 7;
-    for (unsigned int i = 0; i < numbatch; i++)
+    for (int i = 0; i < numbatch; i++)
     {
         std::cout << "BATCH " << i << std::endl;
 

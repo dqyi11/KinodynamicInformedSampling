@@ -254,7 +254,6 @@ int main(int argc, char *argv[])
     if (runRej)
     {
         ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
-        double rejectionRatio = 0.0;
         std::cout << "Running Rejection Sampling..." << std::endl;
         rejSamples = rejSampler.sample(numSamples, duration);
         if (time)

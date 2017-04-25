@@ -43,11 +43,17 @@ public:
         for (int i = 0; i < param.dimensions; i = i + 2)
         {
             if (i == 0)
+            {
                 if (state_rv->values[i] < -0.5 || state_rv->values[i] > 0.5)
+                {
                     return true;
+                }
                 else if (state_rv->values[i] < -5 || (state_rv->values[i] > -0.05 && state_rv->values[i] < 0.05) ||
                          state_rv->values[i] > 5)
+                {
                     return true;
+                }
+            }
         }
         return false;
     }

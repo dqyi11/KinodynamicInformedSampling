@@ -105,7 +105,7 @@ namespace ompl
             const int dim = getStartState().size();
             std::tie(max_vals, min_vals) = getStateLimits();
             double diag = 0;
-            for (unsigned int i = 0; i < dim; i++)
+            for (int i = 0; i < dim; i++)
                 diag = diag + (max_vals[i] - min_vals[i]) * (max_vals[i] - min_vals[i]);
             diag = std::sqrt(diag);
 
@@ -134,7 +134,7 @@ namespace ompl
                     {
                         // Sample random direction in S^dim
                         double sum = 0;
-                        for (unsigned int i = 0; i < dim; i++)
+                        for (int i = 0; i < dim; i++)
                         {
                             dir[i] = norm_dis(gen_);
                             sum = sum + dir[i] * dir[i];
