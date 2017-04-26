@@ -15,7 +15,7 @@ using Eigen::VectorXd;
 // Internal packages
 #include <Sampler/Sampler.h>
 #include <Dimt/Params.h>
-#include <Dimt/Dimt.h>
+#include <Dimt/DoubleIntegratorMinimumTime.h>
 #include <OmplWrappers/OmplHelpers.h>
 
 using MotionCostFxn = std::function<double(VectorXd, VectorXd)>;
@@ -149,7 +149,7 @@ namespace ompl
 
             const Eigen::VectorXd goalState_;
 
-            const Dimt di_;
+            const DoubleIntegratorMinimumTime di_;
 
             Eigen::VectorXd get_eigen_vector(const ompl::base::State *s) const
             {

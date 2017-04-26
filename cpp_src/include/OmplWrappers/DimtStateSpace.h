@@ -2,7 +2,7 @@
 #define OMPL_BASE_SPACES_DIMT_STATE_SPACE_
 #include <Dimt/Params.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <Dimt/Dimt.h>
+#include <Dimt/DoubleIntegratorMinimumTime.h>
 #include <Dimt/DoubleIntegrator.h>
 #include <Eigen/Dense>
 
@@ -13,12 +13,11 @@ namespace ompl
         class DimtStateSpace : public RealVectorStateSpace
         {
         private:
-            Dimt dimt_;
-            DoubleIntegrator<param.dof> double_integrator_;
+            DoubleIntegratorMinimumTime dimt_;
 
         public:
-            DimtStateSpace(const Dimt& dimt, const DoubleIntegrator<param.dof>& double_integrator, unsigned int dim = 0)
-              : RealVectorStateSpace(dim), dimt_(dimt), double_integrator_(double_integrator)
+            DimtStateSpace(const Dimt& dimt)
+              : RealVectorStateSpace(dim.getNumDOF()*2), dimt_(dimt)
             {
             }
 
@@ -40,11 +39,12 @@ namespace ompl
                     eig_from[i] = s1[i];
                     eig_to[i] = s2[i];
                 }
-                double time = double_integrator_.getMinTime(eig_from, eig_to);
+                double time = dimt_.getMinTime(eig_from, eig_to);
                 return time;
             }
 
-            virtual void interpolate(const State *from, const State *to, const double t, State *state) const
+            virtual void interpolate(const State *from, const State *to,
+                                     const double t, State *state) const
             {
                 const StateType *rfrom = static_cast<const StateType *>(from);
                 const StateType *rto = static_cast<const StateType *>(to);
@@ -58,7 +58,7 @@ namespace ompl
                     eig_from[i] = rfrom->values[i];
                     eig_to[i] = rto->values[i];
                 }
-                DoubleIntegrator<param.dof>::Trajectory traj = double_integrator_.getTrajectory(eig_from, eig_to);
+                DoubleIntegrator<param.dof>::Trajectory traj = dimt_.getTrajectory(eig_from, eig_to);
                 eig_state = traj.getState(t);
                 for (unsigned int i = 0; i < dimension_; ++i)
                 {

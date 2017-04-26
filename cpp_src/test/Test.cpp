@@ -3,6 +3,8 @@
 #include "Dimt/Params.h"
 #include <iostream>
 
+using Eigen::VectorXd;
+
 int main()
 {
     // DIMT Test
