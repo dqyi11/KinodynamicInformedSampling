@@ -11,12 +11,7 @@
 #include <memory>
 #include <Eigen/Dense>
 #include "Dimt/Interval.h"
-
-template <int dof>
-class DoubleIntegrator;
-
-template <int dof>
-using DoubleIntegratorPtr = std::shared_ptr<DoubleIntegrator<int dof>>;
+#include "Dimt/DoubleIntegrator.h"
 
 class DoubleIntegratorMinimumTime
 {
@@ -24,7 +19,7 @@ public:
     unsigned int numDOF_;
     std::vector<double> maxAccelerations_;
     std::vector<double> maxVelocities_;
-    DoubleIntegratorPtr doubleIntegrator_;
+    DoubleIntegratorPtr<int> doubleIntegrator_;
     ///
     /// Constructor
     ///
