@@ -8,8 +8,7 @@
 #include <ompl/base/samplers/InformedStateSampler.h>
 #include <ompl/base/spaces/RealVectorBounds.h>
 #include "Dimt/Params.h"
-#include "Dimt/Dimt.h"
-#include "Dimt/DoubleIntegrator.h"
+#include "Dimt/DoubleIntegratorMinimumTime.h"
 
 template< class RNG >
 int random_even_number( RNG &gen ) {
@@ -17,8 +16,7 @@ int random_even_number( RNG &gen ) {
 }
 
 
-void sampleStartAndGoal(Eigen::VectorXd& startVec, Eigen::VectorXd& goalVec,
-                        size_t dimension )
+void sampleStartAndGoal(Eigen::VectorXd& startVec, Eigen::VectorXd& goalVec)
 {
     assert(startVec.cols()==goalVec.cols());
     for (int i = 0; i < startVec.cols(); i++)
@@ -28,19 +26,20 @@ void sampleStartAndGoal(Eigen::VectorXd& startVec, Eigen::VectorXd& goalVec,
     }
 }
 
-ompl::base::SpaceInformationPtr createDimtSpaceInformation(Dimt& dimt,
-                                                           DoubleIntegrator<param.dof>& doubleIntegrator,
+ompl::base::SpaceInformationPtr createDimtSpaceInformation(DIMTPtr dimt,
                                                            int minval,
                                                            int maxval
                                                            )
 {
     // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, param.dimensions));
+    ompl::base::StateSpacePtr space =
+            std::make_shared< ompl::base::DimtStateSpace >(dimt);
     ompl::base::RealVectorBounds bounds(param.dimensions);
     bounds.setLow(minval);
     bounds.setHigh(maxval);
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-    ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
+    ompl::base::SpaceInformationPtr si =
+            std::make_shared< ompl::base::SpaceInformation >(space);
     si->setup();
     return si;
 }
@@ -48,7 +47,7 @@ ompl::base::SpaceInformationPtr createDimtSpaceInformation(Dimt& dimt,
 ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startVec,
                                                    const Eigen::VectorXd& goalVec,
                                                    ompl::base::SpaceInformationPtr si,
-                                                   Dimt& dimt
+                                                   DIMTPtr dimt
                                                   )
 {
     ompl::base::StateSpacePtr space = si->getStateSpace();
@@ -75,8 +74,8 @@ ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startV
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, dimt));
+    const ompl::base::OptimizationObjectivePtr opt =
+            std::make_shared<ompl::base::DimtObjective>(si, startVec, goalVec, dimt);
     pdef->setOptimizationObjective(opt);
 
     return pdef;

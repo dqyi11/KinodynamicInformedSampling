@@ -4,9 +4,6 @@
 
 #include <ompl/base/OptimizationObjective.h>
 
-// Our libs
-#include <Dimt/DoubleIntegrator.h>
-
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 

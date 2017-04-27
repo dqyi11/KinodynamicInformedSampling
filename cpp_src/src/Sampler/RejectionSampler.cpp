@@ -35,6 +35,7 @@
 /* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
 #include <Sampler/RejectionSampler.h>
+#include <OmplWrappers/DimtStateSpace.h>
 
 // Standard library
 #include <limits>
@@ -44,14 +45,14 @@ namespace ompl
 {
     namespace base
     {
-        ///
-        /// Get a series of samples for the problem space
-        ///
-        /// @param no_samples Number of samples to get
-        /// @param time Boolean that determines if the time to run the proccess is
-        /// displayed
-        /// @return A series of samples of shape (number of samples, sample dimension)
-        ///
+        //
+        // Get a series of samples for the problem space
+        //
+        // @param no_samples Number of samples to get
+        // @param time Boolean that determines if the time to run the proccess is
+        // displayed
+        // @return A series of samples of shape (number of samples, sample dimension)
+        //
         Eigen::MatrixXd RejectionSampler::sample(const int numSamples,
                                                  std::chrono::high_resolution_clock::duration &duration)
         {
@@ -81,19 +82,6 @@ namespace ompl
                     newsample << sample, getCost(sample);
                     samples.row(numAcceptedSamples) = newsample;
                     numAcceptedSamples++;
-
-                    //debugging purposes
-                    for (int i(0); i < 2; ++i)
-                    {
-                        double cost1, cost2, infeasible_min, infeasible_max;
-                        std::tie(cost1, infeasible_min, infeasible_max) =
-                            doubleIntegrator1Dof_.getMinTimeAndIntervals(getStartState().segment(i, 2), newsample.segment(i, 2));
-                        std::tie(cost2, infeasible_min, infeasible_max) =
-                            doubleIntegrator1Dof_.getMinTimeAndIntervals(newsample.segment(i, 2), getGoalState().segment(i, 2));
-                        double cost = cost1 + cost2;
-
-                        assert (cost < levelSet_);
-                    }
                 }
                 else
                 {
@@ -126,18 +114,17 @@ namespace ompl
             return sample;
         }
 
-        ///
-        /// HierarchicalRejectionSampler
-        ///
-
-        ///
-        /// Get a series of samples for the problem space
-        ///
-        /// @param no_samples Number of samples to get
-        /// @param time Boolean that determines if the time to run the proccess is
-        /// displayed
-        /// @return A series of samples of shape (number of samples, sample dimension)
-        ///
+        //
+        // HierarchicalRejectionSampler
+        //
+        //
+        // Get a series of samples for the problem space
+        //
+        // @param no_samples Number of samples to get
+        // @param time Boolean that determines if the time to run the proccess is
+        // displayed
+        // @return A series of samples of shape (number of samples, sample dimension)
+        //
         Eigen::MatrixXd HierarchicalRejectionSampler::sample(const int numSamples,
                                                              std::chrono::high_resolution_clock::duration &duration)
         {
@@ -175,15 +162,15 @@ namespace ompl
             return samples;
         }
 
-        ///
-        /// Get one sample using a recursive algorithm of heirarchical rejection
-        /// sampling
-        ///
-        /// @param start_index Start index of the hierarchical sample
-        /// @param end_index End index of the hierarchical sample
-        /// @param sample Reference to a sample that gets changed in place
-        /// @return (c_start, c_goal)
-        ///
+        //
+        // Get one sample using a recursive algorithm of heirarchical rejection
+        // sampling
+        //
+        // @param start_index Start index of the hierarchical sample
+        // @param end_index End index of the hierarchical sample
+        // @param sample Reference to a sample that gets changed in place
+        // @return (c_start, c_goal)
+        //
         std::tuple<double, double> HierarchicalRejectionSampler::HRS(const int startIndex, const int endIndex,
                                                                      Eigen::VectorXd &sample)
         {
@@ -224,36 +211,36 @@ namespace ompl
             return std::make_tuple(cStart, cGoal);
         }
 
-        ///
-        /// GeometricHierarchicalRejectionSampler
-        ///
+        //
+        // GeometricHierarchicalRejectionSampler
+        //
 
-        ///
-        /// Calculates the cost of a leaf node
-        ///
-        /// @param x1 First state
-        /// @param x2 Second state
-        /// @param i Index of the degree of freedom
-        /// @return Cost to go from x1 to x2
-        ///
+        //
+        // Calculates the cost of a leaf node
+        //
+        // @param x1 First state
+        // @param x2 Second state
+        // @param i Index of the degree of freedom
+        // @return Cost to go from x1 to x2
+        //
         double GeometricHierarchicalRejectionSampler::calculateLeaf(const Eigen::VectorXd &x1,
                                                                     const Eigen::VectorXd &x2, const int i)
         {
             return std::pow(x1[i] - x2[i], 2);
         }
 
-        ///
-        /// Combines the cost of two states
-        ///
-        /// @param x1 First state
-        /// @param x2 Second state
-        /// @param i Index of the degree of freedom for first state
-        /// @param m Mid degree of freedom
-        /// @param j Index of  the degree of freedom of the second state
-        /// @param c1 Cost one
-        /// @param c2 Cost two
-        /// @return Combination of the costs
-        ///
+        //
+        // Combines the cost of two states
+        //
+        // @param x1 First state
+        // @param x2 Second state
+        // @param i Index of the degree of freedom for first state
+        // @param m Mid degree of freedom
+        // @param j Index of  the degree of freedom of the second state
+        // @param c1 Cost one
+        // @param c2 Cost two
+        // @return Combination of the costs
+        //
         double GeometricHierarchicalRejectionSampler::combineCosts(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2,
                                                                    const int i, const int m, const int j,
                                                                    const double c1, const double c2) const
@@ -261,13 +248,13 @@ namespace ompl
             return c1 + c2;
         }
 
-        ///
-        /// How to sample a leaf (ex: geometric is one dimension and kino is 2)
-        ///
-        /// @param sample A vector to the sample
-        /// @param dof An index to the degree of freedom to sample
-        /// @return A random vector in the space
-        ///
+        //
+        // How to sample a leaf (ex: geometric is one dimension and kino is 2)
+        //
+        // @param sample A vector to the sample
+        // @param dof An index to the degree of freedom to sample
+        // @return A random vector in the space
+        //
         void GeometricHierarchicalRejectionSampler::sampleLeaf(Eigen::VectorXd &sample, const int dof)
         {
             std::uniform_real_distribution<double> dis(min_[dof], max_[dof]);
@@ -275,32 +262,26 @@ namespace ompl
             sample[dof] = dis(gen_);
         }
 
-        ///
-        /// Dimt Hierarchical Rejection Sampler
-        ///
+        //
+        // Dimt Hierarchical Rejection Sampler
+        //
 
-        ///
-        /// Calculates the cost of a leaf node
-        ///
-        /// @param x1 First state
-        /// @param x2 Second state
-        /// @param i Index of the degree of freedom
-        /// @return Cost to go from x1 to x2
-        ///
+        //
+        // Calculates the cost of a leaf node
+        //
+        // @param x1 First state
+        // @param x2 Second state
+        // @param i Index of the degree of freedom
+        // @return Cost to go from x1 to x2
+        //
         double DimtHierarchicalRejectionSampler::calculateLeaf(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2,
                                                                const int i)
         {
-            const auto state1 = x1.segment(i, 2);
-            const auto state2 = x2.segment(i, 2);
-            const Eigen::Matrix<double, 1, 1> distances = state2.template head<1>() - state1.template head<1>();
-            Eigen::Matrix<double, 1, 1> firstAccelerations;
-
             double cost, infeasible_min, infeasible_max;
             std::tie(cost, infeasible_min, infeasible_max) =
-                doubleIntegrator1Dof_.getMinTimeAndIntervals(x1.segment(i, 2), x2.segment(i, 2));
+                dimt_->getMinTimeAndIntervals1Dof(x1[i], x1[i+1], x2[i], x2[i+1], i);
 
             infeasibleIntervals_[i] = std::make_pair(infeasible_min, infeasible_max);
-
             costs_[i] = cost;
 
             return costs_[i];
@@ -336,18 +317,18 @@ namespace ompl
             return std::make_pair(false, max_val);
         }
 
-        ///
-        /// Combines the cost of two states
-        ///
-        /// @param x1 First state
-        /// @param x2 Second state
-        /// @param i Index of the degree of freedom for first state
-        /// @param m Mid degree of freedom
-        /// @param j Index of  the degree of freedom of the second state
-        /// @param c1 Cost one
-        /// @param c2 Cost two
-        /// @return Combination of the costs
-        ///
+        //
+        // Combines the cost of two states
+        //
+        // @param x1 First state
+        // @param x2 Second state
+        // @param i Index of the degree of freedom for first state
+        // @param m Mid degree of freedom
+        // @param j Index of  the degree of freedom of the second state
+        // @param c1 Cost one
+        // @param c2 Cost two
+        // @return Combination of the costs
+        //
         double DimtHierarchicalRejectionSampler::combineCosts(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2,
                                                               const int i, const int m, const int j, const double c1,
                                                               const double c2) const
@@ -365,13 +346,13 @@ namespace ompl
             return max_val;
         }
 
-        ///
-        /// How to sample a leaf (ex: geometric is one dimension and kino is 2)
-        ///
-        /// @param sample A vector to the sample
-        /// @param dof An index to the degree of freedom to sample
-        /// @return A random vector in the space
-        ///
+        //
+        // How to sample a leaf (ex: geometric is one dimension and kino is 2)
+        //
+        // @param sample A vector to the sample
+        // @param dof An index to the degree of freedom to sample
+        // @return A random vector in the space
+        //
         void DimtHierarchicalRejectionSampler::sampleLeaf(Eigen::VectorXd &sample, const int dof)
         {
             std::uniform_real_distribution<double> dis1(min_[dof * 2], max_[dof * 2]);

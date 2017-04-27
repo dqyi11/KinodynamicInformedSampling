@@ -18,8 +18,7 @@ using Eigen::VectorXd;
 #include "Sampler/HitAndRun.h"
 #include "OmplWrappers/DimtStateSpace.h"
 #include "OmplWrappers/OmplHelpers.h"
-#include "Dimt/DoubleIntegrator.h"
-#include "Dimt/Dimt.h"
+#include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "Dimt/Params.h"
 #include "Dimt/ProblemGeneration.h"
 #include "Benchmark/TimeBenchmark.h"
@@ -77,13 +76,13 @@ int main(int argc, char *argv[])
     std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
-    int numDim = 12;
+    int numDim = param.dimensions;
     double maxval = 25;
     double minval = -25;
     VectorXd startVec(numDim);
     VectorXd goalVec(numDim);
     std::mt19937 gen( std::random_device{}());
-    std::uniform_real_distribution<double> dis(minval, maxval);
+    std::uniform_real_distribution<double> dis(-25, 25);
     for (int i = 0; i < numDim; i++)
     {
         startVec(i) = dis(gen);
@@ -91,18 +90,13 @@ int main(int argc, char *argv[])
     }
 
     // Initializations
-    Dimt dimt(param.a_max, param.v_max);
-    DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
-    for (unsigned int i = 0; i < param.dof; ++i)
-    {
-        maxVelocities[i] = 10;
-        maxAccelerations[i] = param.a_max;
-    }
-    DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
+    std::vector<double> maxVelocities(param.dof, param.v_max);
+    std::vector<double> maxAccelerations(param.dof, param.a_max);
+    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
-    const double levelSet = 1.4 * dimt.get_min_time(startVec, goalVec);
+    const double levelSet = 1.4 * dimt->getMinTime(startVec, goalVec);
 
-    ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, doubleIntegrator, minval, maxval);
+    ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, minval, maxval);
 
     ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);
 
@@ -166,14 +160,8 @@ int main(int argc, char *argv[])
 
         {
             MatrixXd dimthrsSamples;
-            DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-            for (unsigned int i = 0; i < 1; ++i)
-            {
-                maxVelocities1[i] = 10;
-                maxAccelerations1[i] = param.a_max;
-            }
-            DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
-            ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet, 100, 100, doubleIntegrator1dof);
+            ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt, levelSet,
+                                                                        100, 100);
             dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
 
         }

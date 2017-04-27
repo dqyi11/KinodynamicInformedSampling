@@ -1,9 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include "OmplWrappers/DimtStateSpace.h"
-#include "Dimt/DoubleIntegrator.h"
-#include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
+#include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "ompl/geometric/SimpleSetup.h"
 #include "ompl/geometric/planners/rrt/RRTConnect.h"
 #include "ompl/geometric/planners/rrt/RRTstar.h"
@@ -33,21 +32,18 @@ public:
 void planWithSimpleSetup(void)
 {
     // Initializations
-    Dimt dimt(param.a_max, param.v_max);
-    DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
-    for (unsigned int i = 0; i < param.dof; ++i)
-    {
-        maxVelocities[i] = 10;
-        maxAccelerations[i] = param.a_max;
-    }
-    DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
+    std::vector<double> maxVelocities(param.dof, param.v_max);
+    std::vector<double> maxAccelerations(param.dof, param.a_max);
+    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
+
     // construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
+    ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
     ob::RealVectorBounds bounds(param.dimensions);
     bounds.setLow(-10);
     bounds.setHigh(10);
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-    ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
+    ob::SpaceInformationPtr si = std::make_shared<ob::SpaceInformation>(space);
+
     si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
     si->setStateValidityCheckingResolution(0.03);  // 3%
     si->setup();
@@ -56,8 +52,8 @@ void planWithSimpleSetup(void)
     ompl::base::State *goal_s = space->allocState();
     for (int i = 0; i < param.dimensions; i++)
     {
-        start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -5;
-        goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 5;
+        start_s->as<ob::RealVectorStateSpace::StateType>()->values[i] = -5;
+        goal_s->as<ob::RealVectorStateSpace::StateType>()->values[i] = 5;
     }
     ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
     ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
@@ -67,7 +63,7 @@ void planWithSimpleSetup(void)
     // ob::ScopedState<> goal(space);
     // goal.random();
     // Setup Problem Definition
-    ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
+    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
     pdef->setStartAndGoalStates(start, goal);
     // Construct Planner
     // ob::PlannerPtr planner(new ompl::geometric::RRTConnect(si));

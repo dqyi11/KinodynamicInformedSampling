@@ -54,7 +54,7 @@
 
 // Get the Double Integrator Time Model
 #include <Dimt/Params.h>
-#include <Dimt/DoubleIntegrator.h>
+#include <Dimt/DoubleIntegratorMinimumTime.h>
 
 // Example for how to inherit and create your own sampler
 namespace ompl
@@ -78,7 +78,6 @@ namespace ompl
             RejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                              const unsigned int maxNumberCalls, const int sampleBatchSize)
               : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize),
-                doubleIntegrator1Dof_(DoubleIntegrator<1>(DoubleIntegrator<1>::Vector(), DoubleIntegrator<1>::Vector())),
                 rejectionRatio_(1.0)
             {
             }
@@ -93,7 +92,6 @@ namespace ompl
             // Get rejection ratio
             double getRejectionRatio() { return rejectionRatio_; }
 
-            DoubleIntegrator<1> doubleIntegrator1Dof_;
         protected:
             double rejectionRatio_;
 
@@ -301,11 +299,10 @@ namespace ompl
             /// @param double_integrator_1dof A 1DOF double integrator model
             ///
             DimtHierarchicalRejectionSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
-                                             const double levelSet, const unsigned int maxNumberCalls,
-                                             const int sampleBatchSize,
-                                             const DoubleIntegrator<1> double_integrator_1dof)
+                                             const DIMTPtr dimt, const double levelSet,
+                                             const unsigned int maxNumberCalls, const int sampleBatchSize)
               : HierarchicalRejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
-              , doubleIntegrator1Dof_(double_integrator_1dof)
+              , dimt_(dimt)
               , infeasibleIntervals_(param.dof, std::make_pair(0.0, 0.0))
               , costs_(param.dof, 0.0)
             {
@@ -365,6 +362,8 @@ namespace ompl
                 return cost;
             }
 
+            DIMTPtr dimt_;
+
             // Random number generator
             std::mt19937 gen_;
 
@@ -372,14 +371,12 @@ namespace ompl
             Eigen::VectorXd max_;
             Eigen::VectorXd min_;
 
-            // Double Integrator Model
-            DoubleIntegrator<1> doubleIntegrator1Dof_;
-
             // Infeasible time intervals
             std::vector<std::pair<double, double>> infeasibleIntervals_;
 
             // Costs for the dofs
             std::vector<double> costs_;
+
         };
     }  // namespace base
 }  // namespace ompl

@@ -141,7 +141,6 @@ namespace ompl
             virtual Cost combineCosts(Cost c1, Cost c2) const override;
         };
 
-        template <int dof>
         class DimtObjective : public OptimizationObjective
         {
         private:
@@ -149,17 +148,18 @@ namespace ompl
 
             const Eigen::VectorXd goalState_;
 
-            const DoubleIntegratorMinimumTime di_;
+            const DIMTPtr dimt_;
 
-            Eigen::VectorXd get_eigen_vector(const ompl::base::State *s) const
+            Eigen::VectorXd get_eigen_vector(const ompl::base::State* s) const
             {
-                double *val = static_cast<const ompl::base::RealVectorStateSpace::StateType *>(s)->values;
+                const ompl::base::RealVectorStateSpace::StateType * state =
+                        static_cast<const ompl::base::RealVectorStateSpace::StateType *>(s);
 
                 Eigen::VectorXd v(param.dimensions);
 
                 for (uint i = 0; i < param.dimensions; i++)
                 {
-                    v[i] = val[i];
+                    v[i] = state->values[i];
                 }
 
                 return v;
@@ -174,9 +174,11 @@ namespace ompl
             /// @param goalState Goal state of the problem
             /// @param di Double Integrator model
             ///
-            DimtObjective<dof>(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
-                               const Eigen::VectorXd &goalState, const Dimt di)
-              : OptimizationObjective(si), startState_(startState), goalState_(goalState), di_(di)
+            DimtObjective(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
+                          const Eigen::VectorXd &goalState, const DIMTPtr dimt)
+              : OptimizationObjective(si),
+                startState_(startState), goalState_(goalState),
+                dimt_(dimt)
             {
             }
 
@@ -188,8 +190,8 @@ namespace ompl
             ///
             virtual Cost stateCost(const State *s) const override
             {
-                return Cost(di_.get_min_time(startState_, get_eigen_vector(s)) +
-                            di_.get_min_time(get_eigen_vector(s), goalState_));
+                return Cost(dimt_->getMinTime(startState_, get_eigen_vector(s)) +
+                            dimt_->getMinTime(get_eigen_vector(s), goalState_));
             }
 
             ///
@@ -201,7 +203,7 @@ namespace ompl
             ///
             virtual Cost motionCost(const State *s1, const State *s2) const override
             {
-                return Cost(di_.get_min_time(get_eigen_vector(s1), get_eigen_vector(s2)));
+                return Cost(dimt_->getMinTime(get_eigen_vector(s1), get_eigen_vector(s2)));
             }
 
             ///

@@ -14,15 +14,13 @@ using Eigen::VectorXd;
 
 // Internal Libraries
 #include "Sampler/RejectionSampler.h"
-#include "Sampler/RejectionSampler.h"
 #include "Sampler/MonteCarloSamplers.h"
 #include "Sampler/HitAndRun.h"
 #include "OmplWrappers/MyOptimizationObjective.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "OmplWrappers/DimtStateSpace.h"
-#include "Dimt/DoubleIntegrator.h"
-#include "Dimt/Dimt.h"
-#include "Dimt/Params.h"
+#include "Dimt/DoubleIntegratorMinimumTime.h"
+#include "Dimt/ProblemGeneration.h"
 #include "Benchmark/TimeBenchmark.h"
 #include "Benchmark/SampleBenchmark.h"
 #include "Benchmark/OptionParse.h"
@@ -40,8 +38,7 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
         std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
         std::cout << "\t -rej - Boolean (0,1)" << std::endl;
-        std::cout << "\t -ghrej - Boolean(0,1)" << std::endl;
-        std::cout << "\t -dimthrs - Boolean(0,1)" << std::endl;
+        std::cout << "\t -hrs - Boolean(0,1)" << std::endl;
         std::cout << "\t -gibbs - Boolean(0,1)" << std::endl;
         std::cout << "\t -hitnrun - Boolean(0,1)" << std::endl;
         std::cout << "\t -filename - Filename to save the samples to" << std::endl;
@@ -82,17 +79,10 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         else
             args.push_back(1);  // Default to run rej
 
-        // Get the boolean to determine if we run geometric hierarchical rejection
-        // sampling
-        if (cmdOptionExists(argv, argv + argc, "-ghrej"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-ghrej")));
-        else
-            args.push_back(1);  // Default to run ghrej
-
         // Get the boolean to determine if we run dimt hierarchical rejection
         // sampling
-        if (cmdOptionExists(argv, argv + argc, "-dimthrs"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-dimthrs")));
+        if (cmdOptionExists(argv, argv + argc, "-hrs"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-hrs")));
         else
             args.push_back(1);  // Default to run dimthrs
 
@@ -128,10 +118,9 @@ int main(int argc, char *argv[])
     bool runHmc = (args[2] == 1) ? true : false;
     bool runMcmc = (args[3] == 1) ? true : false;
     bool runRej = (args[4] == 1) ? true : false;
-    bool runGhrej = (args[5] == 1) ? true : false;
-    bool runDimthrs = (args[6] == 1) ? true : false;
-    bool runGibbs = (args[7] == 1) ? true : false;
-    bool runHitnrun = (args[8] == 1) ? true : false;
+    bool runHrs = (args[5] == 1) ? true : false;
+    bool runGibbs = (args[6] == 1) ? true : false;
+    bool runHitnrun = (args[7] == 1) ? true : false;
 
     std::string filename;
     bool save;
@@ -152,54 +141,17 @@ int main(int argc, char *argv[])
     }
 
     // Initializations
-    Dimt dimt(param.a_max, param.v_max);
-    DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
-    for (unsigned int i = 0; i < param.dof; ++i)
-    {
-        maxVelocities[i] = 10;
-        maxAccelerations[i] = param.a_max;
-    }
-    DoubleIntegrator<param.dof> doubleIntegrator(maxAccelerations, maxVelocities);
+    std::vector<double> maxVelocities(param.dof, param.v_max);
+    std::vector<double> maxAccelerations(param.dof, param.a_max);
+    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
-    const double levelSet = 1.1 * dimt.get_min_time(startVec, goalVec);
+    const double levelSet = 1.1 * dimt->getMinTime(startVec, goalVec);
     std::chrono::high_resolution_clock::duration duration;
     std::cout << "Level set: " << levelSet << std::endl;
 
-    // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, doubleIntegrator, param.dimensions));
-    ompl::base::RealVectorBounds bounds(param.dimensions);
-    bounds.setLow(minval);
-    bounds.setHigh(maxval);
-    space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-    ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(space));
-    si->setup();
+    ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, minval, maxval);
 
-    // Set custom start and goal
-    ompl::base::State *startState = space->allocState();
-    ompl::base::State *goalState = space->allocState();
-    for (int i = 0; i < param.dimensions; i++)
-    {
-        if (i % 2 == 0)  // position
-        {
-            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
-            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
-        }
-        else  // velocity
-        {
-            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVec[i];
-            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVec[i];
-        }
-    }
-
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, startState);
-    ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goalState);
-
-    ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
-    pdef->setStartAndGoalStates(start, goal);
-
-    const ompl::base::OptimizationObjectivePtr opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, startVec, goalVec, dimt));
-    pdef->setOptimizationObjective(opt);
+    ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);
 
     // Initialize the sampler
     // HMC parameters
@@ -253,14 +205,6 @@ int main(int argc, char *argv[])
     {
         ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
         std::cout << "Running Rejection Sampling..." << std::endl;
-        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-        for (unsigned int i = 0; i < 1; ++i)
-        {
-            maxVelocities1[i] = 10;
-            maxAccelerations1[i] = param.a_max;
-        }
-        DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
-        rejSampler.doubleIntegrator1Dof_ = doubleIntegrator1dof;
         rejSamples = rejSampler.sample(numSamples, duration);
         if (time)
         {
@@ -270,41 +214,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd ghrejSamples;
-    if (runGhrej)
-    {
-        //   	ProblemDefinition geo_prob = ProblemDefinition(start_state,
-        //   goal_state, state_min,
-        //                                                  state_max, level_set,
-        //   	[dimt, start_state, goal_state](const VectorXd& state)
-        //   	{
-        //       		return (start_state - state).norm() + (goal_state -
-        //       state).norm();
-        //   	});
-
-        //   	GeometricHierarchicalRejectionSampler ghrejSampler =
-        //       		GeometricHierarchicalRejectionSampler(geo_prob);
-        //   	std::cout << "Running Geometric Hierarchical Rejection
-        //   Sampling..." << std::endl;
-        //   	ghrejSamples = ghrejSampler.sample(no_samples, duration);
-        //   	if(time)
-        //   	{
-        //   		printTime(duration);
-        // }
-    }
-
     MatrixXd dimthrsSamples;
-    if (runDimthrs)
+    if (runHrs)
     {
-        DoubleIntegrator<1>::Vector maxAccelerations1, maxVelocities1;
-        for (unsigned int i = 0; i < 1; ++i)
-        {
-            maxVelocities1[i] = 10;
-            maxAccelerations1[i] = param.a_max;
-        }
-        DoubleIntegrator<1> doubleIntegrator1dof(maxAccelerations1, maxVelocities1);
-
-        ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet, 100, 100, doubleIntegrator1dof);
+        ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt,
+                                                                    levelSet, 100, 100);
         std::cout << "Running DIMT HRS..." << std::endl;
         dimthrsSamples = dimthrsSampler.sample(numSamples, duration);
         if (time)
@@ -366,15 +280,9 @@ int main(int argc, char *argv[])
             printSampleToFile(rejSamples, rejFile);
         }
 
-        if (runGhrej)
+        if (runHrs)
         {
-            std::ofstream ghrejFile(filename + "_ghrej.log");
-            printSampleToFile(ghrejSamples, ghrejFile);
-        }
-
-        if (runDimthrs)
-        {
-            std::ofstream dimthrsFile(filename + "_dimthrs.log");
+            std::ofstream dimthrsFile(filename + "_hrs.log");
             printSampleToFile(dimthrsSamples, dimthrsFile);
         }
 

@@ -15,9 +15,8 @@
 #include "OmplWrappers/MyInformedRRTstar.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "OmplWrappers/DimtStateSpace.h"
-#include "Dimt/DoubleIntegrator.h"
-#include "Dimt/Dimt.h"
 #include "Dimt/Params.h"
+#include "Dimt/DoubleIntegratorMinimumTime.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -64,14 +63,9 @@ bool MAIN_VERBOSE = true;
 void planWithSimpleSetup(void)
 {
     // Initializations
-    Dimt dimt(param.a_max, param.v_max);
-    DoubleIntegrator<param.dof>::Vector maxAccelerations, maxVelocities;
-    for (unsigned int i = 0; i < param.dof; ++i)
-    {
-        maxVelocities[i] = 10;
-        maxAccelerations[i] = param.a_max;
-    }
-    DoubleIntegrator<param.dof> double_integrator(maxAccelerations, maxVelocities);
+    std::vector<double> maxVelocities(param.dof, param.v_max);
+    std::vector<double> maxAccelerations(param.dof, param.a_max);
+    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
     if (MAIN_VERBOSE)
         std::cout << "Created the double integrator model!" << std::endl;
@@ -88,7 +82,7 @@ void planWithSimpleSetup(void)
         std::cout << "Got the start and goal states!" << std::endl;
 
     // Construct the state space we are planning in
-    ompl::base::StateSpacePtr space(new ompl::base::DimtStateSpace(dimt, double_integrator, param.dimensions));
+    ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
     ob::RealVectorBounds bounds(param.dimensions);
     bounds.setLow(-10);
     bounds.setHigh(10);
@@ -133,8 +127,8 @@ void planWithSimpleSetup(void)
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
 
     std::cout << "MinTime b/w start and goal = "
-              << double_integrator.getMinTime(start_state, int_state) +
-                     double_integrator.getMinTime(int_state, goal_state) << std::endl;
+              << dimt->getMinTime(start_state, int_state) +
+                     dimt->getMinTime(int_state, goal_state) << std::endl;
     std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
     ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
     ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
@@ -148,11 +142,11 @@ void planWithSimpleSetup(void)
     // Get a base problem definition that has the optimization objective with the
     // space
     // This probably should be changed
-    ob::ProblemDefinitionPtr base_pdef(new ob::ProblemDefinition(si));
+    ob::ProblemDefinitionPtr base_pdef = std::make_shared<ob::ProblemDefinition>(si);
     base_pdef->setStartAndGoalStates(start, goal);
 
-    const ompl::base::OptimizationObjectivePtr base_opt = ompl::base::OptimizationObjectivePtr(
-        new ompl::base::DimtObjective<param.dof>(si, start_state, goal_state, dimt));
+    const ompl::base::OptimizationObjectivePtr base_opt =
+            std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
     if (MAIN_VERBOSE)

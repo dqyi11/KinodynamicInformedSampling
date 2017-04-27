@@ -1,7 +1,8 @@
 # Add library for dimt class
 add_library(dimtLib SHARED
-            DoubleIntegratorMinimumTime.cpp
+            DoubleIntegrator.h
             Interval.cpp
+            DoubleIntegratorMinimumTime.cpp
            )
 
 target_link_libraries(dimtLib 

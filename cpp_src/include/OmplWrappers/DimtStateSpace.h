@@ -3,7 +3,6 @@
 #include <Dimt/Params.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <Dimt/DoubleIntegratorMinimumTime.h>
-#include <Dimt/DoubleIntegrator.h>
 #include <Eigen/Dense>
 
 namespace ompl
@@ -13,33 +12,27 @@ namespace ompl
         class DimtStateSpace : public RealVectorStateSpace
         {
         private:
-            DoubleIntegratorMinimumTime dimt_;
+            std::shared_ptr<DIMT> dimt_;
 
         public:
-            DimtStateSpace(const Dimt& dimt)
-              : RealVectorStateSpace(dim.getNumDOF()*2), dimt_(dimt)
+            DimtStateSpace(const std::shared_ptr<DIMT> dimt)
+              : RealVectorStateSpace(param.dimensions)
             {
+                dimt_ = dimt;
             }
 
             virtual double distance(const State *state1, const State *state2) const
             {
                 const double *s1 = static_cast<const StateType *>(state1)->values;
                 const double *s2 = static_cast<const StateType *>(state2)->values;
-                // Eigen::VectorXd eig_s1(dimension_);
-                // Eigen::VectorXd eig_s2(dimension_);
-                // for (unsigned int i = 0; i < dimension_; ++i)
-                // {
-                // 	eig_s1[i] = s1[i];
-                // 	eig_s2[i] = s2[i];
-                // }
-                // return dimt_.get_min_time(eig_s1, eig_s2);
-                DoubleIntegrator<param.dof>::StateVector eig_from, eig_to;
+
+                Eigen::VectorXd eig_from(param.dimensions), eig_to(param.dimensions);
                 for (unsigned int i = 0; i < dimension_; ++i)
                 {
                     eig_from[i] = s1[i];
                     eig_to[i] = s2[i];
                 }
-                double time = dimt_.getMinTime(eig_from, eig_to);
+                double time = dimt_->getMinTime(eig_from, eig_to);
                 return time;
             }
 
@@ -49,31 +42,34 @@ namespace ompl
                 const StateType *rfrom = static_cast<const StateType *>(from);
                 const StateType *rto = static_cast<const StateType *>(to);
                 const StateType *rstate = static_cast<StateType *>(state);
-                DoubleIntegrator<param.dof>::StateVector eig_from, eig_to, eig_state;
-                // for (unsigned int i = 0 ; i < dimension_ ; ++i)
-                // 	rstate->values[i] = rfrom->values[i] + (rto->values[i] -
-                // rfrom->values[i]) * t;
+                /*
+                Eigen::VectorXd eig_from(param.dimensions), eig_to(param.dimensions), eig_state(param.dimensions);
+
                 for (unsigned int i = 0; i < dimension_; ++i)
                 {
                     eig_from[i] = rfrom->values[i];
                     eig_to[i] = rto->values[i];
                 }
-                DoubleIntegrator<param.dof>::Trajectory traj = dimt_.getTrajectory(eig_from, eig_to);
-                eig_state = traj.getState(t);
+                dimt_->interpolate(eig_from, eig_to, t, eig_state);
                 for (unsigned int i = 0; i < dimension_; ++i)
                 {
                     rstate->values[i] = eig_state[i];
                 }
+                */
                 // TODO: Fix assert fail in steering function (using straight line for now)
                 for (unsigned int i = 0; i < dimension_; ++i)
                     rstate->values[i] = rfrom->values[i] + (rto->values[i] - rfrom->values[i]) * t;
             }
+
+
 
             virtual bool isMetricSpace() const
             {
                 return false;
             }
         };
+
+        using DimtStateSpacePtr = std::shared_ptr<DimtStateSpace>;
     }
 }
 #endif
