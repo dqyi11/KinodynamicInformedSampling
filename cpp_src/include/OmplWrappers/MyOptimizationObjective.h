@@ -21,9 +21,9 @@ using Eigen::VectorXd;
 using MotionCostFxn = std::function<double(VectorXd, VectorXd)>;
 using StateCostFxn = std::function<double(VectorXd)>;
 
-///
-/// Class that inherits from InformedSampler
-///
+//
+// Class that inherits from InformedSampler
+//
 namespace ompl
 {
     namespace base
@@ -40,53 +40,53 @@ namespace ompl
             OptimizationObjectivePtr opt_ = nullptr;
 
         public:
-            ///
-            /// Constructor
-            ///
-            /// @param si Space Information
-            /// @param sampler Informed Sampler
-            /// @param sampleBatchSize How many samples to get each time a new
-            /// batch of samples is gotten
-            /// @param stateCostFn Cost function for a single point in space
-            /// @param motionCostFn Cost function between two states
-            ///
+            //
+            // Constructor
+            //
+            // @param si Space Information
+            // @param sampler Informed Sampler
+            // @param sampleBatchSize How many samples to get each time a new
+            // batch of samples is gotten
+            // @param stateCostFn Cost function for a single point in space
+            // @param motionCostFn Cost function between two states
+            //
             MyOptimizationObjective(const SpaceInformationPtr &si, const MyInformedSamplerPtr sampler)
               : OptimizationObjective(si), sampler_(sampler), opt_(sampler_->problem()->getOptimizationObjective())
             {
             }
 
-            ///
-            /// Return the cost of the state at this point
-            ///
-            /// @param s State to get the cost for
-            /// @return Cost of the state
-            ///
+            //
+            // Return the cost of the state at this point
+            //
+            // @param s State to get the cost for
+            // @return Cost of the state
+            //
             virtual Cost stateCost(const State *s) const override;
 
-            ///
-            /// Return the cost of moving from s1 to s2
-            ///
-            /// @param s1 Start state
-            /// @param s2 Goal state
-            /// @return Cost of going from s1 to s2
-            ///
+            //
+            // Return the cost of moving from s1 to s2
+            //
+            // @param s1 Start state
+            // @param s2 Goal state
+            // @return Cost of going from s1 to s2
+            //
             virtual Cost motionCost(const State *s1, const State *s2) const override;
 
-            ///
-            /// Function to get the informed sampler pointer
-            ///
-            /// @param probDefn Problem definition pointer (OMPL)
-            /// @param maxNumberCalls Maximum number of sampling calls
-            /// @return Infromed sampler
-            ///
+            //
+            // Function to get the informed sampler pointer
+            //
+            // @param probDefn Problem definition pointer (OMPL)
+            // @param maxNumberCalls Maximum number of sampling calls
+            // @return Infromed sampler
+            //
             virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn,
                                                                  unsigned int maxNumberCalls) const override;
 
-            ///
-            /// Function to provide and informed sampler
-            ///
-            /// @param sampler
-            ///
+            //
+            // Function to provide and informed sampler
+            //
+            // @param sampler
+            //
             virtual void setInformedStateSampler(const MyInformedSamplerPtr &sampler)
             {
                 sampler_ = sampler;
@@ -101,43 +101,43 @@ namespace ompl
             const Eigen::VectorXd goalState_;
 
         public:
-            ///
-            /// Constructor
-            ///
-            /// @param si Space Information
-            /// @param startState Start state of the problem
-            /// @param goalState Goal state of the problem
-            ///
+            //
+            // Constructor
+            //
+            // @param si Space Information
+            // @param startState Start state of the problem
+            // @param goalState Goal state of the problem
+            //
             GeometricObjective(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
                                const Eigen::VectorXd &goalState)
               : OptimizationObjective(si), startState_(startState), goalState_(goalState)
             {
             }
 
-            ///
-            /// Return the cost of the state at this point
-            ///
-            /// @param s State to get the cost for
-            /// @return Cost of the state
-            ///
+            //
+            // Return the cost of the state at this point
+            //
+            // @param s State to get the cost for
+            // @return Cost of the state
+            //
             virtual Cost stateCost(const State *s) const override;
 
-            ///
-            /// Return the cost of moving from s1 to s2
-            ///
-            /// @param s1 Start state
-            /// @param s2 Goal state
-            /// @return Cost of going from s1 to s2
-            ///
+            //
+            // Return the cost of moving from s1 to s2
+            //
+            // @param s1 Start state
+            // @param s2 Goal state
+            // @return Cost of going from s1 to s2
+            //
             virtual Cost motionCost(const State *s1, const State *s2) const override;
 
-            ///
-            /// Combines cost
-            ///
-            /// @param c1 cost one
-            /// @param c2 cost two
-            /// @return Combined cost (c1 + c2)
-            ///
+            //
+            // Combines cost
+            //
+            // @param c1 cost one
+            // @param c2 cost two
+            // @return Combined cost (c1 + c2)
+            //
             virtual Cost combineCosts(Cost c1, Cost c2) const override;
         };
 
@@ -166,14 +166,14 @@ namespace ompl
             }
 
         public:
-            ///
-            /// Constructor
-            ///
-            /// @param si Space Information
-            /// @param startState Start state of the problem
-            /// @param goalState Goal state of the problem
-            /// @param di Double Integrator model
-            ///
+            //
+            // Constructor
+            //
+            // @param si Space Information
+            // @param startState Start state of the problem
+            // @param goalState Goal state of the problem
+            // @param di Double Integrator model
+            //
             DimtObjective(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
                           const Eigen::VectorXd &goalState, const DIMTPtr dimt)
               : OptimizationObjective(si),
@@ -182,37 +182,37 @@ namespace ompl
             {
             }
 
-            ///
-            /// Return the cost of the state at this point
-            ///
-            /// @param s State to get the cost for
-            /// @return Cost of the state
-            ///
+            //
+            // Return the cost of the state at this point
+            //
+            // @param s State to get the cost for
+            // @return Cost of the state
+            //
             virtual Cost stateCost(const State *s) const override
             {
                 return Cost(dimt_->getMinTime(startState_, get_eigen_vector(s)) +
                             dimt_->getMinTime(get_eigen_vector(s), goalState_));
             }
 
-            ///
-            /// Return the cost of moving from s1 to s2
-            ///
-            /// @param s1 Start state
-            /// @param s2 Goal state
-            /// @return Cost of going from s1 to s2
-            ///
+            //
+            // Return the cost of moving from s1 to s2
+            //
+            // @param s1 Start state
+            // @param s2 Goal state
+            // @return Cost of going from s1 to s2
+            //
             virtual Cost motionCost(const State *s1, const State *s2) const override
             {
                 return Cost(dimt_->getMinTime(get_eigen_vector(s1), get_eigen_vector(s2)));
             }
 
-            ///
-            /// Combines cost
-            ///
-            /// @param c1 cost one
-            /// @param c2 cost two
-            /// @return Combined cost (c1 + c2)
-            ///
+            //
+            // Combines cost
+            //
+            // @param c1 cost one
+            // @param c2 cost two
+            // @return Combined cost (c1 + c2)
+            //
             virtual Cost combineCosts(Cost c1, Cost c2) const override
             {
                 return Cost(std::max(c1.value(), c2.value()));

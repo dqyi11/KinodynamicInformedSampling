@@ -24,9 +24,9 @@ using namespace ompl::geometric;
 // Our stuff
 #include <Dimt/Params.h>
 
-///
-/// Helper functions
-///
+//
+// Helper functions
+//
 
 bool RRT_VERBOSE = false;
 
@@ -44,10 +44,10 @@ void print_out_states(ompl::base::State *statePtr)
     std::cout << " ]" << std::endl;
 }
 
-///
-/// MyInformedRRTstar
-/// This is here mainly for debugging
-///
+//
+// MyInformedRRTstar
+// This is here mainly for debugging
+//
 
 MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) : InformedRRTstar(si)
 {

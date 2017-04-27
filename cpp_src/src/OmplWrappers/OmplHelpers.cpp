@@ -58,12 +58,12 @@
 //     }));
 // }
 
-///
-/// Function to convert a State to a VectorXd
-///
-/// @param s Ompl State
-/// @return Eigen VectorXd
-///
+//
+// Function to convert a State to a VectorXd
+//
+// @param s Ompl State
+// @return Eigen VectorXd
+//
 Eigen::VectorXd get_eigen_vector(const ompl::base::State *s)
 {
     double *val = static_cast<const ompl::base::RealVectorStateSpace::StateType *>(s)->values;
@@ -78,12 +78,12 @@ Eigen::VectorXd get_eigen_vector(const ompl::base::State *s)
     return v;
 }
 
-///
-/// Convert an Eigen::VectorXd to an ompl State pointer
-///
-/// @param vec VectorXd representing the state
-/// @return Pointer to an ompl state
-///
+//
+// Convert an Eigen::VectorXd to an ompl State pointer
+//
+// @param vec VectorXd representing the state
+// @return Pointer to an ompl state
+//
 ompl::base::State *get_ompl_state(const Eigen::VectorXd &vec, const ompl::base::RealVectorStateSpace *space)
 {
     ompl::base::State *state = space->allocState();

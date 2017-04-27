@@ -31,12 +31,12 @@ class DoubleIntegratorMinimumTime
 private:
     std::shared_ptr<DoubleIntegratorImpl> doubleIntegratorImpl_;
 public:
-    ///
-    /// Constructor
-    ///
-    /// @param maxAccelerations Max accelerations of all DOFs
-    /// @param maxVelocities Velocity limits of all DOFs
-    ///
+    //
+    // Constructor
+    //
+    // @param maxAccelerations Max accelerations of all DOFs
+    // @param maxVelocities Velocity limits of all DOFs
+    //
     DoubleIntegratorMinimumTime(std::vector<double>& maxAccelerations,
                                 std::vector<double>& maxVelocities);
 

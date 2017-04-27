@@ -16,12 +16,12 @@ using Eigen::VectorXd;
 // stdlib
 #include <exception>
 
-///
-/// Return the cost of the state at this point
-///
-/// @param s State to get the cost for
-/// @return Cost of the state
-///
+//
+// Return the cost of the state at this point
+//
+// @param s State to get the cost for
+// @return Cost of the state
+//
 ompl::base::Cost ompl::base::MyOptimizationObjective::stateCost(const ompl::base::State *s) const
 {
     if (sampler_ == nullptr or opt_ == nullptr)
@@ -32,13 +32,13 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::stateCost(const ompl::base
     return opt_->stateCost(s);
 }
 
-///
-/// Return the cost of moving from s1 to s2
-///
-/// @param s1 Start state
-/// @param s2 Goal state
-/// @return Cost of going from s1 to s2
-///
+//
+// Return the cost of moving from s1 to s2
+//
+// @param s1 Start state
+// @param s2 Goal state
+// @return Cost of going from s1 to s2
+//
 ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::base::State *s1,
                                                                  const ompl::base::State *s2) const
 {
@@ -50,13 +50,13 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::bas
     return opt_->motionCost(s1, s2);
 }
 
-///
-/// Function to get the informed sampler pointer
-///
-/// @param probDefn Problem definition pointer (OMPL)
-/// @param maxNumberCalls Maximum number of sampling calls
-/// @return Infromed sampler
-///
+//
+// Function to get the informed sampler pointer
+//
+// @param probDefn Problem definition pointer (OMPL)
+// @param maxNumberCalls Maximum number of sampling calls
+// @return Infromed sampler
+//
 ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInformedStateSampler(
     const ProblemDefinitionPtr probDefn, unsigned int maxNumberCalls) const
 {

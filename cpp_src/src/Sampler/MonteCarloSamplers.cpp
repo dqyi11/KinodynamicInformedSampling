@@ -56,24 +56,24 @@ namespace
     // Verbose constant
     const bool VERBOSE = false;
 
-    ///
-    /// Sigmoid function
-    ///
-    /// @param x Input
-    /// @param a Controls shape of sigmoid
-    /// @param c Controls shape of sigmoid
-    /// @return Output of sigmoid function
-    ///
+    //
+    // Sigmoid function
+    //
+    // @param x Input
+    // @param a Controls shape of sigmoid
+    // @param c Controls shape of sigmoid
+    // @return Output of sigmoid function
+    //
     inline double sigmoid(const double &x, const double &a = 200, const double &c = 0)
     {
         return 1 / (1 + exp(-a * (x - c)));
     }
 
-    ///
-    /// Function to get some value between 0 and 1
-    ///
-    /// @return A uniform value between 0 and 1
-    ///
+    //
+    // Function to get some value between 0 and 1
+    //
+    // @return A uniform value between 0 and 1
+    //
     inline double rand_uni()
     {
         // Set up the random number generator
@@ -89,11 +89,11 @@ namespace ompl
 {
     namespace base
     {
-        ///
-        /// Function to determine if any of the joint limits are violated
-        /// @param sample Sample to check
-        /// @return Boolean that is true if any are in violation
-        ///
+        //
+        // Function to determine if any of the joint limits are violated
+        // @param sample Sample to check
+        // @return Boolean that is true if any are in violation
+        //
         bool MonteCarloSampler::anyDimensionInViolation(const Eigen::VectorXd &sample) const
         {
             const std::tuple<Eigen::VectorXd, Eigen::VectorXd> limits = getStateLimits();
@@ -111,12 +111,12 @@ namespace ompl
             return false;
         }
 
-        ///
-        /// Get the energy of the state from the cost function
-        ///
-        /// @param curr_state Current state to get the energy for
-        /// @return Energy of the function
-        ///
+        //
+        // Get the energy of the state from the cost function
+        //
+        // @param curr_state Current state to get the energy for
+        // @return Energy of the function
+        //
         double MonteCarloSampler::getEnergy(const Eigen::VectorXd &curr_state) const
         {
             const double cost = getCost(curr_state);
@@ -133,33 +133,33 @@ namespace ompl
             return E_region + E_grad + E_informed;
         }
 
-        ///
-        /// Get the probability of the state from the cost function
-        ///
-        /// @param energy Energy of the state
-        /// @return Probability of the state
-        ///
+        //
+        // Get the probability of the state from the cost function
+        //
+        // @param energy Energy of the state
+        // @return Probability of the state
+        //
         double MonteCarloSampler::getProb(const double energy) const
         {
             return exp(-energy);
         }
 
-        ///
-        /// Get the probability of the state from the cost function
-        ///
-        /// @param curr_state Current state to get the energy for
-        /// @return Probability of the state
-        ///
+        //
+        // Get the probability of the state from the cost function
+        //
+        // @param curr_state Current state to get the energy for
+        // @return Probability of the state
+        //
         double MonteCarloSampler::getProb(const Eigen::VectorXd &curr_state) const
         {
             return exp(-MonteCarloSampler::getEnergy(curr_state));
         }
 
-        ///
-        /// Get one random uniform sample from the space
-        ///
-        /// @return Random uniform vector of length size
-        ///
+        //
+        // Get one random uniform sample from the space
+        //
+        // @return Random uniform vector of length size
+        //
         Eigen::VectorXd MonteCarloSampler::getRandomSample() const
         {
             // Set up the random number generator
@@ -183,13 +183,13 @@ namespace ompl
             return sample;
         }
 
-        ///
-        /// Function to concatenate a vector to back of matrix
-        ///
-        /// @param matrix Matrix to concatenate to bottom of
-        /// @param vector Vector to contatenate to bottom of matrix
-        /// @return A new matrix with the concatenation
-        ///
+        //
+        // Function to concatenate a vector to back of matrix
+        //
+        // @param matrix Matrix to concatenate to bottom of
+        // @param vector Vector to contatenate to bottom of matrix
+        // @return A new matrix with the concatenation
+        //
         Eigen::MatrixXd concatenate_matrix_and_vector(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
         {
             // Concatenate to results matrix
@@ -198,12 +198,12 @@ namespace ompl
             return new_results;
         }
 
-        // ///
-        // /// Surf down the cost function to get to the levelset
-        // ///
-        // /// @param alpha Learning rate
-        // /// @return Path to the level set
-        // ///
+        // //
+        // // Surf down the cost function to get to the levelset
+        // //
+        // // @param alpha Learning rate
+        // // @return Path to the level set
+        // //
         // VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
         // {
         //  VectorXd start = MonteCarloSampler::get_random_sample();
@@ -234,12 +234,12 @@ namespace ompl
         //  return start;
         // }
 
-        ///
-        /// Surf down the cost function to get to the levelset
-        ///
-        /// @param alpha Learning rate
-        /// @return Path to the level set
-        ///
+        //
+        // Surf down the cost function to get to the levelset
+        //
+        // @param alpha Learning rate
+        // @return Path to the level set
+        //
         Eigen::VectorXd MonteCarloSampler::gradDescent(const double alpha) const
         {
             Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
@@ -277,12 +277,12 @@ namespace ompl
             return start;
         }
 
-        ///
-        /// Surf down the cost function to get to the levelset
-        ///
-        /// @param start Vector to start
-        /// @return A state in the level set
-        ///
+        //
+        // Surf down the cost function to get to the levelset
+        //
+        // @param start Vector to start
+        // @return A state in the level set
+        //
         Eigen::VectorXd MonteCarloSampler::newtonRaphson(const Eigen::VectorXd &start) const
         {
             Eigen::VectorXd end = start;
@@ -309,11 +309,11 @@ namespace ompl
             return end;
         }
 
-        ///
-        /// Get a normal random vector for the momentum
-        ///
-        /// @return A vector of momentum sampled from a random distribution
-        ///
+        //
+        // Get a normal random vector for the momentum
+        //
+        // @return A vector of momentum sampled from a random distribution
+        //
         Eigen::VectorXd MonteCarloSampler::sampleNormal(const double mean, const double sigma) const
         {
             // Set up the random number generator
@@ -443,14 +443,14 @@ namespace ompl
         // HMCSampler
         //
 
-        ///
-        /// Get a series of samples for the problem space
-        ///
-        /// @param no_samples Number of samples to get
-        /// @param time Boolean that determines if the time to run the proccess is
-        /// displayed
-        /// @return A series of samples of shape (number of samples, sample dimension)
-        ///
+        //
+        // Get a series of samples for the problem space
+        //
+        // @param no_samples Number of samples to get
+        // @param time Boolean that determines if the time to run the proccess is
+        // displayed
+        // @return A series of samples of shape (number of samples, sample dimension)
+        //
         Eigen::MatrixXd HMCSampler::sample(const int numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
             if (VERBOSE)
@@ -567,18 +567,18 @@ namespace ompl
             return samples;
         }
 
-        ///
-        /// MCMC Sampler
-        ///
+        //
+        // MCMC Sampler
+        //
 
-        ///
-        /// Get a series of samples for the problem space
-        ///
-        /// @param no_samples Number of samples to get
-        /// @param time Boolean that determines if the time to run the proccess is
-        /// displayed
-        /// @return A series of samples of shape (number of samples, sample dimension)
-        ///
+        //
+        // Get a series of samples for the problem space
+        //
+        // @param no_samples Number of samples to get
+        // @param time Boolean that determines if the time to run the proccess is
+        // displayed
+        // @return A series of samples of shape (number of samples, sample dimension)
+        //
         Eigen::MatrixXd MCMCSampler::sample(const int numSamples,
                                             std::chrono::high_resolution_clock::duration &duration)
         {
