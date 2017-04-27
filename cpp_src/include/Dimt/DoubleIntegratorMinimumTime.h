@@ -15,7 +15,7 @@
 class DoubleIntegratorImpl
 {
 public:
-    virtual double getMinTime(const Eigen::VectorXd x1, const Eigen::VectorXd x2) = 0;
+    virtual double getMinTime(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2) = 0;
 
     virtual std::tuple<double, double, double>
     getMinTimeAndIntervals1Dof(const double x1, const double v1,

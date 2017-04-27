@@ -122,8 +122,9 @@ namespace ompl
             // @param sample_batch_size How many samples to get each time a new
             // batch of samples is gotten
             //
-            MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
-                              const unsigned int maxNumberCalls, const int sampleBatchSize)
+            MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
+                              const double levelSet, const unsigned int maxNumberCalls,
+                              const int sampleBatchSize)
               : InformedSampler(problem, maxNumberCalls)
               , sampleBatchSize_(sampleBatchSize)
               , si_(si)

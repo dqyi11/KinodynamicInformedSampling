@@ -2,11 +2,11 @@
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 
 
-class DoubleIntegratorTubiasImpl : public DoubleIntegratorImpl
+class DoubleIntegratorTobiasImpl : public DoubleIntegratorImpl
 {
     using DI = DoubleIntegrator<param.dof>;
 public:
-    DoubleIntegratorTubiasImpl(std::vector<double>& maxAccelerations,
+    DoubleIntegratorTobiasImpl(std::vector<double>& maxAccelerations,
                                std::vector<double>& maxVelocities)
         : maxAccelerations_(maxAccelerations), maxVelocities_(maxVelocities)
     {
@@ -20,9 +20,35 @@ public:
         doubleIntegrator_ = std::make_shared< DI > (maxA, maxV);
     }
 
-    virtual double getMinTime(const Eigen::VectorXd x1, const Eigen::VectorXd x2)
+    Eigen::VectorXd convertToTobiasFormat(const Eigen::VectorXd& x)
     {
-        return doubleIntegrator_->getMinTime(x1, x2);
+        // convert [x1, v1, x2, v2] to [x1, x2, v1, v2]
+        Eigen::VectorXd newX(param.dimensions);
+        for(int i=0;i<param.dof;i++)
+        {
+            newX[i] = x[2*i];
+            newX[param.dof+i] = x[2*i+1];
+        }
+        return newX;
+    }
+
+    Eigen::VectorXd convertFromTobiasFormat(const Eigen::VectorXd& x)
+    {
+        // convert [x1, x2, v1, v2] to [x1, v1, x2, v2]
+        Eigen::VectorXd newX(param.dimensions);
+        for(int i=0;i<param.dof;i++)
+        {
+            newX[2*i] = x[i];
+            newX[2*i+1] = x[param.dof+i];
+        }
+        return newX;
+    }
+
+    virtual double getMinTime(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2)
+    {
+        Eigen::VectorXd newX1 = convertToTobiasFormat(x1);
+        Eigen::VectorXd newX2 = convertToTobiasFormat(x2);
+        return doubleIntegrator_->getMinTime(newX1, newX2);
     }
 
     virtual std::tuple<double, double, double>
@@ -47,9 +73,13 @@ public:
     }
 
     virtual void interpolate(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
-                     double t, Eigen::VectorXd& x)     {
-        typename DI::Trajectory traj = doubleIntegrator_->getTrajectory(x1, x2);
-        x = traj.getState(t);
+                             double t, Eigen::VectorXd& x)
+    {
+        Eigen::VectorXd newX1 = convertToTobiasFormat(x1);
+        Eigen::VectorXd newX2 = convertToTobiasFormat(x2);
+        typename DI::Trajectory traj = doubleIntegrator_->getTrajectory(newX1, newX2);
+        Eigen::VectorXd newX = traj.getState(t);
+        x = convertFromTobiasFormat(newX);
         return;
     }
 protected:
@@ -62,7 +92,7 @@ protected:
 DoubleIntegratorMinimumTime::DoubleIntegratorMinimumTime(std::vector<double>& maxAccelerations,
                                                          std::vector<double>& maxVelocities)
 {
-    doubleIntegratorImpl_ = std::make_shared<DoubleIntegratorTubiasImpl>(maxAccelerations,
+    doubleIntegratorImpl_ = std::make_shared<DoubleIntegratorTobiasImpl>(maxAccelerations,
                                                                          maxVelocities);
 }
 

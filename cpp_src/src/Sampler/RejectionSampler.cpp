@@ -279,7 +279,7 @@ namespace ompl
         {
             double cost, infeasible_min, infeasible_max;
             std::tie(cost, infeasible_min, infeasible_max) =
-                dimt_->getMinTimeAndIntervals1Dof(x1[i], x1[i+1], x2[i], x2[i+1], i);
+                dimt_->getMinTimeAndIntervals1Dof(x1[i*2], x1[i*2+1], x2[i*2], x2[i*2+1], i);
 
             infeasibleIntervals_[i] = std::make_pair(infeasible_min, infeasible_max);
             costs_[i] = cost;
