@@ -96,6 +96,8 @@ int main(int argc, char *argv[])
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
+    maxVelocities[1] = 0.1;
+    maxAccelerations[1] = 0.1;
     DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
     const double levelSet = 1.4 * dimt->getMinTime(startVec, goalVec);
