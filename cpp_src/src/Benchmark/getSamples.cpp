@@ -164,7 +164,9 @@ int main(int argc, char *argv[])
         double epsilon = 0.1;
         double sigma = 1;
         int maxSteps = 20;
+
         ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
+        /*
         std::cout << "Running HMC Sampling..." << std::endl;
         hmcSamples = hmcSampler.sample(numSamples, duration);
         if (time)
@@ -172,7 +174,7 @@ int main(int argc, char *argv[])
             std::cout << "Total time ";
             printTime(duration, std::cout);
             std::cout << std::endl;
-        }
+        }*/
         std::cout << "Running HMC2 Sampling..." << std::endl;
         hmc2Samples = hmcSampler.sampleBatchMemorized(numSamples, duration);
         if (time)
@@ -246,7 +248,7 @@ int main(int argc, char *argv[])
     MatrixXd hitnrunSamples;
     if (runHitnrun)
     {
-        ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100);
+        ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100, 10);
         std::cout << "Running Hit and Run Sampler..." << std::endl;
         hitnrunSamples = hitnrunSampler.sample(numSamples, duration);
         if (time)

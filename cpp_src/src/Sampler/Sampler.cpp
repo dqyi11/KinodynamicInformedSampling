@@ -196,6 +196,34 @@ namespace ompl
             return optim_obj->motionCost(start_state, state).value() + optim_obj->motionCost(state, goal_state).value();
         }
 
+        bool MyInformedSampler::isInLevelSet(const Eigen::VectorXd &curr_state, Cost thresholdCost) const
+        {
+            // Assert that the problem definition has an optimization objective defined
+            assert(problem_->hasOptimizationObjective());
+            const ompl::base::OptimizationObjectivePtr optim_obj = problem_->getOptimizationObjective();
+            const ompl::base::DimtObjective* dimt_obj = dynamic_cast<ompl::base::DimtObjective*>(optim_obj.get());
+            assert(dimt_obj!=nullptr);
+
+            const ompl::base::State *start_state = problem_->getStartState(0);
+            const ompl::base::State *goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
+
+            const auto space = si_->getStateSpace()->as<ompl::base::RealVectorStateSpace>();
+
+            const ompl::base::State *state = get_ompl_state(curr_state, space);
+
+            Cost costToCome = dimt_obj->getCostIfSmallerThan(start_state, state, thresholdCost);
+            if (costToCome.value() == std::numeric_limits<double>::infinity() )
+            {
+                return false;
+            }
+            Cost costToGo = dimt_obj->getCostIfSmallerThan(state, goal_state, Cost(thresholdCost.value()-costToCome.value()));
+            if (costToGo.value() == std::numeric_limits<double>::infinity() )
+            {
+                return false;
+            }
+            return true;
+        }
+
         // Can implement as many private functions as you want to help do the sampling
         double MyInformedSampler::getRandomDimension(const double max, const double min) const
         {
@@ -338,10 +366,9 @@ namespace ompl
         //
         bool MyInformedSampler::isInBound(const Eigen::VectorXd &state) const
         {
-            Eigen::VectorXd state_max, state_min;
-            std::tie(state_min, state_max) = getStateLimits();
+
             for (unsigned int i = 0; i < state.size(); i++)
-                if (state(i) > state_max(i) || state(i) < state_min(i))
+                if (state(i) > stateMax_(i) || state(i) < stateMin_(i))
                     return false;
             return true;
         }

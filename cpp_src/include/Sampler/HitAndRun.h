@@ -110,8 +110,9 @@ namespace ompl
         {
         public:
             HitAndRun(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
-                      const unsigned int maxNumberCalls, const int sampleBatchSize)
-              : GibbsSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
+                      const unsigned int maxNumberCalls, const int sampleBatchSize, const int numOfTries=10000)
+              : GibbsSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize),
+                numOfTries_(numOfTries)
             {
             }
 
@@ -125,6 +126,8 @@ namespace ompl
             //
             virtual Eigen::MatrixXd sample(const int no_samples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
+        protected:
+            int numOfTries_;
         };
     }  // namespace base
 }  // namespace ompl

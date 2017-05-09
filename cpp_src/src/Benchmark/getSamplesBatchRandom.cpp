@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
-    maxVelocities[1] = 0.1;
-    maxAccelerations[1] = 0.1;
+    //maxVelocities[1] = 0.1;
+    //maxAccelerations[1] = 0.1;
     DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
     const double levelSet = 1.4 * dimt->getMinTime(startVec, goalVec);
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
         throw std::runtime_error("file not opened");
     }
 
-    int numSamplers = 5;
+    int numSamplers = 3;
     for (int i = 0; i < numbatch; i++)
     {
         std::cout << "BATCH " << i << std::flush;
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         }
 
         // create a level set
-        double rndNum = 0.5*dis01(gen)+1;
+        double rndNum = 0.3*dis01(gen)+1;
         const double levelSet = rndNum * dimt->getMinTime(startVec, goalVec);
 
         std::cout <<  " ratio " << rndNum << " " << std::flush;
@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
 
         curr++;
 
+        std::cout << " HMC " << std::flush;
         {
             MatrixXd hmcSamples;
             double alpha = 0.5;
@@ -162,9 +163,9 @@ int main(int argc, char *argv[])
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
             hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, times[curr]);
         }
-
+        printTime(times[curr], std::cout);
         curr++;
-        */
+
         std::cout << " MCMC " << std::flush;
         {
             MatrixXd mcmcSamples;
@@ -176,16 +177,7 @@ int main(int argc, char *argv[])
         }
         printTime(times[curr], std::cout);
         curr++;
-
-        std::cout << " REJ " << std::flush;
-        {
-            MatrixXd rejSamples;
-            ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
-            rejSamples = rejSampler.sample(numSamples, times[curr]);
-            rejectionRatio = rejSampler.getRejectionRatio();
-        }
-        printTime(times[curr], std::cout);
-        curr++;
+        */
 
         std::cout << " HRS " << std::flush;
         {
@@ -198,6 +190,7 @@ int main(int argc, char *argv[])
         printTime(times[curr], std::cout);
         curr++;
 
+        /*
         std::cout << " GIBBS " << std::flush;
         {
             MatrixXd gibbsSamples;
@@ -206,14 +199,29 @@ int main(int argc, char *argv[])
         }
         printTime(times[curr], std::cout);
         curr++;
-
-        std::cout << " H&R " << std::flush;
+        */
+        int numTrials = 5;
+        std::cout << " H&R (" << numTrials << ") " << std::flush;
         {
             MatrixXd hitnrunSamples;
-            ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100);
+            ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100, numTrials);
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
         }
         printTime(times[curr], std::cout);
+
+
+
+        std::cout << " REJ " << std::flush;
+        {
+            MatrixXd rejSamples;
+            ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
+            rejSamples = rejSampler.sample(numSamples, times[curr]);
+            rejectionRatio = rejSampler.getRejectionRatio();
+        }
+        printTime(times[curr], std::cout);
+        curr++;
+
+        std::cout << "        REJ RATIO[" << rejectionRatio << "]" << std::flush;
 
         appendTimeAndRatioToFile(times, rejectionRatio, numSamples, logFile);
 

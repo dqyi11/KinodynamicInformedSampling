@@ -51,6 +51,15 @@ public:
         return doubleIntegrator_->getMinTime(newX1, newX2);
     }
 
+
+    virtual double getMinTimeIfSmallerThan(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
+                                    double timeThreshold)
+    {
+        Eigen::VectorXd newX1 = convertToTobiasFormat(x1);
+        Eigen::VectorXd newX2 = convertToTobiasFormat(x2);
+        return doubleIntegrator_->getMinTimeIfSmallerThan(newX1, newX2, timeThreshold);
+    }
+
     virtual std::tuple<double, double, double>
     getMinTimeAndIntervals1Dof(const double x1, const double v1,
                                const double x2, const double v2,

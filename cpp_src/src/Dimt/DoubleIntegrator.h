@@ -486,19 +486,6 @@ public:
     double getMinTime(const StateVector &state1, const StateVector &state2,
                        double maxTime = std::numeric_limits<double>::infinity()) const
     {
-        // std::cout << "Min time state1: [";
-        //    for(uint i = 0; i < state1.rows(); i++)
-        //    {
-        //        std::cout << state1.row(i) << " ";
-        //    }
-        //    std::cout << "]" << std::endl;
-
-        // std::cout << "Min time state2: [";
-        //    for(uint i = 0; i < state2.rows(); i++)
-        //    {
-        //        std::cout << state2.row(i) << " ";
-        //    }
-        //    std::cout << "]" << std::endl;
         const Vector distances = state2.template head<dof>() - state1.template head<dof>();
         double minTime = 0.0;
         int limitDof = -1;  // DOF for which the min time but not the infeasible
@@ -515,6 +502,36 @@ public:
                                          infeasibleIntervals, limitDof);
         }
         assert(minTime < std::numeric_limits<double>::infinity());
+        return minTime;
+    }
+
+    double getMinTimeIfSmallerThan(const StateVector &state1, const StateVector &state2, double timeThreshold) const
+    {
+        const Vector distances = state2.template head<dof>() - state1.template head<dof>();
+        double minTime = 0.0;
+        int limitDof = -1;  // DOF for which the min time but not the infeasible
+                            // interval has been calculated yet
+        std::pair<double, double> infeasibleIntervals[dof];
+        Vector firstAccelerations;
+        double maxTimeDummy = std::numeric_limits<double>::infinity();
+
+        for (unsigned int i = 0; i < dof && minTime < maxTimeDummy; ++i)
+        {
+            const double time = getMinTime1D(state1[dof + i], state2[dof + i], distances[i], maxAccelerations_[i],
+                                             maxVelocities_[i], maxTimeDummy, firstAccelerations[i]);
+            if(time >= timeThreshold)
+            {
+                return std::numeric_limits<double>::infinity();
+            }
+
+            adjustForInfeasibleIntervals(i, time, maxTimeDummy, state1.template tail<dof>(), state2.template tail<dof>(),
+                                         distances, firstAccelerations, maxAccelerations_, maxVelocities_, minTime,
+                                         infeasibleIntervals, limitDof);
+            if(minTime >= timeThreshold)
+            {
+                return std::numeric_limits<double>::infinity();
+            }
+        }
         return minTime;
     }
 

@@ -217,6 +217,12 @@ namespace ompl
             {
                 return Cost(std::max(c1.value(), c2.value()));
             }
+
+
+            Cost getCostIfSmallerThan(const State* s1, const State *s2, Cost thresholdCost) const
+            {
+                return Cost(dimt_->getMinTimeIfSmallerThan(get_eigen_vector(s1), get_eigen_vector(s2), thresholdCost.value()));
+            }
         };
     }
 }

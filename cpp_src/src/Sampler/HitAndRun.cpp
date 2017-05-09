@@ -120,6 +120,9 @@ namespace ompl
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
+            //cleamn up later
+            std::uniform_real_distribution<> uni_dis01(0, 1);
+
             Eigen::VectorXd sample;
             int skip = 0, trys = 0;
             bool retry;
@@ -130,7 +133,7 @@ namespace ompl
                 do
                 {
                     retry = false;
-                    if (trys > 10000 || trys == -1)
+                    if (trys > numOfTries_ || trys == -1)
                     {
                         // Sample random direction in S^dim
                         double sum = 0;
@@ -146,8 +149,11 @@ namespace ompl
                         trys = 0;
                     }
                     // Generate random sample along dir
-                    std::uniform_real_distribution<> uni_dis(lamda_lower_bound, lamda_upper_bound);
-                    double lamda = uni_dis(gen_);
+                    //std::uniform_real_distribution<> uni_dis(lamda_lower_bound, lamda_upper_bound);
+                    //double lamda = uni_dis(gen_);
+                    double lamda = uni_dis01(gen_);
+                    lamda = lamda * (lamda_upper_bound - lamda_lower_bound) + lamda_lower_bound;
+
                     sample = prev_sample_ + lamda * dir;
                     if (!isInBound(sample))
                     {
@@ -171,8 +177,28 @@ namespace ompl
 
                 Eigen::VectorXd newsample(getStartState().size() + 1);
                 prev_sample_ = sample;
+
                 newsample << sample, getCost(sample);
                 samples.row(i) = newsample;
+
+                //hack - use previos samples and not only last one
+
+                double p = uni_dis01(gen_);
+                int index = i;
+                if (i > 5 && p < 0.5)
+                {
+                    if (p > 0.25)
+                        index = i-2;
+                    else if (p > 0.125)
+                        index = i-3;
+                    else if (p > 0.06125)
+                        index = i-4;
+                    else if (p > 0.0306125)
+                        index = i-5;
+                    else index = i-6;
+                }
+                prev_sample_ = samples.row(index).head(dim);
+
             }
 
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();

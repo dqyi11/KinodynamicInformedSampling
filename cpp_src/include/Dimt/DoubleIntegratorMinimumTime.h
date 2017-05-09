@@ -24,6 +24,9 @@ public:
 
     virtual void interpolate(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
                              double t, Eigen::VectorXd& x) = 0;
+
+    virtual double getMinTimeIfSmallerThan(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
+                                    double timeThreshold)  = 0;
 };
 
 class DoubleIntegratorMinimumTime
@@ -59,6 +62,11 @@ public:
         return doubleIntegratorImpl_->getMinTimeAndIntervals1Dof(x1,v1,
                                                                  x2,v2,
                                                                  dof_index);
+    }
+
+    double getMinTimeIfSmallerThan(const Eigen::VectorXd x1, const Eigen::VectorXd x2, double timeThreshold) const
+    {
+        return doubleIntegratorImpl_->getMinTimeIfSmallerThan(x1, x2, timeThreshold);
     }
 
     void interpolate(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,

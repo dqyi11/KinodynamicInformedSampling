@@ -110,6 +110,9 @@ namespace ompl
 
             double levelSet_;
 
+            Eigen::VectorXd stateMax_;
+            Eigen::VectorXd stateMin_;
+
         public:
             //
             // Constructor
@@ -132,6 +135,7 @@ namespace ompl
               , levelSet_(levelSet)              
             {
                 started_ = false;
+                std::tie(stateMin_, stateMax_) = getStateLimits();
             }
 
             //
@@ -266,8 +270,11 @@ namespace ompl
             //
             virtual bool isInLevelSet(const Eigen::VectorXd &state) const
             {
-                return getCost(state) <= levelSet_;
+                //return getCost(state) <= levelSet_;
+                return isInLevelSet(state, Cost(levelSet_));
             }
+
+            bool isInLevelSet(const Eigen::VectorXd &curr_state, Cost thresholdCost) const;
 
             //
             // Get the gradient of the cost function at a specific state
@@ -294,6 +301,9 @@ namespace ompl
             // @return Boolean that is true if it is in the boundaries of the space
             //
             virtual bool isInBound(const Eigen::VectorXd &state) const;
+
+
+
         };  // MyInformedSampler
 
         using MyInformedSamplerPtr = std::shared_ptr<ompl::base::MyInformedSampler>;

@@ -19,9 +19,7 @@ using Eigen::MatrixXd;
 #include "Sampler/HitAndRun.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "OmplWrappers/DimtStateSpace.h"
-#include "Dimt/Params.h"
-#include "Dimt/DoubleIntegratorMinimumTime.h"
-#include "Dimt/ProblemGeneration.h"
+#include "Benchmark/GeometryProblemGeneration.h"
 #include "Benchmark/TimeBenchmark.h"
 #include "Benchmark/OptionParse.h"
 
@@ -71,41 +69,36 @@ int main(int argc, char *argv[])
 
     int numSamples = args[0];
     int numBatch = args[1];
+    int dimension = 4;
+    double vmax = 10.0, amax = 1.0;
 
     std::string filename;
     bool save;
     std::tie(save, filename) = get_filename(argc, argv);
 
     // Create a problem definition
-    int numDim = param.dimensions;
     double maxval = 25;
     double minval = -25;
-    VectorXd startVec(numDim);
-    VectorXd goalVec(numDim);
+    VectorXd startVec(dimension);
+    VectorXd goalVec(dimension);
     std::mt19937 gen( std::random_device{}());
     std::uniform_real_distribution<double> dis(-25, 25);
-    for (int i = 0; i < numDim; i++)
+    for (int i = 0; i < dimension; i++)
     {
         startVec(i) = dis(gen);
         goalVec(i) = dis(gen);
     }
 
+    ompl::base::SpaceInformationPtr si = createGeometrySpaceInformation(dimension, minval, maxval);
+    ompl::base::ProblemDefinitionPtr pdef = createGeometryProblem(startVec, goalVec, si);
+
     // Initializations
-    std::vector<double> maxVelocities(param.dof, param.v_max);
-    std::vector<double> maxAccelerations(param.dof, param.a_max);
-    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
-
-    const double levelSet = 1.4 * dimt->getMinTime(startVec, goalVec);
+    const double levelSet = 1.4 *  getCost(pdef->getOptimizationObjective(), si, startVec, goalVec);
     std::cout << "Level set: " << levelSet << std::endl;
-
-    ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, minval, maxval);
-
-    ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);
 
     double levelSetRatios[] = {1.6, 1.5, 1.4, 1.3, 1.2, 1.1};
     int levelSetsNum = sizeof(levelSetRatios) / sizeof(double);
     std::cout << "level set num " << levelSetsNum << std::endl;
-
 
     int numSampler = 7;
 
@@ -167,7 +160,7 @@ int main(int argc, char *argv[])
 
             {
                 MatrixXd dimthrsSamples;
-                ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt, levelSet,
+                ompl::base::GeometricHierarchicalRejectionSampler dimthrsSampler(si, pdef, levelSet,
                                                                             100, 100);
                 dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
 
