@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         }
 
         // create a level set
-        double rndNum = 0.3*dis01(gen)+1;
+        double rndNum = 0.02*dis01(gen)+1;
         const double levelSet = rndNum * dimt->getMinTime(startVec, goalVec);
 
         std::cout <<  " ratio " << rndNum << " " << std::flush;
@@ -149,8 +149,9 @@ int main(int argc, char *argv[])
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
             hmcSamples = hmcSampler.sample(numSamples, times[curr]);
         }
-
+        printTime(times[curr], std::cout);
         curr++;
+        */
 
         std::cout << " HMC " << std::flush;
         {
@@ -166,6 +167,7 @@ int main(int argc, char *argv[])
         printTime(times[curr], std::cout);
         curr++;
 
+        /*
         std::cout << " MCMC " << std::flush;
         {
             MatrixXd mcmcSamples;
