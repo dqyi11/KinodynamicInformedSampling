@@ -131,13 +131,12 @@ int main(int argc, char *argv[])
     double maxval = 25;
     double minval = -25;
     VectorXd startVec(numDim);
-    VectorXd goalVec(numDim);
-    std::mt19937 gen( std::random_device{}());
-    std::uniform_real_distribution<double> dis(-25, 25);
+    VectorXd goalVec(numDim);    
+    UniformRealRandomGenerator uniRndGnr;
     for (int i = 0; i < numDim; i++)
     {
-        startVec(i) = dis(gen);
-        goalVec(i) = dis(gen);
+        startVec(i) = uniRndGnr.sample(minval, maxval);
+        goalVec(i) = uniRndGnr.sample(minval, maxval);
     }
 
     // Initializations

@@ -84,11 +84,11 @@ namespace ompl
 {
     namespace base
     {
-        //
-        // Get the state limits of the space
-        //
-        // @return Tuple(state_max, state_min)
-        //
+        ///
+        /// Get the state limits of the space
+        ///
+        /// @return Tuple(state_max, state_min)
+        ///
         std::tuple<Eigen::VectorXd, Eigen::VectorXd> MyInformedSampler::getStateLimits() const
         {
             // Get the bounds from the vector
@@ -99,28 +99,28 @@ namespace ompl
             return std::make_tuple(low, high);
         }
 
-        //
-        // Get the start state
-        //
-        // @return Start state defined in the constructor
-        //
+        ///
+        /// Get the start state
+        ///
+        /// @return Start state defined in the constructor
+        ///
         Eigen::VectorXd MyInformedSampler::getStartState() const
         {
             return get_eigen_vector(problem_->getStartState(0));
         }
 
-        //
-        // Get the goal state
-        //
-        // @return Start state defined in the constructor
-        //
+        ///
+        /// Get the goal state
+        ///
+        /// @return Start state defined in the constructor
+        ///
         Eigen::VectorXd MyInformedSampler::getGoalState() const
         {
             const auto goal_state = problem_->getGoal()->as<ompl::base::GoalState>();
             return get_eigen_vector(goal_state->getState());
         }
 
-        Eigen::VectorXd MyInformedSampler::getGradient(const Eigen::VectorXd &curr_state) const
+        Eigen::VectorXd MyInformedSampler::getGradient(const Eigen::VectorXd &curr_state)
         {
             // Assert that the matrix is not empty
             assert(curr_state.size() != 0 or curr_state.size() != 0);
@@ -173,12 +173,12 @@ namespace ompl
             return inv_jacobian;
         }
 
-        //
-        // Get the cost for a specific state
-        //
-        // @param curr_state Current state to get the cost for
-        // @return Cost at that state
-        //
+        ///
+        /// Get the cost for a specific state
+        ///
+        /// @param curr_state Current state to get the cost for
+        /// @return Cost at that state
+        ///
         double MyInformedSampler::getCost(const Eigen::VectorXd &curr_state) const
         {
 
@@ -187,8 +187,6 @@ namespace ompl
 
             const ompl::base::State *start_state = problem_->getStartState(0);
             const ompl::base::State *goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
-
-            const auto space = si_->getStateSpace()->as<ompl::base::RealVectorStateSpace>();
 
             ompl::base::State* state = si_->allocState();
             get_ompl_state(curr_state, state);
@@ -213,8 +211,6 @@ namespace ompl
             const ompl::base::State *start_state = problem_->getStartState(0);
             const ompl::base::State *goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
 
-            const auto space = si_->getStateSpace()->as<ompl::base::RealVectorStateSpace>();
-
             ompl::base::State* state = si_->allocState();
             get_ompl_state(curr_state, state);
 
@@ -234,22 +230,18 @@ namespace ompl
             return true;
         }
 
-        // Can implement as many private functions as you want to help do the sampling
-        double MyInformedSampler::getRandomDimension(const double max, const double min) const
+        /// Can implement as many private functions as you want to help do the sampling
+        double MyInformedSampler::getRandomDimension(const double max, const double min)
         {
-            // Set up the random number generator
-            std::mt19937 gen( std::random_device{}());
-            std::uniform_real_distribution<> dis(min, max);
-
-            return dis(gen);
+            return uniRndGnr_.sample(min, max);
         }
 
-        //
-        // Function to sample a state uniformly from the entire space before you have
-        // a solution
-        //
-        // @param statePtr Pointer to the state to sample
-        //
+        ///
+        /// Function to sample a state uniformly from the entire space before you have
+        /// a solution
+        ///
+        /// @param statePtr Pointer to the state to sample
+        ///
         bool MyInformedSampler::sampleFullSpace(State *statePtr)
         {
             // Get the limits of the space
@@ -265,12 +257,12 @@ namespace ompl
             return true;
         }
 
-        //
-        // Function to sample uniformly from the informed subset
-        //
-        // @param statePtr Pointer to the state to sample
-        // @param maxCost Best cost found so far
-        //
+        ///
+        /// Function to sample uniformly from the informed subset
+        ///
+        /// @param statePtr Pointer to the state to sample
+        /// @param maxCost Best cost found so far
+        ///
         bool MyInformedSampler::sampleInformedSpace(State *statePtr, const Cost maxCost)
         {
             if (started_ == false)  // Set the timer when the function is called for the first time
@@ -315,13 +307,13 @@ namespace ompl
             return true;
         }
 
-        //
-        // Sample uniformly from the informed space
-        //
-        // @param statePtr Pointer of the state you're sampling
-        // @param maxCost Max cost of the informed subspace
-        // @return true if a sample is gotten false, if not
-        //
+        ///
+        /// Sample uniformly from the informed space
+        ///
+        /// @param statePtr Pointer of the state you're sampling
+        /// @param maxCost Max cost of the informed subspace
+        /// @return true if a sample is gotten false, if not
+        ///
         bool MyInformedSampler::sampleUniform(State *statePtr, const Cost &maxCost)
         {
             if (maxCost.value() == std::numeric_limits<double>::infinity())
@@ -334,46 +326,46 @@ namespace ompl
             }
         }
 
-        //
-        // Just call sampleUniform(statePtr, maxCost) - there is no mincost
-        //
-        // @param statePtr Pointer of the state you're sampling
-        // @param maxCost Max cost of the informed subspace
-        // @param minCost Minimum cost of the informed subspace
-        // @return true if a sample is gotten false, if not
-        //
+        ///
+        /// Just call sampleUniform(statePtr, maxCost) - there is no mincost
+        ///
+        /// @param statePtr Pointer of the state you're sampling
+        /// @param maxCost Max cost of the informed subspace
+        /// @param minCost Minimum cost of the informed subspace
+        /// @return true if a sample is gotten false, if not
+        ///
         bool MyInformedSampler::sampleUniform(State *statePtr, const Cost &minCost, const Cost &maxCost)
         {
             return sampleUniform(statePtr, maxCost);
         }
 
-        //
-        // Function that lets the planner know if we have an informed measure
-        //
-        // @return True if we have implemented an informed measure, false if not
-        //
+        ///
+        /// Function that lets the planner know if we have an informed measure
+        ///
+        /// @return True if we have implemented an informed measure, false if not
+        ///
         bool MyInformedSampler::hasInformedMeasure() const
         {
             return false;
         }
 
-        //
-        // Function to return the measure of the informed space
-        //
-        // @param currentCost - Current cost of the best path
-        // @return Measure of the informed space
-        //
+        ///
+        /// Function to return the measure of the informed space
+        ///
+        /// @param currentCost - Current cost of the best path
+        /// @return Measure of the informed space
+        ///
         double MyInformedSampler::getInformedMeasure(const Cost &currentCost) const
         {
             return InformedSampler::space_->getMeasure();
         }
 
-        //
-        // Determines if a sample is within the boundaries of the space
-        //
-        // @param state State to test
-        // @return Boolean that is true if it is in the boundaries of the space
-        //
+        ///
+        /// Determines if a sample is within the boundaries of the space
+        ///
+        /// @param state State to test
+        /// @return Boolean that is true if it is in the boundaries of the space
+        ///
         bool MyInformedSampler::isInBound(const Eigen::VectorXd &state) const
         {
 

@@ -10,11 +10,6 @@
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 
-template< class RNG >
-int random_even_number( RNG &gen ) {
-    return (int) gen() * 2;
-}
-
 
 void sampleStartAndGoal(Eigen::VectorXd& startVec, Eigen::VectorXd& goalVec)
 {

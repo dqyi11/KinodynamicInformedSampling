@@ -34,20 +34,20 @@ class DoubleIntegratorMinimumTime
 private:
     std::shared_ptr<DoubleIntegratorImpl> doubleIntegratorImpl_;
 public:
-    //
-    // Constructor
-    //
-    // @param maxAccelerations Max accelerations of all DOFs
-    // @param maxVelocities Velocity limits of all DOFs
-    //
+    ///
+    /// Constructor
+    ///
+    /// @param maxAccelerations Max accelerations of all DOFs
+    /// @param maxVelocities Velocity limits of all DOFs
+    ///
     DoubleIntegratorMinimumTime(std::vector<double>& maxAccelerations,
                                 std::vector<double>& maxVelocities);
 
-    // This function calculates the maximum time given a set number of joints
-    // x = [x_1, x_1_dot,...,x_n,x_n_dot]
-    // @param x1 Initial state
-    // @param x2 Final state
-    // @return T Maximum time
+    /// This function calculates the maximum time given a set number of joints
+    /// x = [x_1, x_1_dot,...,x_n,x_n_dot]
+    /// @param x1 Initial state
+    /// @param x2 Final state
+    /// @return T Maximum time
     double getMinTime(const Eigen::VectorXd x1, const Eigen::VectorXd x2) const
     {
         return doubleIntegratorImpl_->getMinTime(x1, x2);

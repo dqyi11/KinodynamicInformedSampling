@@ -44,13 +44,12 @@ namespace ompl
     {
         Eigen::VectorXd GibbsSampler::getRandomSample(double min, double max, const int dim)
         {
-            std::uniform_real_distribution<> dis(min, max);
             // Updates the member variable of the class as well
-            prev_sample_(dim) = dis(gen_);
+            prev_sample_(dim) = uniRndGnr_.sample(min, max);
             return prev_sample_;
         }
 
-        Eigen::MatrixXd GibbsSampler::sample(const int no_samples,
+        Eigen::MatrixXd GibbsSampler::sample(const uint numSamples,
                                              std::chrono::high_resolution_clock::duration &duration)
         {
             // Get the limits of the space
@@ -59,14 +58,14 @@ namespace ompl
             std::tie(max_vals, min_vals) = getStateLimits();
 
             // Run until you get the correct number of samples
-            Eigen::MatrixXd samples(no_samples, dim + 1);
+            Eigen::MatrixXd samples(numSamples, dim + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
             Eigen::VectorXd sample;
             unsigned int skip = 0, trys = 0;
-            for (int i = 0; i < no_samples; i++)
+            for (uint i = 0; i < numSamples; i++)
             {
                 trys = 0;
                 do
@@ -98,7 +97,7 @@ namespace ompl
             // std::cout << "Updated Level Set" << std::endl;
         }
 
-        Eigen::MatrixXd HitAndRun::sample(const int no_samples, std::chrono::high_resolution_clock::duration &duration)
+        Eigen::MatrixXd HitAndRun::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
             // Get the limits of the space
             Eigen::VectorXd max_vals, min_vals;
@@ -110,11 +109,11 @@ namespace ompl
             diag = std::sqrt(diag);
 
             // Run until you get the correct number of samples
-            Eigen::MatrixXd samples(no_samples, dim + 1);
+            Eigen::MatrixXd samples(numSamples, dim + 1);
 
             // Set up RGN
             std::normal_distribution<> norm_dis(0, 1);
-            double lamda_upper_bound, lamda_lower_bound;
+            double lamda_lower_bound = 0.0, lamda_upper_bound = 1.0;
             Eigen::VectorXd dir(dim);
 
             // If you want to time the sampling
@@ -127,7 +126,7 @@ namespace ompl
             int skip = 0, trys = 0;
             bool retry;
 
-            for (int i = 0; i < no_samples; i++)
+            for (uint i = 0; i < numSamples; i++)
             {
                 trys = -1;
                 do
@@ -139,7 +138,7 @@ namespace ompl
                         double sum = 0;
                         for (int i = 0; i < dim; i++)
                         {
-                            dir[i] = norm_dis(gen_);
+                            dir[i] = normRndGnr_.sample();
                             sum = sum + dir[i] * dir[i];
                         }
                         dir = dir / sum;
@@ -149,10 +148,7 @@ namespace ompl
                         trys = 0;
                     }
                     // Generate random sample along dir
-                    //std::uniform_real_distribution<> uni_dis(lamda_lower_bound, lamda_upper_bound);
-                    //double lamda = uni_dis(gen_);
-                    double lamda = uni_dis01(gen_);
-                    lamda = lamda * (lamda_upper_bound - lamda_lower_bound) + lamda_lower_bound;
+                    double lamda = uniRndGnr_.sample(lamda_lower_bound, lamda_upper_bound);
 
                     sample = prev_sample_ + lamda * dir;
                     if (!isInBound(sample))
@@ -183,7 +179,7 @@ namespace ompl
 
                 //hack - use previos samples and not only last one
 
-                double p = uni_dis01(gen_);
+                double p = uniRndGnr_.sample();
                 int index = i;
                 if (i > 5 && p < 0.5)
                 {

@@ -30,18 +30,4 @@ std::tuple<bool, std::string> get_filename(int argc, char *argv[])
         return std::make_tuple(false, "none");
 }
 
-std::vector<double> get_random_vector(const double &max, const double &min, const int &numDim)
-{
-    std::mt19937 gen(std::random_device{}());
-    std::uniform_real_distribution<double> dis(min, max);
-
-    std::vector<double> vec;
-
-    for (int i = 0; i < numDim; i++)
-    {
-        vec.push_back(dis(gen));
-    }
-    return vec;
-}
-
 #endif // OPTION_PARSE_H_

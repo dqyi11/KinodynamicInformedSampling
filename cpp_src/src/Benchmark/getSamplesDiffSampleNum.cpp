@@ -75,12 +75,11 @@ int main(int argc, char *argv[])
     double minval = -25;
     VectorXd startVec(numDim);
     VectorXd goalVec(numDim);
-    std::mt19937 gen( std::random_device{}());
-    std::uniform_real_distribution<double> dis(-25, 25);
+    UniformRealRandomGenerator uniRndGnr;
     for (int i = 0; i < numDim; i++)
     {
-        startVec(i) = dis(gen);
-        goalVec(i) = dis(gen);
+        startVec(i) = uniRndGnr.sample(minval, maxval);
+        goalVec(i) = uniRndGnr.sample(minval, maxval);
     }
 
     // Initializations
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
 
     for (int j = 0; j < sampleNumSetsNum; j++)
     {
-        int numSamples = sampleNumSets[j];
+        uint numSamples = sampleNumSets[j];
         std::cout << "NO SAMPLE " << numSamples << std::endl;
 
          ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);

@@ -55,120 +55,122 @@ namespace ompl
         class MonteCarloSampler : public MyInformedSampler
         {
         public:
-            //
-            // Constructor for HMC Sampler (calls super class constructor)
-            //
-            // @param si Space information pointer
-            // @param problem OMPL's problem definition
-            // @param levelSet Initial level set of the problem
-            // @param maxNumberCalls Max number of calls to the sampler
-            // @param sampler Sampler that inherits from Sampler.h
-            // @param sample_batch_size How many samples to get each time a new
-            // batch of samples is gotten
-            // @param alpha Step size of gradient descent
-            //
+            ///
+            /// Constructor for HMC Sampler (calls super class constructor)
+            ///
+            /// @param si Space information pointer
+            /// @param problem OMPL's problem definition
+            /// @param levelSet Initial level set of the problem
+            /// @param maxNumberCalls Max number of calls to the sampler
+            /// @param sampler Sampler that inherits from Sampler.h
+            /// @param sample_batch_size How many samples to get each time a new
+            /// batch of samples is gotten
+            /// @param alpha Step size of gradient descent
+            ///
             MonteCarloSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                               const unsigned int maxNumberCalls, const int sampleBatchSize, const double alpha)
               : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize), alpha_(alpha)
             {
             }
 
-            //
-            // Get alpha - learning rate for gradient descent
-            //
+            ///
+            /// Get alpha - learning rate for gradient descent
+            ///
             double getAlpha() const
             {
                 return alpha_;
             }
 
-            //
-            // Surf down the cost function to get to the levelset
-            //
-            // @param alpha Learning rate
-            // @return Path to the level set
-            //
-            virtual Eigen::VectorXd gradDescent(const double alpha = 0.01) const;
+            ///
+            /// Surf down the cost function to get to the levelset
+            ///
+            /// @param alpha Learning rate
+            /// @return Path to the level set
+            ///
+            virtual Eigen::VectorXd gradDescent(const double alpha = 0.01);
 
-            //
-            // Surf down the cost function to get to the levelset
-            //
-            // @param start Starting state
-            // @return Path to the level set
-            //
-            virtual Eigen::VectorXd newtonRaphson(const Eigen::VectorXd &start) const;
+            ///
+            /// Surf down the cost function to get to the levelset
+            ///
+            /// @param start Starting state
+            /// @return Path to the level set
+            ///
+            virtual Eigen::VectorXd newtonRaphson(const Eigen::VectorXd &start);
 
-            //
-            // Get the energy of the state from the cost function
-            //
-            // @param curr_state Current state to get the energy for
-            // @return Energy of the state
-            //
+            ///
+            /// Get the energy of the state from the cost function
+            ///
+            /// @param curr_state Current state to get the energy for
+            /// @return Energy of the state
+            ///
             virtual double getEnergy(const Eigen::VectorXd &curr_state) const;
 
-            //
-            // Get the probability of the state from the cost function
-            //
-            // @param energy Energy of the state
-            // @return Probability of the state
-            //
+            ///
+            /// Get the probability of the state from the cost function
+            ///
+            /// @param energy Energy of the state
+            /// @return Probability of the state
+            ///
             virtual double getProb(const double energy) const;
 
-            //
-            // Get the probability of the state from the cost function
-            //
-            // @param curr_state Current state to get the energy for
-            // @return Probability of the state
-            //
+            ///
+            /// Get the probability of the state from the cost function
+            ///
+            /// @param curr_state Current state to get the energy for
+            /// @return Probability of the state
+            ///
             virtual double getProb(const Eigen::VectorXd &curr_state) const;
 
-            //
-            // Get one random uniform sample from the space
-            //
-            // @return Random uniform vector from the space
-            //
-            virtual Eigen::VectorXd getRandomSample() const;
+            ///
+            /// Get one random uniform sample from the space
+            ///
+            /// @return Random uniform vector from the space
+            ///
+            virtual Eigen::VectorXd getRandomSample();
 
-            //
-            // Get a normal random vector for the momentum
-            //
-            // @param mean Mean of the normal distribution
-            // @paramm sigma Sigma of the normal distribution
-            // @return A vector of momentum sampled from a random distribution
-            //
-            Eigen::VectorXd sampleNormal(const double mean, const double sigma) const;
+            ///
+            /// Get a normal random vector for the momentum
+            ///
+            /// @param mean Mean of the normal distribution
+            /// @paramm sigma Sigma of the normal distribution
+            /// @return A vector of momentum sampled from a random distribution
+            ///
+            Eigen::VectorXd sampleNormal(const double mean, const double sigma);
 
         private:
-            // Learning rate for gradient descent
+            /// Learning rate for gradient descent
             double alpha_;
 
+            NormalRealRandomGenerator normRndGnr_;
+
         protected:
-            //
-            // Function to determine if any of the joint limits are violated
-            // @param sample Sample to check
-            // @return Boolean that is true if any are in violation
-            //
+            ///
+            /// Function to determine if any of the joint limits are violated
+            /// @param sample Sample to check
+            /// @return Boolean that is true if any are in violation
+            ///
             bool anyDimensionInViolation(const Eigen::VectorXd &sample) const;
         };  // MonteCarloSampler
 
         class HMCSampler : public MonteCarloSampler
         {
         public:
-            //
-            // Constructor for HMC Sampler (calls super class constructor)
-            //
-            // @param si Space information pointer
-            // @param problem OMPL's problem definition
-            // @param levelSet Initial level set of the problem
-            // @param maxNumberCalls Max number of calls to the sampler
-            // @param sampler Sampler that inherits from Sampler.h
-            // @param sample_batch_size How many samples to get each time a new
-            // batch of samples is gotten
-            // @param alpha Learning rate for gradient descent
-            // @param L Distance of integration for HMC step
-            // @param epsilon Integration constant for HMC
-            // @param sigma Sampling the momentum as a normal distribution
-            // @param steps Number of steps to run HMC for each chain
-            //
+            ///
+            /// Constructor for HMC Sampler (calls super class constructor)
+            ///
+            /// @param si Space information pointer
+            /// @param problem OMPL's problem definition
+            /// @param levelSet Initial level set of the problem
+            /// @param maxNumberCalls Max number of calls to the sampler
+            /// @param sampler Sampler that inherits from Sampler.h
+            /// @param sample_batch_size How many samples to get each time a new
+            /// batch of samples is gotten
+            /// @param alpha Learning rate for gradient descent
+            /// @param L Distance of integration for HMC step
+            /// @param epsilon Integration constant for HMC
+            /// @param sigma Sampling the momentum as a normal distribution
+            /// @param steps Number of steps to run HMC for each chain
+            ///
             HMCSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                        const unsigned int maxNumberCalls, const int sampleBatchSize, const double &alpha,
                        const double &L, const double &epsilon, const double &sigma, const int &steps)
@@ -182,121 +184,121 @@ namespace ompl
                 lastSample_ = Eigen::VectorXd(getStartState().size() + 1);
             }
 
-            //
-            // Get L - Distance of integration for HMC step
-            //
+            ///
+            /// Get L - Distance of integration for HMC step
+            ///
             double getL() const
             {
                 return L_;
             }
 
-            //
-            // Get epsilon - Integration constant for HMC
-            //
+            ///
+            /// Get epsilon - Integration constant for HMC
+            ///
             double getEpsilon() const
             {
                 return epsilon_;
             }
 
-            //
-            // Get sigma - Sampling the momentum as a normal distribution
-            //
+            ///
+            /// Get sigma - Sampling the momentum as a normal distribution
+            ///
             double getSigma() const
             {
                 return sigma_;
             }
 
-            //
-            // Get steps - Number of steps to run HMC for each chain
-            //
+            ///
+            /// Get steps - Number of steps to run HMC for each chain
+            ///
             double getSteps() const
             {
                 return steps_;
             }
 
-            //
-            // Get current step
-            //
+            ///
+            /// Get current step
+            ///
             int getCurrentStep() const
             {
                 return currentStep_;
             }
 
-            //
-            // Get last sample
-            //
+            ///
+            /// Get last sample
+            ///
             Eigen::VectorXd getLastSample() const
             {
                 return lastSample_;
             }
 
-            //
-            // Update current step
-            //
+            ///
+            /// Update current step
+            ///
             void updateCurrentStep(int currentStep)
             {
                 currentStep_ = currentStep;
             }
 
-            //
-            // Update current step
-            //
+            ///
+            /// Update current step
+            ///
             void updateCurrentStep()
             {
                 currentStep_++;
             }
 
-            //
-            // Get a series of samples for the problem space
-            //
-            // @param noSamples Number of samples to get
-            // @param time Boolean that determines if the time to run the proccess is
-            // displayed
-            // @return A series of samples of shape (number of samples, sample dimension)
-            //
-            virtual Eigen::MatrixXd sample(const int noSamples,
+            ///
+            /// Get a series of samples for the problem space
+            ///
+            /// @param noSamples Number of samples to get
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
+            /// @return A series of samples of shape (number of samples, sample dimension)
+            ///
+            virtual Eigen::MatrixXd sample(const uint noSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
-            virtual Eigen::MatrixXd sampleBatchMemorized(const int no_samples,
+            virtual Eigen::MatrixXd sampleBatchMemorized(const uint numSamples,
                                                          std::chrono::high_resolution_clock::duration &duration);
             virtual Eigen::VectorXd sampleMemorized();
 
         private:
-            // Distance of integration for HMC step
+            /// Distance of integration for HMC step
             double L_;
 
-            // Integration constant for HMC
+            /// Integration constant for HMC
             double epsilon_;
 
-            // Sigma for sampling the momentum as a normal distribution
+            /// Sigma for sampling the momentum as a normal distribution
             double sigma_;
 
-            // Number of steps to run HMC
+            /// Number of steps to run HMC
             double steps_;
 
             int currentStep_;
 
-            // Last sample
+            /// Last sample
             Eigen::VectorXd lastSample_;
         };
 
         class MCMCSampler : public MonteCarloSampler
         {
         public:
-            //
-            // Constructor for HMC Sampler (calls super class constructor)
-            //
-            // @param si Space information pointer
-            // @param problem OMPL's problem definition
-            // @param levelSet Initial level set of the problem
-            // @param maxNumberCalls Max number of calls to the sampler
-            // @param sampler Sampler that inherits from Sampler.h
-            // @param sample_batch_size How many samples to get each time a new
-            // batch of samples is gotten
-            // @param alpha Learning rate for gradient descent
-            // @param sigma Sigma for sampling the step
-            // @param steps Number of steps to run MCMC for each chain
-            //
+            ///
+            /// Constructor for HMC Sampler (calls super class constructor)
+            ///
+            /// @param si Space information pointer
+            /// @param problem OMPL's problem definition
+            /// @param levelSet Initial level set of the problem
+            /// @param maxNumberCalls Max number of calls to the sampler
+            /// @param sampler Sampler that inherits from Sampler.h
+            /// @param sample_batch_size How many samples to get each time a new
+            /// batch of samples is gotten
+            /// @param alpha Learning rate for gradient descent
+            /// @param sigma Sigma for sampling the step
+            /// @param steps Number of steps to run MCMC for each chain
+            ///
             MCMCSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                         const unsigned int maxNumberCalls, const int sampleBatchSize, const double alpha,
                         const double sigma, const double steps)
@@ -306,38 +308,38 @@ namespace ompl
             {
             }
 
-            //
-            // Get a series of samples for the problem space
-            //
-            // @param no_samples Number of samples to get
-            // @param time Boolean that determines if the time to run the proccess is
-            // displayed
-            // @return A series of samples of shape (number of samples, sample dimension)
-            //
-            virtual Eigen::MatrixXd sample(const int no_samples,
+            ///
+            /// Get a series of samples for the problem space
+            ///
+            /// @param numSamples Number of samples to get
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
+            /// @return A series of samples of shape (number of samples, sample dimension)
+            ///
+            virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
-            //
-            // Get Sigma for sampling the step
-            //
+            ///
+            /// Get Sigma for sampling the step
+            ///
             double getSigma() const
             {
                 return sigma_;
             }
 
-            //
-            // Get number of steps to run for each MCMC chain
-            //
+            ///
+            /// Get number of steps to run for each MCMC chain
+            ///
             double getSteps() const
             {
                 return steps_;
             }
 
         private:
-            // Sigma for sampling the step
+            /// Sigma for sampling the step
             double sigma_;
 
-            // Number of steps to run MCMC for each chain
+            /// Number of steps to run MCMC for each chain
             double steps_;
         };
     }  // base

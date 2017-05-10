@@ -84,13 +84,11 @@ int main(int argc, char *argv[])
     double minval = -25;
     VectorXd startVec(numDim);
     VectorXd goalVec(numDim);
-    std::mt19937 gen( std::random_device{}());
-    std::uniform_real_distribution<double> dis(-25, 25);
-    std::uniform_real_distribution<double> dis01(0, 1);
+    UniformRealRandomGenerator uniRndGnr;
     for (int i = 0; i < numDim; i++)
     {
-        startVec(i) = dis(gen);
-        goalVec(i) = dis(gen);
+        startVec(i) = uniRndGnr.sample(minval, maxval);
+        goalVec(i) = uniRndGnr.sample(minval, maxval);
     }
 
     // Initializations
@@ -112,7 +110,7 @@ int main(int argc, char *argv[])
         throw std::runtime_error("file not opened");
     }
 
-    int numSamplers = 3;
+    int numSamplers = 4;
     for (int i = 0; i < numbatch; i++)
     {
         std::cout << "BATCH " << i << std::flush;
@@ -122,12 +120,12 @@ int main(int argc, char *argv[])
         // sample new start and goal
         for (int d = 0; d < numDim; d++)
         {
-            startVec(d) = dis(gen);
-            goalVec(d) = dis(gen);
+            startVec(d) = uniRndGnr.sample(minval, maxval);
+            goalVec(d) = uniRndGnr.sample(minval, maxval);
         }
 
         // create a level set
-        double rndNum = 0.02*dis01(gen)+1;
+        double rndNum = uniRndGnr.sample(1.0, 1.5);
         const double levelSet = rndNum * dimt->getMinTime(startVec, goalVec);
 
         std::cout <<  " ratio " << rndNum << " " << std::flush;

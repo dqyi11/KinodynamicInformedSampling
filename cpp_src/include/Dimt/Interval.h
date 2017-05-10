@@ -61,7 +61,7 @@ private:
     void insert_and_bounded(const Interval &i);
 
 private:
-    // every interval is a legal partioining of the line
+    /// every interval is a legal partioining of the line
     IntervalList intervals;
 };  // IntervalSet
 

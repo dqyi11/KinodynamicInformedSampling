@@ -69,20 +69,6 @@ namespace
         return 1 / (1 + exp(-a * (x - c)));
     }
 
-    //
-    // Function to get some value between 0 and 1
-    //
-    // @return A uniform value between 0 and 1
-    //
-    inline double rand_uni()
-    {
-        // Set up the random number generator
-        std::mt19937 gen( std::random_device{}());
-        std::uniform_real_distribution<double> dis(0.0, 1.0);
-
-        return dis(gen);
-    }
-
 }  // namespace
 
 namespace ompl
@@ -160,10 +146,8 @@ namespace ompl
         //
         // @return Random uniform vector of length size
         //
-        Eigen::VectorXd MonteCarloSampler::getRandomSample() const
+        Eigen::VectorXd MonteCarloSampler::getRandomSample()
         {
-            // Set up the random number generator
-            std::mt19937 gen( std::random_device{}());
             // Get the limits of the space
             Eigen::VectorXd max_vals, min_vals;
             std::tie(max_vals, min_vals) = getStateLimits();
@@ -175,9 +159,7 @@ namespace ompl
                 // Get a random distribution between the values of the joint
                 double min = min_vals(i);
                 double max = max_vals(i);
-                std::uniform_real_distribution<> dis(min, max);
-
-                sample(i) = dis(gen);
+                sample(i) = uniRndGnr_.sample(min, max);
             }
 
             return sample;
@@ -225,7 +207,7 @@ namespace ompl
         // @param alpha Learning rate
         // @return Path to the level set
         //
-        Eigen::VectorXd MonteCarloSampler::gradDescent(const double alpha) const
+        Eigen::VectorXd MonteCarloSampler::gradDescent(const double alpha)
         {
             Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
             double cost = getCost(start);
@@ -268,7 +250,7 @@ namespace ompl
         // @param start Vector to start
         // @return A state in the level set
         //
-        Eigen::VectorXd MonteCarloSampler::newtonRaphson(const Eigen::VectorXd &start) const
+        Eigen::VectorXd MonteCarloSampler::newtonRaphson(const Eigen::VectorXd &start)
         {
             Eigen::VectorXd end = start;
             double cost = getCost(end);
@@ -299,24 +281,19 @@ namespace ompl
         //
         // @return A vector of momentum sampled from a random distribution
         //
-        Eigen::VectorXd MonteCarloSampler::sampleNormal(const double mean, const double sigma) const
+        Eigen::VectorXd MonteCarloSampler::sampleNormal(const double mean, const double sigma)
         {
-            // Set up the random number generator
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::normal_distribution<double> dis(mean, sigma);
-
             int size = getSpaceDimension();
             Eigen::VectorXd sample(size);
             for (int i = 0; i < size; i++)
             {
-                sample(i) = dis(gen);
+                sample(i) = normRndGnr_.sample(mean, sigma);
             }
 
             return sample;
         }
 
-        Eigen::MatrixXd HMCSampler::sampleBatchMemorized(const int numSamples,
+        Eigen::MatrixXd HMCSampler::sampleBatchMemorized(const uint numSamples,
                                                          std::chrono::high_resolution_clock::duration &duration)
         {
             Eigen::MatrixXd samples;
@@ -324,7 +301,7 @@ namespace ompl
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            for(int i=0;i<numSamples;++i)
+            for(uint i=0;i<numSamples;++i)
             {
                 Eigen::VectorXd newsample = sampleMemorized();
                 samples.row(i) = newsample;
@@ -411,7 +388,7 @@ namespace ompl
 
                 // Accept or reject the state at the end of trajectory
                 double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
-                if (rand_uni() > alpha)
+                if (uniRndGnr_.sample() > alpha)
                 {
                     q = q_last;
                 }
@@ -438,12 +415,12 @@ namespace ompl
         //
         // Get a series of samples for the problem space
         //
-        // @param no_samples Number of samples to get
+        // @param numSamples Number of samples to get
         // @param time Boolean that determines if the time to run the proccess is
         // displayed
         // @return A series of samples of shape (number of samples, sample dimension)
         //
-        Eigen::MatrixXd HMCSampler::sample(const int numSamples, std::chrono::high_resolution_clock::duration &duration)
+        Eigen::MatrixXd HMCSampler::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
             if (VERBOSE)
                 std::cout << "Number of samples: " << numSamples << std::endl;
@@ -457,8 +434,8 @@ namespace ompl
             Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
             samples << q.transpose(), getCost(q);
 
-            int accepted = 0;
-            int rejected = 0;
+            uint accepted = 0;
+            uint rejected = 0;
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
             while (accepted < numSamples)
@@ -525,7 +502,7 @@ namespace ompl
 
                     // Accept or reject the state at the end of trajectory
                     double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
-                    if (rand_uni() <= alpha)
+                    if (uniRndGnr_.sample() <= alpha)
                     {
                         Eigen::VectorXd newsample(getStartState().size() + 1);
                         newsample << q, getCost(q);
@@ -566,12 +543,12 @@ namespace ompl
         //
         // Get a series of samples for the problem space
         //
-        // @param no_samples Number of samples to get
+        // @param numSamples Number of samples to get
         // @param time Boolean that determines if the time to run the proccess is
         // displayed
         // @return A series of samples of shape (number of samples, sample dimension)
         //
-        Eigen::MatrixXd MCMCSampler::sample(const int numSamples,
+        Eigen::MatrixXd MCMCSampler::sample(const uint numSamples,
                                             std::chrono::high_resolution_clock::duration &duration)
         {
             if (VERBOSE)
@@ -586,8 +563,8 @@ namespace ompl
             Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
             samples << q.transpose(), getCost(q);
 
-            int accepted = 0;
-            int rejected = 0;
+            uint accepted = 0;
+            uint rejected = 0;
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
             while (accepted < numSamples)
@@ -611,7 +588,7 @@ namespace ompl
 
                     // if(prob_proposed / prob_before >= rand_uni() and
                     //    // !any_dimensions_in_violation(q_proposed))
-                    if (prob_proposed / prob_before >= rand_uni())
+                    if (prob_proposed / prob_before >= uniRndGnr_.sample())
                     {
                         Eigen::VectorXd newsample(getStartState().size() + 1);
                         newsample << q_proposed, getCost(q_proposed);

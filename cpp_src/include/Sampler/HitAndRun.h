@@ -58,51 +58,47 @@ namespace ompl
         class GibbsSampler : public MyInformedSampler
         {
         public:
-            //
-            // Constructor for Gibbs Sampler
-            //
-            // @param si Space information pointer
-            // @param problem OMPL's problem definition
-            // @param levelSet Initial level set of the problem
-            // @param maxNumberCalls Max number of calls to the sampler
-            // @param sampler Sampler that inherits from Sampler.h
-            // @param sample_batch_size How many samples to get each time a new
-            // batch of samples is gotten
-            //
+            ///
+            /// Constructor for Gibbs Sampler
+            ///
+            /// @param si Space information pointer
+            /// @param problem OMPL's problem definition
+            /// @param levelSet Initial level set of the problem
+            /// @param maxNumberCalls Max number of calls to the sampler
+            /// @param sampler Sampler that inherits from Sampler.h
+            /// @param sample_batch_size How many samples to get each time a new
+            /// batch of samples is gotten
+            ///
             GibbsSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
                          const unsigned int maxNumberCalls, const int sampleBatchSize)
               : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
             {
-                // Set up the random number generator
-                gen_ = std::mt19937(std::random_device{}());
-
                 // Use the start positions as starting point of the algorithm
                 // (This will always be inside the informed subspace)
                 prev_sample_ = getStartState();
             }
 
-            //
-            // Get a series of samples for the problem space
-            //
-            // @param no_samples Number of samples to get
-            // @param time Boolean that determines if the time to run the proccess is
-            // displayed
-            // @return A series of samples of shape (number of samples, sample dimension)
-            //
-            virtual Eigen::MatrixXd sample(const int no_samples,
+            ///
+            /// Get a series of samples for the problem space
+            ///
+            /// @param numSamples Number of samples to get
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
+            /// @return A series of samples of shape (number of samples, sample dimension)
+            ///
+            virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
             virtual void updateLevelSet(const double level_set) override;
 
-            std::mt19937 gen_;
             Eigen::VectorXd prev_sample_;
 
         private:
-            //
-            // Get one random uniform sample from the space
-            //
-            // @return Random uniform vector from the space
-            //
+            ///
+            /// Get one random uniform sample from the space
+            ///
+            /// @return Random uniform vector from the space
+            ///
             virtual Eigen::VectorXd getRandomSample(double min, double max, const int dim);
         };
 
@@ -116,18 +112,19 @@ namespace ompl
             {
             }
 
-            //
-            // Get a series of samples for the problem space
-            //
-            // @param no_samples Number of samples to get
-            // @param time Boolean that determines if the time to run the proccess is
-            // displayed
-            // @return A series of samples of shape (number of samples, sample dimension)
-            //
-            virtual Eigen::MatrixXd sample(const int no_samples,
+            ///
+            /// Get a series of samples for the problem space
+            ///
+            /// @param numSamples Number of samples to get
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
+            /// @return A series of samples of shape (number of samples, sample dimension)
+            ///
+            virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
         protected:
             int numOfTries_;
+            NormalRealRandomGenerator normRndGnr_;
         };
     }  // namespace base
 }  // namespace ompl

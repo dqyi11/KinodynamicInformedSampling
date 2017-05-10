@@ -52,23 +52,25 @@
 #include <chrono>
 #include <memory>
 
+#include "RandomGenerator.h"
+
 namespace ompl
 {
     namespace base
-    {
+    {   
         class MyInformedSampler : public InformedSampler
         {
         private:
-            // Holds the previous cost so that we know
+            /// Holds the previous cost so that we know
             double prevCost_ = -1;
 
-            // Holds the index of the sample we've gotten
+            /// Holds the index of the sample we've gotten
             int sampleIndex_ = 0;
 
-            // Number of samples to call at each iteration
+            /// Number of samples to call at each iteration
             int sampleBatchSize_;
 
-            // Samples in the batch
+            /// Samples in the batch
             Eigen::MatrixXd batchSamples_;
 
             // Timing stuff
@@ -78,30 +80,30 @@ namespace ompl
             std::vector<double> costVec_;
             bool started_;
 
-            //
-            // Function to sample a state uniformly from the entire space before you have
-            // a solution
-            //
-            // @param statePtr Pointer to the state to sample
-            //
+            ///
+            /// Function to sample a state uniformly from the entire space before you have
+            /// a solution
+            ///
+            /// @param statePtr Pointer to the state to sample
+            ///
             virtual bool sampleFullSpace(State *statePtr);
 
-            //
-            // Function to sample uniformly from the informed subset
-            //
-            // @param statePtr Pointer to the state to sample
-            // @param maxCost Best cost found so far
-            //
+            ///
+            /// Function to sample uniformly from the informed subset
+            ///
+            /// @param statePtr Pointer to the state to sample
+            /// @param maxCost Best cost found so far
+            ///
             virtual bool sampleInformedSpace(State *statePtr, const Cost maxCost);
 
-            //
-            // Function to get a random sample in the limits
-            //
-            // @param max Max value for the dimension
-            // @param min Min value for the dimension
-            // @return Uniform sample in one of the dimensions between min and max
-            //
-            double getRandomDimension(const double max, const double min) const;
+            ///
+            /// Function to get a random sample in the limits
+            ///
+            /// @param max Max value for the dimension
+            /// @param min Min value for the dimension
+            /// @return Uniform sample in one of the dimensions between min and max
+            ///
+            double getRandomDimension(const double max, const double min);
 
         protected:
             ompl::base::SpaceInformationPtr si_;
@@ -110,18 +112,21 @@ namespace ompl
 
             double levelSet_;
 
+            /// random generator
+            UniformRealRandomGenerator uniRndGnr_;
+
             Eigen::VectorXd stateMax_;
             Eigen::VectorXd stateMin_;
 
         public:
-            //
-            // Constructor
-            //
-            // @param si Space information pointer
-            // @param problem OMPL's problem definition
-            // @param levelSet Initial level set of the problem
-            // @param maxNumberCalls Max number of calls to the sampler
-            // @param sampler Sampler that inherits from Sampler.h
+            ///
+            /// Constructor
+            ///
+            /// @param si Space information pointer
+            /// @param problem OMPL's problem definition
+            /// @param levelSet Initial level set of the problem
+            /// @param maxNumberCalls Max number of calls to the sampler
+            /// @param sampler Sampler that inherits from Sampler.h
             // @param sample_batch_size How many samples to get each time a new
             // batch of samples is gotten
             //
@@ -132,7 +137,7 @@ namespace ompl
               , sampleBatchSize_(sampleBatchSize)
               , si_(si)
               , problem_(problem)
-              , levelSet_(levelSet)              
+              , levelSet_(levelSet)
             {
                 started_ = false;
                 std::tie(stateMin_, stateMax_) = getStateLimits();
@@ -175,12 +180,12 @@ namespace ompl
             //
             // Get a series of samples for the problem space
             //
-            // @param no_samples Number of samples to get
+            // @param numSamples Number of samples to get
             // @param time Boolean that determines if the time to run the proccess is
             // displayed
             // @return A series of samples of shape (number of samples, sample dimension)
             //
-            virtual Eigen::MatrixXd sample(const int no_samples,
+            virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) = 0;
 
             //
@@ -283,7 +288,7 @@ namespace ompl
             // @return Gradient of the function at the current state (same dimension as
             // current state)
             //
-            virtual Eigen::VectorXd getGradient(const Eigen::VectorXd &curr_state) const;
+            virtual Eigen::VectorXd getGradient(const Eigen::VectorXd &curr_state);
 
             //
             // Get the Inverse Jacobian of the cost function at a specific state
