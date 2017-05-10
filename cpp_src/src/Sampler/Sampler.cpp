@@ -181,6 +181,7 @@ namespace ompl
         //
         double MyInformedSampler::getCost(const Eigen::VectorXd &curr_state) const
         {
+
             // Assert that the problem definition has an optimization objective defined
             assert(problem_->hasOptimizationObjective());
 
@@ -189,11 +190,16 @@ namespace ompl
 
             const auto space = si_->getStateSpace()->as<ompl::base::RealVectorStateSpace>();
 
-            const ompl::base::State *state = get_ompl_state(curr_state, space);
+            ompl::base::State* state = si_->allocState();
+            get_ompl_state(curr_state, state);
 
             const ompl::base::OptimizationObjectivePtr optim_obj = problem_->getOptimizationObjective();
 
-            return optim_obj->motionCost(start_state, state).value() + optim_obj->motionCost(state, goal_state).value();
+            double cost =  optim_obj->motionCost(start_state, state).value() +
+                    optim_obj->motionCost(state, goal_state).value();
+
+            si_->freeState(state);
+            return cost;
         }
 
         bool MyInformedSampler::isInLevelSet(const Eigen::VectorXd &curr_state, Cost thresholdCost) const
@@ -209,18 +215,22 @@ namespace ompl
 
             const auto space = si_->getStateSpace()->as<ompl::base::RealVectorStateSpace>();
 
-            const ompl::base::State *state = get_ompl_state(curr_state, space);
+            ompl::base::State* state = si_->allocState();
+            get_ompl_state(curr_state, state);
 
             Cost costToCome = dimt_obj->getCostIfSmallerThan(start_state, state, thresholdCost);
             if (costToCome.value() == std::numeric_limits<double>::infinity() )
             {
+                si_->freeState(state);
                 return false;
             }
             Cost costToGo = dimt_obj->getCostIfSmallerThan(state, goal_state, Cost(thresholdCost.value()-costToCome.value()));
             if (costToGo.value() == std::numeric_limits<double>::infinity() )
             {
+                si_->freeState(state);
                 return false;
             }
+            si_->freeState(state);
             return true;
         }
 

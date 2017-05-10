@@ -138,21 +138,6 @@ int main(int argc, char *argv[])
 
         int curr=0;
 
-        /*
-        {
-            MatrixXd hmcSamples;
-            double alpha = 0.5;
-            double L = 5;
-            double epsilon = 0.1;
-            double sigma = 1;
-            int maxSteps = 20;
-            ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-            hmcSamples = hmcSampler.sample(numSamples, times[curr]);
-        }
-        printTime(times[curr], std::cout);
-        curr++;
-        */
-
         std::cout << " HMC " << std::flush;
         {
             MatrixXd hmcSamples;
@@ -160,7 +145,7 @@ int main(int argc, char *argv[])
             double L = 5;
             double epsilon = 0.1;
             double sigma = 1;
-            int maxSteps = 20;
+            int maxSteps = 50000000;
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
             hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, times[curr]);
         }

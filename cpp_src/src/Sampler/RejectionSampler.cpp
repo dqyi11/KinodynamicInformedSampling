@@ -65,8 +65,8 @@ namespace ompl
             double min = min_vals(0);
 
             // Run until you get the correct number of samples
-            int numAcceptedSamples = 0;
-            int numRejectedSamples = 0;
+            unsigned int numAcceptedSamples = 0;
+            unsigned int numRejectedSamples = 0;
             Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
 
             // If you want to time the sampling

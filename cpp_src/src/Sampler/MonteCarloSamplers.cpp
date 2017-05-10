@@ -183,21 +183,6 @@ namespace ompl
             return sample;
         }
 
-        //
-        // Function to concatenate a vector to back of matrix
-        //
-        // @param matrix Matrix to concatenate to bottom of
-        // @param vector Vector to contatenate to bottom of matrix
-        // @return A new matrix with the concatenation
-        //
-        Eigen::MatrixXd concatenate_matrix_and_vector(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
-        {
-            // Concatenate to results matrix
-            Eigen::MatrixXd new_results(matrix.rows() + 1, matrix.cols());
-            new_results << matrix, vector.transpose();
-            return new_results;
-        }
-
         // //
         // // Surf down the cost function to get to the levelset
         // //
@@ -334,20 +319,15 @@ namespace ompl
         Eigen::MatrixXd HMCSampler::sampleBatchMemorized(const int numSamples,
                                                          std::chrono::high_resolution_clock::duration &duration)
         {
-            Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
+            Eigen::MatrixXd samples;
+            samples.conservativeResize(numSamples, getSpaceDimension() + 1);
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            for (int i = 0; i < numSamples; i++)
-            int i=0;
-            while (i<numSamples)
+            for(int i=0;i<numSamples;++i)
             {
                 Eigen::VectorXd newsample = sampleMemorized();
-                if(isInLevelSet(newSample))
-                {
-                    samples = concatenate_matrix_and_vector(samples, newsample);
-                    ++i;
-                }
+                samples.row(i) = newsample;
             }
 
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
@@ -357,7 +337,7 @@ namespace ompl
         }
 
         Eigen::VectorXd HMCSampler::sampleMemorized()
-        {
+        {      
             // last sample
             Eigen::VectorXd q = Eigen::VectorXd(getStartState().size());
             for (unsigned int i = 0; i < getStartState().size(); i++)
@@ -365,73 +345,79 @@ namespace ompl
                 q[i] = lastSample_[i];
             }
 
-            if (getCurrentStep() < 0)
+            do
             {
-                Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
-                // q = newton_raphson(start);
-                q = gradDescent(getAlpha());
-            }
-            updateCurrentStep();
+                if (getCurrentStep() < 0)
+                {
+                    Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
+                    // q = newton_raphson(start);
+                    q = gradDescent(getAlpha());
+                }
 
-            // Sample the momentum and set up the past and current state and momentum
-            Eigen::VectorXd q_last = q;
-            Eigen::VectorXd p = MonteCarloSampler::sampleNormal(0, getSigma());
-            Eigen::VectorXd p_last = p;
-
-            if (VERBOSE)
-                std::cout << "Sampled the momentum" << std::endl;
-
-            // Make a half step for momentum at the beginning
-            Eigen::VectorXd grad = getGradient(q);
-            if (VERBOSE)
-                std::cout << "Got the gradient" << std::endl;
-
-            // Ensure that the gradient isn't two large
-            while (grad.maxCoeff() > 1e2)
-            {
+                // Make a half step for momentum at the beginning
+                Eigen::VectorXd grad = getGradient(q);
                 if (VERBOSE)
-                    std::cout << "WARNING: Gradient too high" << std::endl;
+                    std::cout << "Got the gradient" << std::endl;
 
-                Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
-                q = newtonRaphson(start);
-                grad = getGradient(q);
-            }
+                // Ensure that the gradient isn't two large
+                while (grad.maxCoeff() > 1e2)
+                {
+                    if (VERBOSE)
+                        std::cout << "WARNING: Gradient too high" << std::endl;
 
-            p = p - getEpsilon() * grad / 2;
+                    Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
+                    q = newtonRaphson(start);
+                    grad = getGradient(q);
+                }
 
-            // Alternate Full steps for q and p
-            for (int i = 0; i < getL(); i++)
-            {
-                q = q + getEpsilon() * p;
-                if (i != getL())
-                    p = p - getEpsilon() * grad;
-            }
+                updateCurrentStep();
 
-            if (VERBOSE)
-                std::cout << "Integrated Along momentum" << std::endl;
+                // Sample the momentum and set up the past and current state and momentum
+                Eigen::VectorXd q_last = q;
+                Eigen::VectorXd p = MonteCarloSampler::sampleNormal(0, getSigma());
+                Eigen::VectorXd p_last = p;
 
-            // Make a half step for momentum at the end
-            p = p - getEpsilon() * grad / 2;
+                if (VERBOSE)
+                    std::cout << "Sampled the momentum" << std::endl;
 
-            // Negate the momentum at the end of the traj to make proposal
-            // symmetric
-            p = -p;
+                p = p - getEpsilon() * grad / 2;
 
-            // Evaluate potential and kinetic energies at start and end of traj
-            double U_last = getEnergy(q_last);
-            double K_last = p_last.norm() / 2;
-            double U_proposed = getEnergy(q);
-            double K_proposed = p_last.norm() / 2;
+                // Alternate Full steps for q and p
+                for (int i = 0; i < getL(); i++)
+                {
+                    q = q + getEpsilon() * p;
+                    if (i != getL())
+                        p = p - getEpsilon() * grad;
+                }
 
-            if (VERBOSE)
-                std::cout << "Got energies" << std::endl;
+                if (VERBOSE)
+                    std::cout << "Integrated Along momentum" << std::endl;
 
-            // Accept or reject the state at the end of trajectory
-            double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
-            if (rand_uni() > alpha)
-            {
-                q = q_last;
-            }
+                // Make a half step for momentum at the end
+                p = p - getEpsilon() * grad / 2;
+
+                // Negate the momentum at the end of the traj to make proposal
+                // symmetric
+                p = -p;
+
+                // Evaluate potential and kinetic energies at start and end of traj
+                double U_last = getEnergy(q_last);
+                double K_last = p_last.norm() / 2;
+                double U_proposed = getEnergy(q);
+                double K_proposed = p_last.norm() / 2;
+
+                if (VERBOSE)
+                    std::cout << "Got energies" << std::endl;
+
+                // Accept or reject the state at the end of trajectory
+                double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
+                if (rand_uni() > alpha)
+                {
+                    q = q_last;
+                }
+
+
+            } while(!isInLevelSet(q));
 
             Eigen::VectorXd newsample(getStartState().size() + 1);
             newsample << q, getCost(q);
@@ -468,7 +454,7 @@ namespace ompl
                 std::cout << "Got Through Gradient Descent" << std::endl;
 
             // Store the samples
-            Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
+            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
             samples << q.transpose(), getCost(q);
 
             int accepted = 0;
@@ -543,7 +529,7 @@ namespace ompl
                     {
                         Eigen::VectorXd newsample(getStartState().size() + 1);
                         newsample << q, getCost(q);
-                        samples = concatenate_matrix_and_vector(samples, newsample);
+                        samples.row(accepted) = newsample;
                         accepted++;
                     }
                     else
@@ -629,7 +615,7 @@ namespace ompl
                     {
                         Eigen::VectorXd newsample(getStartState().size() + 1);
                         newsample << q_proposed, getCost(q_proposed);
-                        samples = concatenate_matrix_and_vector(samples, newsample);
+                        samples.row(accepted) = newsample;
                         accepted++;
                         q = q_proposed;
                     }

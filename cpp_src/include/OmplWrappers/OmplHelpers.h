@@ -125,4 +125,4 @@ Eigen::VectorXd get_eigen_vector(const std::vector<T> &vec)
 // @param vec VectorXd representing the state
 // @return Pointer to an ompl state
 //
-ompl::base::State *get_ompl_state(const Eigen::VectorXd &vec, const ompl::base::RealVectorStateSpace *space);
+bool get_ompl_state(const Eigen::VectorXd &vec, ompl::base::State* state);

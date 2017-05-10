@@ -78,6 +78,9 @@ ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startV
             std::make_shared<ompl::base::DimtObjective>(si, startVec, goalVec, dimt);
     pdef->setOptimizationObjective(opt);
 
+    space->freeState(startState);
+    space->freeState(goalState);
+
     return pdef;
 }
 
