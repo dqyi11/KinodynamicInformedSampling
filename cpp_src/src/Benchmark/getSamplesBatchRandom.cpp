@@ -193,8 +193,7 @@ int main(int argc, char *argv[])
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
         }
         printTime(times[curr], std::cout);
-
-
+        curr++;
 
         std::cout << " REJ " << std::flush;
         {
