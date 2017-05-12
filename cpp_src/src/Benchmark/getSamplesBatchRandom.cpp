@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         }
 
         // create a level set
-        double rndNum = uniRndGnr.sample(1.0, 1.5);
+        double rndNum = uniRndGnr.sample(1.0, 1.1);
         const double levelSet = rndNum * dimt->getMinTime(startVec, goalVec);
 
         std::cout <<  " ratio " << rndNum << " " << std::flush;

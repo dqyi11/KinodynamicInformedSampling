@@ -71,8 +71,10 @@ namespace ompl
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
-            while (numAcceptedSamples < numSamples)
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
+            while (numAcceptedSamples < numSamples && timeElapsedDouble < timelimit_)
             {
                 Eigen::VectorXd sample = getRandomSample(max, min, getStartState().size());
 
@@ -87,11 +89,13 @@ namespace ompl
                 {
                     numRejectedSamples++;
                 }
+
+                t2 = std::chrono::high_resolution_clock::now();
+                timeElapsed = t2-t1;
+                timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
             }
 
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            duration = t2 - t1;
-
+            duration = timeElapsed;
             rejectionRatio_ = static_cast<double>(numAcceptedSamples) /
                               static_cast<double>(numAcceptedSamples+numRejectedSamples);
             return samples;
