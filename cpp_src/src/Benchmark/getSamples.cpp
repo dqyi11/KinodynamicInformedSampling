@@ -155,27 +155,16 @@ int main(int argc, char *argv[])
     // Initialize the sampler
     // HMC parameters
     MatrixXd hmcSamples;
-    MatrixXd hmc2Samples;
     if (runHmc)
     {
         double alpha = 0.5;
         double L = 5;
         double epsilon = 0.1;
         double sigma = 1;
-        int maxSteps = 20;
-
+        int maxSteps = 50000000;
         ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-        /*
         std::cout << "Running HMC Sampling..." << std::endl;
-        hmcSamples = hmcSampler.sample(numSamples, duration);
-        if (time)
-        {
-            std::cout << "Total time ";
-            printTime(duration, std::cout);
-            std::cout << std::endl;
-        }*/
-        std::cout << "Running HMC2 Sampling..." << std::endl;
-        hmc2Samples = hmcSampler.sampleBatchMemorized(numSamples, duration);
+        hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -265,8 +254,6 @@ int main(int argc, char *argv[])
         {
             std::ofstream hmcFile(filename + "_hmc.log");
             printSampleToFile(hmcSamples, hmcFile);
-            std::ofstream hmc2File(filename + "_hmc2.log");
-            printSampleToFile(hmc2Samples, hmc2File);
         }
 
         if (runMcmc)
