@@ -84,9 +84,9 @@ namespace ompl
 
             /// Only function that you must implement
             virtual Eigen::MatrixXd sample(const uint numSamples,
-                                           std::chrono::high_resolution_clock::duration &duration);
+                                           std::chrono::high_resolution_clock::duration &duration) override;
 
-            virtual bool sampleInLevelSet(Eigen::VectorXd& sample);
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
 
             /// Can implement as many private functions as you want to help do the sampling
             virtual Eigen::VectorXd getRandomSample(const Eigen::VectorXd min, const Eigen::VectorXd max, const int size);

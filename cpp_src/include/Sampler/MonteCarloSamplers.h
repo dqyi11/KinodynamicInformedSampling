@@ -317,6 +317,9 @@ namespace ompl
             virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
+
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override { return false; }
+
             ///
             /// Get Sigma for sampling the step
             ///

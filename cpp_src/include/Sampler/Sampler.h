@@ -195,7 +195,7 @@ namespace ompl
             /// \param[out] sample
             /// \return True if the sample is in the level set
             ///
-            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) { return false; };
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample)  = 0;
 
             ///
             /// Get the problem definition for the problem
