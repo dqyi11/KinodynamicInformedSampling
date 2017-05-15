@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
             double sigma = 1;
             int maxSteps = 50000000;
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-            hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, times[curr]);
+            hmcSamples = hmcSampler.sample(numSamples, times[curr]);
         }
         printTime(times[curr], std::cout);
         curr++;

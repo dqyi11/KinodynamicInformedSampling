@@ -145,56 +145,63 @@ namespace ompl
                 std::tie(stateMin_, stateMax_) = getStateLimits();
             }
 
-            //
-            // Sample uniformly from the informed space
-            //
-            // @param statePtr Pointer of the state you're sampling
-            // @param maxCost Max cost of the informed subspace
-            // @return true if a sample is gotten false, if not
-            //
+            ///
+            /// Sample uniformly from the informed space
+            ///
+            /// @param statePtr Pointer of the state you're sampling
+            /// @param maxCost Max cost of the informed subspace
+            /// @return true if a sample is gotten false, if not
+            ///
             virtual bool sampleUniform(State *statePtr, const Cost &maxCost) override;
 
-            //
-            // Just call sampleUniform(statePtr, maxCost) - there is no mincost
-            //
-            // @param statePtr Pointer of the state you're sampling
-            // @param maxCost Max cost of the informed subspace
-            // @param minCost Minimum cost of the informed subspace
-            // @return true if a sample is gotten false, if not
-            //
+            ///
+            /// Just call sampleUniform(statePtr, maxCost) - there is no mincost
+            ///
+            /// @param statePtr Pointer of the state you're sampling
+            /// @param maxCost Max cost of the informed subspace
+            /// @param minCost Minimum cost of the informed subspace
+            /// @return true if a sample is gotten false, if not
+            ///
             virtual bool sampleUniform(State *statePtr, const Cost &minCost, const Cost &maxCost) override;
 
-            //
-            // Function that lets the planner know if we have an informed measure
-            //
-            // @return True if we have implemented an informed measure, false if not
-            //
+            ///
+            /// Function that lets the planner know if we have an informed measure
+            ///
+            /// @return True if we have implemented an informed measure, false if not
+            ///
             virtual bool hasInformedMeasure() const override;
 
-            //
-            // Function to return the measure of the informed space
-            //
-            // @param currentCost - Current cost of the best path
-            // @return Measure of the informed space
-            //
+            ///
+            /// Function to return the measure of the informed space
+            ///
+            /// @param currentCost - Current cost of the best path
+            /// @return Measure of the informed space
+            ///
             virtual double getInformedMeasure(const Cost &currentCost) const override;
 
-            //
-            // Get a series of samples for the problem space
-            //
-            // @param numSamples Number of samples to get
-            // @param time Boolean that determines if the time to run the proccess is
-            // displayed
-            // @return A series of samples of shape (number of samples, sample dimension)
-            //
+            ///
+            /// Get a series of samples for the problem space
+            ///
+            /// @param numSamples Number of samples to get
+            /// @param time Boolean that determines if the time to run the proccess is
+            /// displayed
+            /// @return A series of samples of shape (number of samples, sample dimension)
+            ///
             virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) = 0;
 
-            //
-            // Get the problem definition for the problem
-            //
-            // @return The problem definition
-            //
+            ///
+            /// Get one sample for the problem space
+            /// \param[out] sample
+            /// \return True if the sample is in the level set
+            ///
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) { return false; };
+
+            ///
+            /// Get the problem definition for the problem
+            ///
+            /// @return The problem definition
+            ///
             ompl::base::ProblemDefinitionPtr problem() const
             {
                 return problem_;
@@ -275,13 +282,12 @@ namespace ompl
             // @param state State to test
             // @return Boolean that is true if it is in the level set
             //
-            virtual bool isInLevelSet(const Eigen::VectorXd &state) const
+            virtual bool isInLevelSet(const Eigen::VectorXd &state, double& stateCost) const
             {
-                //return getCost(state) <= levelSet_;
-                return isInLevelSet(state, Cost(levelSet_));
+                return isInLevelSet(state, levelSet_, stateCost);
             }
 
-            bool isInLevelSet(const Eigen::VectorXd &curr_state, Cost thresholdCost) const;
+            bool isInLevelSet(const Eigen::VectorXd &curr_state, double thresholdCost, double& stateCost) const;
 
             //
             // Get the gradient of the cost function at a specific state

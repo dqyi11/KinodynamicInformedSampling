@@ -200,7 +200,7 @@ namespace ompl
             return cost;
         }
 
-        bool MyInformedSampler::isInLevelSet(const Eigen::VectorXd &curr_state, Cost thresholdCost) const
+        bool MyInformedSampler::isInLevelSet(const Eigen::VectorXd &curr_state, double thresholdCost, double& stateCost) const
         {
             // Assert that the problem definition has an optimization objective defined
             assert(problem_->hasOptimizationObjective());
@@ -214,18 +214,19 @@ namespace ompl
             ompl::base::State* state = si_->allocState();
             get_ompl_state(curr_state, state);
 
-            Cost costToCome = dimt_obj->getCostIfSmallerThan(start_state, state, thresholdCost);
-            if (costToCome.value() == std::numeric_limits<double>::infinity() )
+            double costToCome = dimt_obj->getCostIfSmallerThan(start_state, state, Cost(thresholdCost)).value();
+            if (costToCome == std::numeric_limits<double>::infinity() )
             {
                 si_->freeState(state);
                 return false;
             }
-            Cost costToGo = dimt_obj->getCostIfSmallerThan(state, goal_state, Cost(thresholdCost.value()-costToCome.value()));
-            if (costToGo.value() == std::numeric_limits<double>::infinity() )
+            double costToGo = dimt_obj->getCostIfSmallerThan(state, goal_state, Cost(thresholdCost-costToCome)).value();
+            if (costToGo == std::numeric_limits<double>::infinity() )
             {
                 si_->freeState(state);
                 return false;
             }
+            stateCost = costToCome + costToGo;
             si_->freeState(state);
             return true;
         }

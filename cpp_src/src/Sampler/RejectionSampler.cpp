@@ -58,16 +58,11 @@ namespace ompl
         {
             // Reset rejection rate
             rejectionRatio_ = 1.0;
-            // Get the limits of the space
-            Eigen::VectorXd max_vals, min_vals;
-            std::tie(max_vals, min_vals) = getStateLimits();
-            double max = max_vals(0);
-            double min = min_vals(0);
 
             // Run until you get the correct number of samples
             unsigned int numAcceptedSamples = 0;
             unsigned int numRejectedSamples = 0;
-            Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
+            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
@@ -76,12 +71,9 @@ namespace ompl
             double timeElapsedDouble = 0.0;
             while (numAcceptedSamples < numSamples && timeElapsedDouble < timelimit_)
             {
-                Eigen::VectorXd sample = getRandomSample(max, min, getStartState().size());
-
-                if (isInLevelSet(sample))
+                Eigen::VectorXd newsample( getSpaceDimension() + 1 );
+                if(sampleInLevelSet(newsample))
                 {
-                    Eigen::VectorXd newsample(getStartState().size() + 1);
-                    newsample << sample, getCost(sample);
                     samples.row(numAcceptedSamples) = newsample;
                     numAcceptedSamples++;
                 }
@@ -101,14 +93,27 @@ namespace ompl
             return samples;
         }
 
+        bool RejectionSampler::sampleInLevelSet(Eigen::VectorXd& sample)
+        {
+            Eigen::VectorXd newSample = getRandomSample(stateMin_, stateMax_, getSpaceDimension());
+            double newSampleCost = std::numeric_limits<double>::infinity();
+            if (isInLevelSet(newSample, newSampleCost))
+            {
+                sample << newSample, newSampleCost;
+                return true;
+            }
+
+            return false;
+        }
+
         /// Can implement as many private functions as you want to help do the sampling
-        Eigen::VectorXd RejectionSampler::getRandomSample(const double max, const double min, const int size)
+        Eigen::VectorXd RejectionSampler::getRandomSample(const Eigen::VectorXd min, const Eigen::VectorXd max, const int size)
         {
             Eigen::VectorXd sample(size);
 
             for (int i = 0; i < size; i++)
             {
-                sample(i) = uniRndGnr_.sample(min, max);
+                sample(i) = uniRndGnr_.sample(min[i], max[i]);
             }
             return sample;
         }
@@ -127,31 +132,19 @@ namespace ompl
         Eigen::MatrixXd HierarchicalRejectionSampler::sample(const uint numSamples,
                                                              std::chrono::high_resolution_clock::duration &duration)
         {
-            /*
-            // Get the limits of the space
-            Eigen::VectorXd max_vals, min_vals;
-            std::tie(max_vals, min_vals) = getStateLimits();
-            double max = max_vals(0);
-            double min = min_vals(0);
-            */
-
             // Run until you get the correct number of samples
             uint currNumSamples = 0;
-            Eigen::MatrixXd samples(numSamples, getStartState().size() + 1);
+            Eigen::MatrixXd samples(numSamples, getSpaceDimension()+1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
             while (currNumSamples < numSamples)
             {
-                Eigen::VectorXd sample(getStartState().size());
-                HRS(0, dimension_ - 1, sample);
-
-                if (isInLevelSet(sample))
+                Eigen::VectorXd sample(getSpaceDimension()+1);
+                if(sampleInLevelSet(sample))
                 {
-                    Eigen::VectorXd newsample(getStartState().size() + 1);
-                    newsample << sample, getCost(sample);
-                    samples.row(currNumSamples) = newsample;
+                    samples.row(currNumSamples) = sample;
                     currNumSamples++;
                 }
             }
@@ -161,6 +154,20 @@ namespace ompl
             duration = t2 - t1;
 
             return samples;
+        }
+
+        bool HierarchicalRejectionSampler::sampleInLevelSet(Eigen::VectorXd& sample)
+        {
+            Eigen::VectorXd newSample( getSpaceDimension() );
+            double newSampleCost = std::numeric_limits<double>::infinity();
+            HRS(0, dimension_ - 1, newSample);
+
+            if (isInLevelSet(newSample, newSampleCost))
+            {
+                sample << newSample, newSampleCost;
+                return true;
+            }
+            return false;
         }
 
         ///

@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
         int maxSteps = 50000000;
         ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
         std::cout << "Running HMC Sampling..." << std::endl;
-        hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, duration);
+        hmcSamples = hmcSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";

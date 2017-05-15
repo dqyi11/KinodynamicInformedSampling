@@ -181,7 +181,7 @@ namespace ompl
               , steps_(steps)
               , currentStep_(-1)
             {
-                lastSample_ = Eigen::VectorXd(getStartState().size() + 1);
+                lastSample_ = Eigen::VectorXd(getSpaceDimension());
             }
 
             ///
@@ -256,12 +256,10 @@ namespace ompl
             /// displayed
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
-            virtual Eigen::MatrixXd sample(const uint noSamples,
+            virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
-            virtual Eigen::MatrixXd sampleBatchMemorized(const uint numSamples,
-                                                         std::chrono::high_resolution_clock::duration &duration);
-            virtual Eigen::VectorXd sampleMemorized();
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
 
         private:
             /// Distance of integration for HMC step

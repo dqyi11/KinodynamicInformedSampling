@@ -129,18 +129,6 @@ int main(int argc, char *argv[])
         curr++;
 
         {
-            MatrixXd hmcSamples;
-            double alpha = 0.5;
-            double L = 5;
-            double epsilon = 0.1;
-            double sigma = 1;
-            int maxSteps = 20;
-            ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-            hmcSamples = hmcSampler.sampleBatchMemorized(numSamples, times[numbatch + i]);
-        }
-        curr++;
-
-        {
             MatrixXd mcmcSamples;
             double sigma = 5;
             int maxSteps = 20;

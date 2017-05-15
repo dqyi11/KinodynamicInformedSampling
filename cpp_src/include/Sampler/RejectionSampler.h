@@ -86,8 +86,10 @@ namespace ompl
             virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration);
 
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample);
+
             /// Can implement as many private functions as you want to help do the sampling
-            virtual Eigen::VectorXd getRandomSample(const double max, const double min, const int size);
+            virtual Eigen::VectorXd getRandomSample(const Eigen::VectorXd min, const Eigen::VectorXd max, const int size);
 
             /// Get rejection ratio
             double getRejectionRatio() { return rejectionRatio_; }
@@ -132,6 +134,7 @@ namespace ompl
             virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
+             virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
         private:
             ///
             /// Get one sample using a recursive algorithm of heirarchical rejection

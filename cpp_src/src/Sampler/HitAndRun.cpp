@@ -54,16 +54,16 @@ namespace ompl
         {
             // Get the limits of the space
             Eigen::VectorXd max_vals, min_vals;
-            const int dim = getStartState().size();
             std::tie(max_vals, min_vals) = getStateLimits();
 
             // Run until you get the correct number of samples
-            Eigen::MatrixXd samples(numSamples, dim + 1);
+            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
             Eigen::VectorXd sample;
+            double sampleCost = std::numeric_limits<double>::infinity();
             unsigned int skip = 0, trys = 0;
             for (uint i = 0; i < numSamples; i++)
             {
@@ -75,13 +75,13 @@ namespace ompl
                         skip++;
                         trys = 0;
                     }
-                    sample = getRandomSample(min_vals[(i + skip) % dim], max_vals[(i + skip) % dim], (i + skip) % dim);
+                    sample = getRandomSample(min_vals[(i + skip) % getSpaceDimension()], max_vals[(i + skip) % getSpaceDimension()], (i + skip) % getSpaceDimension());
                     trys++;
-                } while (!isInLevelSet(sample));
+                } while (!isInLevelSet(sample, sampleCost));
 
-                Eigen::VectorXd newsample(getStartState().size() + 1);
+                Eigen::VectorXd newsample(getSpaceDimension() + 1);
                 prev_sample_ = sample;
-                newsample << sample, getCost(sample);
+                newsample << sample, sampleCost;
                 samples.row(i) = newsample;
             }
 
@@ -99,107 +99,75 @@ namespace ompl
 
         Eigen::MatrixXd HitAndRun::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
-            // Get the limits of the space
-            Eigen::VectorXd max_vals, min_vals;
-            const int dim = getStartState().size();
-            std::tie(max_vals, min_vals) = getStateLimits();
-            double diag = 0;
-            for (int i = 0; i < dim; i++)
-                diag = diag + (max_vals[i] - min_vals[i]) * (max_vals[i] - min_vals[i]);
-            diag = std::sqrt(diag);
-
             // Run until you get the correct number of samples
-            Eigen::MatrixXd samples(numSamples, dim + 1);
-
-            // Set up RGN
-            std::normal_distribution<> norm_dis(0, 1);
-            double lamda_lower_bound = 0.0, lamda_upper_bound = 1.0;
-            Eigen::VectorXd dir(dim);
+            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
 
             // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-            //cleamn up later
-            std::uniform_real_distribution<> uni_dis01(0, 1);
-
-            Eigen::VectorXd sample;
-            int skip = 0, trys = 0;
-            bool retry;
-
             for (uint i = 0; i < numSamples; i++)
             {
-                trys = -1;
-                do
-                {
-                    retry = false;
-                    if (trys > numOfTries_ || trys == -1)
-                    {
-                        // Sample random direction in S^dim
-                        double sum = 0;
-                        for (int i = 0; i < dim; i++)
-                        {
-                            dir[i] = normRndGnr_.sample();
-                            sum = sum + dir[i] * dir[i];
-                        }
-                        dir = dir / sum;
-                        lamda_upper_bound = diag;
-                        lamda_lower_bound = -diag;
-                        skip++;
-                        trys = 0;
-                    }
-                    // Generate random sample along dir
-                    double lamda = uniRndGnr_.sample(lamda_lower_bound, lamda_upper_bound);
+                Eigen::VectorXd newSample(getSpaceDimension() + 1);
 
-                    sample = prev_sample_ + lamda * dir;
-                    if (!isInBound(sample))
-                    {
-                        if (lamda > 0)
-                            lamda_upper_bound = lamda;
-                        else
-                            lamda_lower_bound = lamda;
-                        retry = true;
-                    }
-                    else if (!isInLevelSet(sample))
-                        retry = true;
-                    trys++;
-                    if (VERBOSE)
-                        std::cout << "Current_sample: " << i << " Trys: " << trys << " Skip: " << skip
-                                  << " UB:" << lamda_upper_bound << " LB:" << lamda_lower_bound << std::endl;
-                    // if (!problem().is_in_level_set(prev_sample_))
-                    //   std::cout << "\nstart_FALSE!!!!!!!!!!!!!!!!!!"  << std::endl;
-                    // else
-                    //   std::cout << "\nstart_TRUE!!!!!!!" << std::endl;
-                } while (retry);
-
-                Eigen::VectorXd newsample(getStartState().size() + 1);
-                prev_sample_ = sample;
-
-                newsample << sample, getCost(sample);
-                samples.row(i) = newsample;
-
-                //hack - use previos samples and not only last one
-
-                double p = uniRndGnr_.sample();
-                int index = i;
-                if (i > 5 && p < 0.5)
-                {
-                    if (p > 0.25)
-                        index = i-2;
-                    else if (p > 0.125)
-                        index = i-3;
-                    else if (p > 0.06125)
-                        index = i-4;
-                    else if (p > 0.0306125)
-                        index = i-5;
-                    else index = i-6;
-                }
-                prev_sample_ = samples.row(index).head(dim);
-
+                sampleInLevelSet(newSample);
+                samples.row(i) = newSample;
             }
 
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
             return samples;
+        }
+
+
+        bool HitAndRun::sampleInLevelSet(Eigen::VectorXd& sample)
+        {
+            double lamda_lower_bound = 0.0, lamda_upper_bound = 1.0;
+            Eigen::VectorXd dir(getSpaceDimension());
+            double newSampleCost = std::numeric_limits<double>::infinity();
+            Eigen::VectorXd newSample;
+
+            int trys = -1;
+            bool retry = false;
+
+            do
+            {
+                retry = false;
+                if (trys > numOfTries_ || trys == -1)
+                {
+                    // Sample random direction in S^dim
+                    double sum = 0;
+                    for (int i = 0; i < getSpaceDimension(); i++)
+                    {
+                        dir[i] = normRndGnr_.sample();
+                        sum = sum + dir[i] * dir[i];
+                    }
+                    dir = dir / sum;
+                    lamda_upper_bound = diagonalLength_;
+                    lamda_lower_bound = -diagonalLength_;
+                   // skip++;
+                    trys = 0;
+                }
+                // Generate random sample along dir
+                double lamda = uniRndGnr_.sample(lamda_lower_bound, lamda_upper_bound);
+
+                newSample = prev_sample_ + lamda * dir;
+                if (!isInBound(newSample))
+                {
+                    if (lamda > 0)
+                        lamda_upper_bound = lamda;
+                    else
+                        lamda_lower_bound = lamda;
+                    retry = true;
+                }
+                else if (!isInLevelSet(newSample, newSampleCost))
+                    retry = true;
+                trys++;
+
+            } while (retry);
+
+            sample << newSample, newSampleCost;
+            pushPrevSamples(newSample);
+            return true;
         }
     }  // namespace base
 }  // namespace ompl

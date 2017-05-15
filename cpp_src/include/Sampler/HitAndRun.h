@@ -89,6 +89,8 @@ namespace ompl
             virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
 
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override { return false; }
+
             virtual void updateLevelSet(const double level_set) override;
 
             Eigen::VectorXd prev_sample_;
@@ -110,6 +112,14 @@ namespace ompl
               : GibbsSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize),
                 numOfTries_(numOfTries)
             {
+                diagonalLength_ = 0.0;
+                for (int i = 0; i < getSpaceDimension(); i++)
+                    diagonalLength_ = diagonalLength_ + (stateMax_[i] - stateMin_[i]) * (stateMax_[i] - stateMin_[i]);
+                diagonalLength_ = std::sqrt(diagonalLength_);
+
+                numOfPrevSamples_ = 6;
+                prevSamples_.reserve(numOfPrevSamples_);
+                headOfPrevSamples_ = -1;
             }
 
             ///
@@ -122,9 +132,58 @@ namespace ompl
             ///
             virtual Eigen::MatrixXd sample(const uint numSamples,
                                            std::chrono::high_resolution_clock::duration &duration) override;
+
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
+
+            void pushPrevSamples(Eigen::VectorXd& sample)
+            {
+                if(prevSamples_.size() < numOfPrevSamples_)
+                {
+                    prevSamples_.push_back(sample);
+                }
+                else {
+                    prevSamples_[headOfPrevSamples_] = sample;
+                }
+                headOfPrevSamples_ = (headOfPrevSamples_ +1) % numOfPrevSamples_;
+                selectPrevSample();
+            }
+
+            void selectPrevSample()
+            {
+                if (prevSamples_.size() < numOfPrevSamples_)
+                {
+                    prev_sample_ = prevSamples_.back();
+                    return;
+                }
+
+                double p = uniRndGnr_.sample();
+                int index = headOfPrevSamples_;
+                if (p < 0.5)
+                {
+                    if (p > 0.25)
+                        index = index-1;
+                    else if (p > 0.125)
+                        index = index-2;
+                    else if (p > 0.06125)
+                        index = index-3;
+                    else if (p > 0.0306125)
+                        index = index-4;
+                    else index = index-5;
+
+                    index = (index + numOfPrevSamples_) % numOfPrevSamples_;
+                }
+                prev_sample_ = prevSamples_[index];
+//                prev_sample_ = samples.row(index).head(getSpaceDimension());
+            }
+
         protected:
             int numOfTries_;
             NormalRealRandomGenerator normRndGnr_;
+            double diagonalLength_;
+            int numOfPrevSamples_;
+            std::vector<Eigen::VectorXd> prevSamples_;
+            int headOfPrevSamples_;
+
         };
     }  // namespace base
 }  // namespace ompl

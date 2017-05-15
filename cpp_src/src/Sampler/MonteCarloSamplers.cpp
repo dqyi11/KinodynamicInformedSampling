@@ -293,8 +293,19 @@ namespace ompl
             return sample;
         }
 
-        Eigen::MatrixXd HMCSampler::sampleBatchMemorized(const uint numSamples,
-                                                         std::chrono::high_resolution_clock::duration &duration)
+        //
+        // HMCSampler
+        //
+
+        //
+        // Get a series of samples for the problem space
+        //
+        // @param numSamples Number of samples to get
+        // @param time Boolean that determines if the time to run the proccess is
+        // displayed
+        // @return A series of samples of shape (number of samples, sample dimension)
+        //
+        Eigen::MatrixXd HMCSampler::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
             Eigen::MatrixXd samples;
             samples.conservativeResize(numSamples, getSpaceDimension() + 1);
@@ -303,7 +314,8 @@ namespace ompl
 
             for(uint i=0;i<numSamples;++i)
             {
-                Eigen::VectorXd newsample = sampleMemorized();
+                Eigen::VectorXd newsample(getSpaceDimension()+1);
+                sampleInLevelSet(newsample);
                 samples.row(i) = newsample;
             }
 
@@ -313,14 +325,12 @@ namespace ompl
             return samples;
         }
 
-        Eigen::VectorXd HMCSampler::sampleMemorized()
+        bool HMCSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {      
             // last sample
             Eigen::VectorXd q = Eigen::VectorXd(getStartState().size());
-            for (unsigned int i = 0; i < getStartState().size(); i++)
-            {
-                q[i] = lastSample_[i];
-            }
+            double sampleCost = std::numeric_limits<double>::infinity();
+            q << lastSample_;
 
             do
             {
@@ -394,146 +404,17 @@ namespace ompl
                 }
 
 
-            } while(!isInLevelSet(q));
+            } while(!isInLevelSet(q, sampleCost));
 
-            Eigen::VectorXd newsample(getStartState().size() + 1);
-            newsample << q, getCost(q);
+            sample << q, sampleCost;
 
-            lastSample_ = newsample;
+            lastSample_ << q;
             if (getCurrentStep() >= getSteps())
             {
                 updateCurrentStep(-1);
             }
 
-            return newsample;
-        }
-
-        //
-        // HMCSampler
-        //
-
-        //
-        // Get a series of samples for the problem space
-        //
-        // @param numSamples Number of samples to get
-        // @param time Boolean that determines if the time to run the proccess is
-        // displayed
-        // @return A series of samples of shape (number of samples, sample dimension)
-        //
-        Eigen::MatrixXd HMCSampler::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
-        {
-            if (VERBOSE)
-                std::cout << "Number of samples: " << numSamples << std::endl;
-            if (VERBOSE)
-                std::cout << "Surfing" << std::endl;
-            Eigen::VectorXd q = HMCSampler::gradDescent(getAlpha());
-            if (VERBOSE)
-                std::cout << "Got Through Gradient Descent" << std::endl;
-
-            // Store the samples
-            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
-            samples << q.transpose(), getCost(q);
-
-            uint accepted = 0;
-            uint rejected = 0;
-            // If you want to time the sampling
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-            while (accepted < numSamples)
-            {
-                if (VERBOSE)
-                    std::cout << "New start!" << std::endl;
-                Eigen::VectorXd q = HMCSampler::gradDescent(getAlpha());
-                if (VERBOSE)
-                    std::cout << "Got Through Gradient Descent in loop" << std::endl;
-
-                int curr_rejections = 0;
-                int curr_step = 0;
-                while (curr_rejections < 10 and accepted < numSamples and curr_step < getSteps())
-                {
-                    // Sample the momentum and set up the past and current state and momentum
-                    Eigen::VectorXd q_last = q;
-                    Eigen::VectorXd p = MonteCarloSampler::sampleNormal(0, getSigma());
-                    Eigen::VectorXd p_last = p;
-
-                    if (VERBOSE)
-                        std::cout << "Sampled the momentum" << std::endl;
-
-                    // Make a half step for momentum at the beginning
-                    Eigen::VectorXd grad = getGradient(q);
-                    if (VERBOSE)
-                        std::cout << "Got the gradient" << std::endl;
-
-                    // Ensure that the gradient isn't two large
-                    if (grad.maxCoeff() > 1e2)
-                    {
-                        if (VERBOSE)
-                            std::cout << "WARNING: Gradient too high" << std::endl;
-                        break;
-                    }
-
-                    p = p - getEpsilon() * grad / 2;
-
-                    // Alternate Full steps for q and p
-                    for (int i = 0; i < getL(); i++)
-                    {
-                        q = q + getEpsilon() * p;
-                        if (i != getL())
-                            p = p - getEpsilon() * grad;
-                    }
-
-                    if (VERBOSE)
-                        std::cout << "Integrated Along momentum" << std::endl;
-
-                    // Make a half step for momentum at the end
-                    p = p - getEpsilon() * grad / 2;
-
-                    // Negate the momentum at the end of the traj to make proposal
-                    // symmetric
-                    p = -p;
-
-                    // Evaluate potential and kinetic energies at start and end of traj
-                    double U_last = getEnergy(q_last);
-                    double K_last = p_last.norm() / 2;
-                    double U_proposed = getEnergy(q);
-                    double K_proposed = p_last.norm() / 2;
-
-                    if (VERBOSE)
-                        std::cout << "Got energies" << std::endl;
-
-                    // Accept or reject the state at the end of trajectory
-                    double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
-                    if (uniRndGnr_.sample() <= alpha)
-                    {
-                        Eigen::VectorXd newsample(getStartState().size() + 1);
-                        newsample << q, getCost(q);
-                        samples.row(accepted) = newsample;
-                        accepted++;
-                    }
-                    else
-                    {
-                        q = q_last;
-                        rejected++;
-                        curr_rejections++;
-                        // std::cout << "Current Rejections: " << curr_rejections << std::endl;
-                    }
-
-                    curr_step++;
-                    if (VERBOSE)
-                        std::cout << "Decided on rejection / acceptance" << std::endl;
-                    if (VERBOSE)
-                        std::cout << "Number Accepted: " << accepted << std::endl;
-                    if (VERBOSE)
-                        std::cout << "Number Accepted: " << accepted << std::endl;
-                }
-            }
-
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            duration = t2 - t1;
-
-            if (VERBOSE)
-                std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected + accepted) << std::endl;
-
-            return samples;
+            return true;
         }
 
         //
