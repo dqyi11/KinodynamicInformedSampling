@@ -1,3 +1,8 @@
+datahmc = datatesthmc;
+datahrs = datatesthrs;
+datahitnrun = datatesthitnrun;
+datarej = datatestrej;
+
 figure;
 for i= 1:1:12
     subplot(4,3,i);
