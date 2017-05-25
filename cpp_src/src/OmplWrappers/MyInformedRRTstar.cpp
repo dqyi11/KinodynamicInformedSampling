@@ -57,6 +57,11 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) 
     std::cout << " useInformedSampling_ " << useInformedSampling_ << std::endl;
     //infSampler_->sampleUniform(NULL, ompl::base::Cost(100.0));
     // maxDistance_ = 10.0;
+
+    // A hack to approximate an infinite connection radius
+    setRewireFactor(10000.);
+
+    setTreePruning(false);
 }
 
 base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondition &ptc)
@@ -134,7 +139,9 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                     solution->cost.value());
 
     if (useKNearest_)
-        OMPL_INFORM("%s: Initial k-nearest value of %u", getName().c_str(),
+
+        OMPL_INFORM("%s: k_rrt_ %u ->> Initial k-nearest value of %u", getName().c_str(),
+                    k_rrg_,
                     (unsigned int)std::ceil(k_rrg_ * log((double)(nn_->size() + 1u))));
     else
         OMPL_INFORM(
@@ -142,12 +149,31 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             std::min(maxDistance_, r_rrg_ * std::pow(log((double)(nn_->size() + 1u)) / ((double)(nn_->size() + 1u)),
                                                      1 / (double)(si_->getStateDimension()))));
 
+
     // our functor for sorting nearest neighbors
     CostIndexCompare compareFn(costs, *opt_);
 
     while (ptc == false)
     {
+        //first iteration, try to explicitly connect start to goal
+        if (iterations_ == 0)
+        {
+            if (goal_s && goalMotions_.size() < goal_s->maxSampleCount() && goal_s->canSample())
+                goal_s->sampleGoal(rstate);
+
+            // find closest state in the tree
+            Motion *nmotion = nn_->nearest(rmotion); //this is the start
+
+            if (si_->checkMotion(nmotion->state, rstate))
+            {
+                OMPL_INFORM("TRIVIAL PROBLEM< CONNECT START TO GOAL OPTIMALY---NOT RUNNING PLANNER ");
+                return base::PlannerStatus(false, false);
+            }
+        }
+
         iterations_++;
+
+        //OMPL_INFORM(" %u-th iteration ", iterations_);
 
         // sample random state (with goal biasing)
         // Goal samples are only sampled until maxSampleCount() goals are in the
@@ -183,12 +209,14 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
         base::State *dstate = rstate;
 
         // find state to add to the tree
+        /* FOLLOWING HRS PAPER WE USE oo EXTENSION
         double d = si_->distance(nmotion->state, rstate);
         if (d > maxDistance_)
         {
             si_->getStateSpace()->interpolate(nmotion->state, rstate, maxDistance_ / d, xstate);
             dstate = xstate;
         }
+        */
 
         // Check if the motion between the nearest state and the state to add is
         // valid
@@ -388,6 +416,12 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                         if (opt_->isFinite(bestCost_) == false)
                         {
                             OMPL_INFORM("%s: Found an initial solution with a cost of %.2f "
+                                        "in %u iterations (%u vertices in the graph)",
+                                        getName().c_str(), goalMotions_[i]->cost.value(), iterations_, nn_->size());
+                        }
+                        else
+                        {
+                            OMPL_INFORM("%s: Found an better solution with a cost of %.2f "
                                         "in %u iterations (%u vertices in the graph)",
                                         getName().c_str(), goalMotions_[i]->cost.value(), iterations_, nn_->size());
                         }

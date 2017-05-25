@@ -14,9 +14,9 @@ using Eigen::VectorXd;
 
 // Internal Libraries
 #include "Sampler/RejectionSampler.h"
-#include "Sampler/MonteCarloSamplers.h"
+#include "Sampler/MonteCarloSampler.h"
 #include "Sampler/RejectionSampler.h"
-#include "Sampler/HitAndRun.h"
+#include "Sampler/HitAndRunSampler.h"
 #include "OmplWrappers/DimtStateSpace.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "Dimt/Params.h"
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
         std::cout << " H&R (" << numTrials << ") " << std::flush;
         {
             MatrixXd hitnrunSamples;
-            ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100, numTrials);
+            ompl::base::HitAndRunSampler hitnrunSampler(si, pdef, levelSet, 100, 100, numTrials);
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
         }
         printTime(times[curr], std::cout);

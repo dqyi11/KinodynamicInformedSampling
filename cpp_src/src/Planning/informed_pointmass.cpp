@@ -9,8 +9,8 @@
 
 #include "Sampler/Sampler.h"
 #include "Sampler/RejectionSampler.h"
-#include "Sampler/MonteCarloSamplers.h"
-#include "Sampler/HitAndRun.h"
+#include "Sampler/MonteCarloSampler.h"
+#include "Sampler/HitAndRunSampler.h"
 #include "OmplWrappers/MyOptimizationObjective.h"
 #include "OmplWrappers/MyInformedRRTstar.h"
 #include "OmplWrappers/OmplHelpers.h"
@@ -39,22 +39,34 @@ public:
         // }
         // return false;
         // Narrow Corridor problem
+
+        if (state_rv->values[0] > -1 && state_rv->values[0] < 1 &&
+              state_rv->values[2] > -1 && state_rv->values[2] < 1  )
+        {
+            return false;
+        }
+
         for (int i = 0; i < param.dimensions; i = i + 2)
         {
-            if (i == 0)
+            if (i % 2 == 0)
             {
-                if (state_rv->values[i] < -0.5 || state_rv->values[i] > 0.5)
+                if (state_rv->values[i] < -10 || state_rv->values[i] > 10)
                 {
-                    return true;
+                    return false;
                 }
-                else if (state_rv->values[i] < -5 || (state_rv->values[i] > -0.05 && state_rv->values[i] < 0.05) ||
-                         state_rv->values[i] > 5)
+
+            }
+            else
+            {
+                if (state_rv->values[i] < - param.v_max ||
+                         state_rv->values[i] > param.v_max)
                 {
-                    return true;
+                    return false;
                 }
             }
         }
-        return false;
+        return true;
+
     }
 };
 
@@ -65,7 +77,7 @@ void planWithSimpleSetup(void)
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
-    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
+    DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
     if (MAIN_VERBOSE)
         std::cout << "Created the double integrator model!" << std::endl;
@@ -117,13 +129,13 @@ void planWithSimpleSetup(void)
             int_state[i] = 2;
         }
     }
-    start_state[0] = -1.5;
+    start_state[0] = -4;
     start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = start_state[0];
-    goal_state[0] = 1.5;
+    goal_state[0] = 4;
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = goal_state[0];
-    start_state[2] = 1;
+    start_state[2] = 0;
     start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = start_state[2];
-    goal_state[2] = 1;
+    goal_state[2] = 0;
     goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
 
     std::cout << "MinTime b/w start and goal = "
@@ -154,12 +166,20 @@ void planWithSimpleSetup(void)
 
     // Construct Sampler with the base pdef and base optimization objective
     double sigma = 1;
-    int max_steps = 100;
-    double alpha = 1.0;
-    double batch_size = 1000;
+    int max_steps = 20;
+    double alpha = 0.5;
+    double max_call_num = 100;
+    double batch_size = 100;
+    double epsilon = 0.1;
+    double L = 5;
+    int num_trials = 5;
     const double level_set = std::numeric_limits<double>::infinity();
     const auto sampler = ompl::base::MyInformedSamplerPtr(
-        new ompl::base::MCMCSampler(si, base_pdef, level_set, 1000, batch_size, alpha, sigma, max_steps));
+        new ompl::base::HitAndRunSampler(si, base_pdef, level_set, max_call_num, batch_size, num_trials));
+        //new ompl::base::HMCSampler(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps));
+        //new ompl::base::DimtHierarchicalRejectionSampler(si, base_pdef, dimt, level_set, max_call_num, batch_size));
+        //new ompl::base::RejectionSampler(si, base_pdef, level_set, max_call_num, batch_size));
+
 
     // Set up the final problem with the full optimization objective
     ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
@@ -192,7 +212,7 @@ void planWithSimpleSetup(void)
         std::cout << "Set up Informed RRT* planner!" << std::endl;
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(1500.0);
+    ob::PlannerStatus solved = planner->solve(60.0);
 
     if (MAIN_VERBOSE)
         std::cout << "Planner solved!" << std::endl;

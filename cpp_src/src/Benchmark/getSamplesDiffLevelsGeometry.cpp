@@ -15,8 +15,8 @@ using Eigen::MatrixXd;
 
 // Internal Libraries
 #include "Sampler/RejectionSampler.h"
-#include "Sampler/MonteCarloSamplers.h"
-#include "Sampler/HitAndRun.h"
+#include "Sampler/MonteCarloSampler.h"
+#include "Sampler/HitAndRunSampler.h"
 #include "OmplWrappers/OmplHelpers.h"
 #include "OmplWrappers/DimtStateSpace.h"
 #include "Benchmark/GeometryProblemGeneration.h"
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
             {
                 MatrixXd hitnrunSamples;
-                ompl::base::HitAndRun hitnrunSampler(si, pdef, levelSet, 100, 100);
+                ompl::base::HitAndRunSampler hitnrunSampler(si, pdef, levelSet, 100, 100);
                 hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
             }
 

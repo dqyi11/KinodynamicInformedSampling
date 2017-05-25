@@ -45,7 +45,6 @@
 #include <cmath>
 #include <Eigen/Core>
 #include <tuple>
-#include "Dimt/Interval.h"
 
 template <int dof>
 class DoubleIntegrator

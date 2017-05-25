@@ -34,7 +34,7 @@ void planWithSimpleSetup(void)
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
-    DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
+    DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
     // construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);

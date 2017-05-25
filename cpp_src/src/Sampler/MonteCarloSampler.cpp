@@ -34,7 +34,7 @@
 
 /* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
-#include "Sampler/MonteCarloSamplers.h"
+#include "Sampler/MonteCarloSampler.h"
 
 // Standard library functions
 #include <math.h> /* exp, tanh, log */

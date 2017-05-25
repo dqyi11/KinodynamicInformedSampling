@@ -53,7 +53,6 @@ public:
         return doubleIntegratorImpl_->getMinTime(x1, x2);
     }
 
-
     std::tuple<double, double, double>
     getMinTimeAndIntervals1Dof(const double x1, const double v1,
                                const double x2, const double v2,

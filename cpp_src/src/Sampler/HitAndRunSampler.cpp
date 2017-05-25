@@ -34,7 +34,7 @@
 
 /* Authors: Cole Gulino, Daqing Yi, Oren Salzman, and Rohan Thakker */
 
-#include "Sampler/HitAndRun.h"
+#include "Sampler/HitAndRunSampler.h"
 
 const bool VERBOSE = false;
 
@@ -97,7 +97,7 @@ namespace ompl
             // std::cout << "Updated Level Set" << std::endl;
         }
 
-        Eigen::MatrixXd HitAndRun::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
+        Eigen::MatrixXd HitAndRunSampler::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
         {
             // Run until you get the correct number of samples
             Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
@@ -119,7 +119,7 @@ namespace ompl
         }
 
 
-        bool HitAndRun::sampleInLevelSet(Eigen::VectorXd& sample)
+        bool HitAndRunSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {
             double lamda_lower_bound = 0.0, lamda_upper_bound = 1.0;
             Eigen::VectorXd dir(getSpaceDimension());

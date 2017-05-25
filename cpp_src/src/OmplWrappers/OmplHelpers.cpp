@@ -66,15 +66,11 @@
 //
 Eigen::VectorXd get_eigen_vector(const ompl::base::State *s)
 {
-    double *val = static_cast<const ompl::base::RealVectorStateSpace::StateType *>(s)->values;
-
     Eigen::VectorXd v(param.dimensions);
-
     for (uint i = 0; i < param.dimensions; i++)
     {
-        v[i] = val[i];
+        v[i] = s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i];
     }
-
     return v;
 }
 

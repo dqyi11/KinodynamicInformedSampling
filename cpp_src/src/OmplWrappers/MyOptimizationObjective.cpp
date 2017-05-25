@@ -11,7 +11,7 @@ using Eigen::VectorXd;
 
 // Internal Libraries
 #include <Dimt/Params.h>
-#include <Sampler/MonteCarloSamplers.h>
+#include <Sampler/MonteCarloSampler.h>
 
 // stdlib
 #include <exception>

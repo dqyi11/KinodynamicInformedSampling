@@ -128,9 +128,9 @@ namespace ompl
             /// @param levelSet Initial level set of the problem
             /// @param maxNumberCalls Max number of calls to the sampler
             /// @param sampler Sampler that inherits from Sampler.h
-            // @param sample_batch_size How many samples to get each time a new
-            // batch of samples is gotten
-            //
+            /// @param sample_batch_size How many samples to get each time a new
+            /// batch of samples is gotten
+            ///
             MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
                               const double levelSet, const unsigned int maxNumberCalls,
                               const int sampleBatchSize, const double timelimit = 3600)
@@ -207,81 +207,81 @@ namespace ompl
                 return problem_;
             }
 
-            //
-            // Get the space information pointer for the problem
-            //
-            // @return The space information
-            //
+            ///
+            /// Get the space information pointer for the problem
+            ///
+            /// @return The space information
+            ///
             ompl::base::SpaceInformationPtr si() const
             {
                 return si_;
             }
 
-            //
-            // Update the level set of the problem definition
-            //
-            // @param levelSet The new level set
-            //
+            ///
+            /// Update the level set of the problem definition
+            ///
+            /// @param levelSet The new level set
+            ///
             virtual void updateLevelSet(const double levelSet)
             {
                 levelSet_ = levelSet;
             }
 
-            //
-            // Get the state limits of the space
-            //
-            // @return Tuple(state_max, state_min)
-            //
+            ///
+            /// Get the state limits of the space
+            ///
+            /// @return Tuple(state_max, state_min)
+            ///
             std::tuple<Eigen::VectorXd, Eigen::VectorXd> getStateLimits() const;
 
-            //
-            // Get the start state
-            //
-            // @return Start state defined in the constructor
-            //
+            ///
+            /// Get the start state
+            ///
+            /// @return Start state defined in the constructor
+            ///
             Eigen::VectorXd getStartState() const;
 
-            //
-            // Get the goal state
-            //
-            // @return Start state defined in the constructor
-            //
+            ///
+            /// Get the goal state
+            ///
+            /// @return Start state defined in the constructor
+            ///
             Eigen::VectorXd getGoalState() const;
 
-            //
-            // Get the level set
-            //
-            // @return Get the level set of the cost function you want to sample from
-            //
+            ///
+            /// Get the level set
+            ///
+            /// @return Get the level set of the cost function you want to sample from
+            ///
             double getLevelSet() const
             {
                 return levelSet_;
             }
 
-            //
-            // Get the dimension of the space
-            //
-            // @return Get the level set of the cost function you want to sample from
-            //
+            ///
+            /// Get the dimension of the space
+            ///
+            /// @return Get the level set of the cost function you want to sample from
+            ///
             uint getSpaceDimension() const
             {
                 return si_->getStateSpace()->getDimension();
             }
 
-            //
-            // Get the cost for a specific state
-            //
-            // @param curr_state Current state to get the cost for
-            // @return Cost at that state
-            //
+            ///
+            /// Get the cost for a specific state
+            ///
+            /// @param curr_state Current state to get the cost for
+            /// @return Cost at that state
+            ///
             virtual double getCost(const Eigen::VectorXd &curr_state) const;
 
-            //
-            // Determines if a sample is within the cost function level set
-            //
-            // @param state State to test
-            // @return Boolean that is true if it is in the level set
-            //
+            ///
+            /// Determines if a sample is within the cost function level set
+            ///
+            /// @param state State to test
+            /// @return Boolean that is true if it is in the level set
+            ///
             virtual bool isInLevelSet(const Eigen::VectorXd &state, double& stateCost) const
             {
                 return isInLevelSet(state, levelSet_, stateCost);
@@ -289,30 +289,30 @@ namespace ompl
 
             bool isInLevelSet(const Eigen::VectorXd &curr_state, double thresholdCost, double& stateCost) const;
 
-            //
-            // Get the gradient of the cost function at a specific state
-            //
-            // @param curr_state Current state to get the cost for
-            // @return Gradient of the function at the current state (same dimension as
-            // current state)
-            //
+            ///
+            /// Get the gradient of the cost function at a specific state
+            ///
+            /// @param curr_state Current state to get the cost for
+            /// @return Gradient of the function at the current state (same dimension as
+            /// current state)
+            ///
             virtual Eigen::VectorXd getGradient(const Eigen::VectorXd &curr_state);
 
-            //
-            // Get the Inverse Jacobian of the cost function at a specific state
-            //
-            // @param curr_state Current state to get the cost for
-            // @return Inverse Jacobian of the function at the current state (same
-            // dimension as current state)
-            //
+            ///
+            /// Get the Inverse Jacobian of the cost function at a specific state
+            ///
+            /// @param curr_state Current state to get the cost for
+            /// @return Inverse Jacobian of the function at the current state (same
+            /// dimension as current state)
+            ///
             virtual Eigen::VectorXd getInvJacobian(const Eigen::VectorXd &curr_state) const;
 
-            //
-            // Determines if a sample is within the boundaries of the space
-            //
-            // @param state State to test
-            // @return Boolean that is true if it is in the boundaries of the space
-            //
+            ///
+            /// Determines if a sample is within the boundaries of the space
+            ///
+            /// @param state State to test
+            /// @return Boolean that is true if it is in the boundaries of the space
+            ///
             virtual bool isInBound(const Eigen::VectorXd &state) const;
 
 
