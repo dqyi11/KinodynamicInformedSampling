@@ -93,7 +93,7 @@ namespace ompl
         void GibbsSampler::updateLevelSet(const double level_set)
         {
             prev_sample_ = getStartState();
-            updateLevelSet(level_set);
+            MyInformedSampler::updateLevelSet(level_set);
             // std::cout << "Updated Level Set" << std::endl;
         }
 

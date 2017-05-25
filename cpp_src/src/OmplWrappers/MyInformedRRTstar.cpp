@@ -54,6 +54,8 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) 
     setTreePruning(false);
     useRejectionSampling_ = false;
     useNewStateRejection_ = false;
+    std::cout << " useInformedSampling_ " << useInformedSampling_ << std::endl;
+    //infSampler_->sampleUniform(NULL, ompl::base::Cost(100.0));
     // maxDistance_ = 10.0;
 }
 

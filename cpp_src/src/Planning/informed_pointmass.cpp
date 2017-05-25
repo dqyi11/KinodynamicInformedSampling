@@ -170,7 +170,7 @@ void planWithSimpleSetup(void)
     if (MAIN_VERBOSE)
         std::cout << "Set up the MCMC sampler!" << std::endl;
 
-    opt->setCostThreshold(ob::Cost(1.51));
+    //opt->setCostThreshold(ob::Cost(1.51));
     pdef->setOptimizationObjective(opt);
 
     if (MAIN_VERBOSE)
@@ -192,7 +192,7 @@ void planWithSimpleSetup(void)
         std::cout << "Set up Informed RRT* planner!" << std::endl;
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(15.0);
+    ob::PlannerStatus solved = planner->solve(1500.0);
 
     if (MAIN_VERBOSE)
         std::cout << "Planner solved!" << std::endl;
