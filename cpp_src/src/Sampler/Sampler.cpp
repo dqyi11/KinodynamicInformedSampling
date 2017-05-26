@@ -266,6 +266,7 @@ namespace ompl
         ///
         bool MyInformedSampler::sampleInformedSpace(State *statePtr, const Cost maxCost)
         {
+
             if (started_ == false)  // Set the timer when the function is called for the first time
             {
                 started_ = true;
