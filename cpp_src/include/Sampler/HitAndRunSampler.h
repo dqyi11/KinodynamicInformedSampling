@@ -113,7 +113,7 @@ namespace ompl
                 numOfTries_(numOfTries)
             {
                 diagonalLength_ = 0.0;
-                for (int i = 0; i < getSpaceDimension(); i++)
+                for (uint i = 0; i < getSpaceDimension(); i++)
                     diagonalLength_ = diagonalLength_ + (stateMax_[i] - stateMin_[i]) * (stateMax_[i] - stateMin_[i]);
                 diagonalLength_ = std::sqrt(diagonalLength_);
 

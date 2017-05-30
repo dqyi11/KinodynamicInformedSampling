@@ -136,7 +136,7 @@ namespace ompl
                 {
                     // Sample random direction in S^dim
                     double sum = 0;
-                    for (int i = 0; i < getSpaceDimension(); i++)
+                    for (uint i = 0; i < getSpaceDimension(); i++)
                     {
                         dir[i] = normRndGnr_.sample();
                         sum = sum + dir[i] * dir[i];

@@ -202,7 +202,7 @@ void planWithSimpleSetup(void)
     // ob::PlannerPtr planner(new og::RRTstar(si));
     // ob::PlannerPtr planner(new og::InformedRRTstar(si));
     //ob::PlannerPtr planner(new MyInformedRRTstar(si));
-    ob::PlannerPtr planner = std::make_shared<MyInformedRRTstar>(si);
+    ob::PlannerPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
 
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);

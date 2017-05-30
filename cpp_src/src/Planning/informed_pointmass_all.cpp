@@ -23,6 +23,19 @@ namespace og = ompl::geometric;
 
 #include <limits>
 
+typedef enum{ HNR, RS, HRS, HMC } SamplerType;
+
+// Construct Sampler with the base pdef and base optimization objective
+double sigma = 1;
+int max_steps = 20;
+double alpha = 0.5;
+double max_call_num = 100;
+double batch_size = 100;
+double epsilon = 0.1;
+double L = 5;
+int num_trials = 5;
+const double level_set = std::numeric_limits<double>::infinity();
+
 class ValidityChecker : public ob::StateValidityChecker
 {
 public:
@@ -54,7 +67,6 @@ public:
                 {
                     return false;
                 }
-
             }
             else
             {
@@ -71,6 +83,60 @@ public:
 };
 
 bool MAIN_VERBOSE = true;
+
+ompl::base::PlannerPtr createPlanner(std::string caseName, int index,
+                                     SamplerType type, ompl::base::SpaceInformationPtr si,
+                                     ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal)
+{
+    ompl::base::MyInformedSamplerPtr sampler;
+    std::string samplerName;
+    switch(type)
+    {
+        case HNR:
+            std::cout << "Planning using Hit&Run Sampler" << std::endl;
+            sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
+            samplerName = "HNR";
+            break;
+
+        case RS:
+            std::cout << "Planning using Rejection Sampler" << std::endl;
+            sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+            samplerName = "RS";
+            break;
+
+        case HRS:
+            std::cout << "Planning using HRS Sampler" << std::endl;
+            sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
+            samplerName = "HRS";
+            break;
+
+        case HMC:
+            std::cout << "Planning using HMC Sampler" << std::endl;
+            sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+            samplerName = "HMC";
+            break;
+    }
+
+    // Set up the final problem with the full optimization objective
+    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
+    pdef->setStartAndGoalStates(start, goal);
+
+    ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
+
+    pdef->setOptimizationObjective(opt);
+
+    ob::PlannerPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
+
+    // Set the problem instance for our planner to solve
+    planner->setProblemDefinition(pdef);
+    planner->setup();
+    planner.get()->as<ob::MyInformedRRTstar>()->initLogFile(caseName, samplerName, index);
+
+    return planner;
+}
+
 
 void planWithSimpleSetup(void)
 {
@@ -161,170 +227,32 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
-    // Construct Sampler with the base pdef and base optimization objective
-    double sigma = 1;
-    int max_steps = 20;
-    double alpha = 0.5;
-    double max_call_num = 100;
-    double batch_size = 100;
-    double epsilon = 0.1;
-    double L = 5;
-    int num_trials = 5;
-    const double level_set = std::numeric_limits<double>::infinity();
-
-    // Hit And Run
+    int iteration_num = 1;
+    std::string caseName = "simple";
+    for(int i=0;i<iteration_num;i++)
     {
-        std::cout << "Planning using Hit&Run Sampler" << std::endl;
-        const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
-
-        // Set up the final problem with the full optimization objective
-        ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-        pdef->setStartAndGoalStates(start, goal);
-
-        const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
-
-        pdef->setOptimizationObjective(opt);
-
-        ob::PlannerPtr planner = std::make_shared<MyInformedRRTstar>(si);
-
-        // Set the problem instance for our planner to solve
-        planner->setProblemDefinition(pdef);
-        planner->setup();
-
-        // Run planner
-        ob::PlannerStatus solved = planner->solve(60.0);
-
-        if (solved)
+        // Hit And Run
         {
-            std::cout << "Found solution:" << std::endl;
-            // get the goal representation from the problem definition (not the same as
-            // the goal state)
-            // and inquire about the found path
-            ob::PathPtr path = pdef->getSolutionPath();
-            // print the path to screen
-            path->print(std::cout);
-            // Print to File
-            // std::ofstream myfile;
-            // myfile.open("geometric_pointmass2d.txt");
-            // path->printAsMatrix(std::cout);
-            // myfile.close();
+            auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
         }
-    }
 
-    // HMC
-    {
-        std::cout << "Planning using HMC Sampler" << std::endl;
-        const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
-
-        // Set up the final problem with the full optimization objective
-        ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-        pdef->setStartAndGoalStates(start, goal);
-
-        const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
-
-        pdef->setOptimizationObjective(opt);
-
-        ob::PlannerPtr planner = std::make_shared<MyInformedRRTstar>(si);
-
-        // Set the problem instance for our planner to solve
-        planner->setProblemDefinition(pdef);
-        planner->setup();
-
-        // Run planner
-        ob::PlannerStatus solved = planner->solve(60.0);
-
-        if (solved)
+        // HMC
         {
-            std::cout << "Found solution:" << std::endl;
-            // get the goal representation from the problem definition (not the same as
-            // the goal state)
-            // and inquire about the found path
-            ob::PathPtr path = pdef->getSolutionPath();
-            // print the path to screen
-            path->print(std::cout);
-            // Print to File
-            // std::ofstream myfile;
-            // myfile.open("geometric_pointmass2d.txt");
-            // path->printAsMatrix(std::cout);
-            // myfile.close();
+            auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
         }
-    }
 
-    // HRS
-    {
-        std::cout << "Planning using HRS Sampler" << std::endl;
-        const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
-
-        // Set up the final problem with the full optimization objective
-        ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-        pdef->setStartAndGoalStates(start, goal);
-
-        const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
-
-        pdef->setOptimizationObjective(opt);
-
-        ob::PlannerPtr planner = std::make_shared<MyInformedRRTstar>(si);
-
-        // Set the problem instance for our planner to solve
-        planner->setProblemDefinition(pdef);
-        planner->setup();
-
-        // Run planner
-        ob::PlannerStatus solved = planner->solve(60.0);
-
-        if (solved)
+        // HRS
         {
-            std::cout << "Found solution:" << std::endl;
-            // get the goal representation from the problem definition (not the same as
-            // the goal state)
-            // and inquire about the found path
-            ob::PathPtr path = pdef->getSolutionPath();
-            // print the path to screen
-            path->print(std::cout);
-            // Print to File
-            // std::ofstream myfile;
-            // myfile.open("geometric_pointmass2d.txt");
-            // path->printAsMatrix(std::cout);
-            // myfile.close();
+            auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
         }
-    }
 
-    // Rejection
-    {
-        std::cout << "Planning using Rejection Sampler" << std::endl;
-        const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
-
-        // Set up the final problem with the full optimization objective
-        ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-        pdef->setStartAndGoalStates(start, goal);
-
-        const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
-
-        pdef->setOptimizationObjective(opt);
-
-        ob::PlannerPtr planner = std::make_shared<MyInformedRRTstar>(si);
-
-        // Set the problem instance for our planner to solve
-        planner->setProblemDefinition(pdef);
-        planner->setup();
-
-        // Run planner
-        ob::PlannerStatus solved = planner->solve(60.0);
-
-        if (solved)
+        // Rejection
         {
-            std::cout << "Found solution:" << std::endl;
-            // get the goal representation from the problem definition (not the same as
-            // the goal state)
-            // and inquire about the found path
-            ob::PathPtr path = pdef->getSolutionPath();
-            // print the path to screen
-            path->print(std::cout);
-            // Print to File
-            // std::ofstream myfile;
-            // myfile.open("geometric_pointmass2d.txt");
-            // path->printAsMatrix(std::cout);
-            // myfile.close();
+            auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
         }
     }
 

@@ -56,14 +56,14 @@ namespace
     // Verbose constant
     const bool VERBOSE = false;
 
-    //
-    // Sigmoid function
-    //
-    // @param x Input
-    // @param a Controls shape of sigmoid
-    // @param c Controls shape of sigmoid
-    // @return Output of sigmoid function
-    //
+    ///
+    /// Sigmoid function
+    ///
+    /// @param x Input
+    /// @param a Controls shape of sigmoid
+    /// @param c Controls shape of sigmoid
+    /// @return Output of sigmoid function
+    ///
     inline double sigmoid(const double &x, const double &a = 200, const double &c = 0)
     {
         return 1 / (1 + exp(-a * (x - c)));
@@ -75,11 +75,11 @@ namespace ompl
 {
     namespace base
     {
-        //
-        // Function to determine if any of the joint limits are violated
-        // @param sample Sample to check
-        // @return Boolean that is true if any are in violation
-        //
+        ///
+        /// Function to determine if any of the joint limits are violated
+        /// @param sample Sample to check
+        /// @return Boolean that is true if any are in violation
+        ///
         bool MonteCarloSampler::anyDimensionInViolation(const Eigen::VectorXd &sample) const
         {
             const std::tuple<Eigen::VectorXd, Eigen::VectorXd> limits = getStateLimits();
@@ -97,12 +97,12 @@ namespace ompl
             return false;
         }
 
-        //
-        // Get the energy of the state from the cost function
-        //
-        // @param curr_state Current state to get the energy for
-        // @return Energy of the function
-        //
+        ///
+        /// Get the energy of the state from the cost function
+        ///
+        /// @param curr_state Current state to get the energy for
+        /// @return Energy of the function
+        ///
         double MonteCarloSampler::getEnergy(const Eigen::VectorXd &curr_state) const
         {
             const double cost = getCost(curr_state);
@@ -119,12 +119,12 @@ namespace ompl
             return E_region + E_grad + E_informed;
         }
 
-        //
-        // Get the probability of the state from the cost function
-        //
-        // @param energy Energy of the state
-        // @return Probability of the state
-        //
+        ///
+        /// Get the probability of the state from the cost function
+        ///
+        /// @param energy Energy of the state
+        /// @return Probability of the state
+        ///
         double MonteCarloSampler::getProb(const double energy) const
         {
             return exp(-energy);

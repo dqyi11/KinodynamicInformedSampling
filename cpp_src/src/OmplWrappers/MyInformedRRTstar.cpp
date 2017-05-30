@@ -49,6 +49,11 @@ void print_out_states(ompl::base::State *statePtr)
 // This is here mainly for debugging
 //
 
+namespace ompl
+{
+namespace base
+{
+
 MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) : InformedRRTstar(si)
 {
     setTreePruning(false);
@@ -153,6 +158,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
     // our functor for sorting nearest neighbors
     CostIndexCompare compareFn(costs, *opt_);
 
+    std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
     while (ptc == false)
     {
         //first iteration, try to explicitly connect start to goal
@@ -425,6 +431,13 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                                         "in %u iterations (%u vertices in the graph)",
                                         getName().c_str(), goalMotions_[i]->cost.value(), iterations_, nn_->size());
                         }
+                        if(out_.is_open())
+                        {
+                            std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
+                            std::chrono::high_resolution_clock::duration duration = currentTime - startTime;
+                            out_ << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << " , " <<
+                                   goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << std::endl;
+                        }
                         bestCost_ = goalMotions_[i]->cost;
                         updatedSolution = true;
                     }
@@ -526,4 +539,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 getName().c_str(), statesGenerated, rewireTest, goalMotions_.size(), bestCost_.value());
 
     return base::PlannerStatus(addedSolution, approximate);
+}
+
+}
 }
