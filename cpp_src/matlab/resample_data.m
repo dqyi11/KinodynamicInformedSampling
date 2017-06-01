@@ -1,11 +1,16 @@
-function [ resampled_data ] = resample_data( data, total_time, interval )
+function [ new_Y ] = resample_data( Y, X, new_X )
 
-  [num, dim] = size(data);
-  new_num = int(total_time/interval);
-  resampled_data = zeros(new_num, dim);
+  [new_num, dim] = size(new_X);
+  resampled_Y = zeros(new_num, dim);
   
-  idx = 1
-  for 
+  idx = 0
+  for i=1:1:new_num:
+    while X[idx] > new_X[idx]:
+      idx = idx + 1
+    end
+      new_Y = Y[idx]
+  end
   
+  return new_Y  
 end
 
