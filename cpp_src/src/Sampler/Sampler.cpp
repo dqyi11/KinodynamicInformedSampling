@@ -266,6 +266,7 @@ namespace ompl
         ///
         bool MyInformedSampler::sampleInformedSpace(State *statePtr, const Cost maxCost)
         {
+            /*
             if (started_ == false)  // Set the timer when the function is called for the first time
             {
                 started_ = true;
@@ -304,6 +305,18 @@ namespace ompl
             }
 
             sampleIndex_++;
+
+            return true;
+            */
+            updateLevelSet(maxCost.value());
+            VectorXd sample(si_->getStateDimension()+1);
+            double *val = static_cast<ompl::base::RealVectorStateSpace::StateType *>(statePtr)->values;
+            while(false == sampleInLevelSet(sample)){}
+
+            for (int i = 0; i < sample.size() - 1; i++)
+            {
+                val[i] = sample(i);
+            }
 
             return true;
         }

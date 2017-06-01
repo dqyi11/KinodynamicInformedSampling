@@ -67,7 +67,6 @@ public:
                 {
                     return false;
                 }
-
             }
             else
             {
@@ -85,32 +84,38 @@ public:
 
 bool MAIN_VERBOSE = true;
 
-ompl::base::PlannerPtr createPlanner(SamplerType type, ompl::base::SpaceInformationPtr si,
+ompl::base::PlannerPtr createPlanner(std::string caseName, int index,
+                                     SamplerType type, ompl::base::SpaceInformationPtr si,
                                      ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
                                      const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
                                      const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal)
 {
     ompl::base::MyInformedSamplerPtr sampler;
+    std::string samplerName;
     switch(type)
     {
         case HNR:
             std::cout << "Planning using Hit&Run Sampler" << std::endl;
             sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
+            samplerName = "HNR";
             break;
 
         case RS:
             std::cout << "Planning using Rejection Sampler" << std::endl;
             sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+            samplerName = "RS";
             break;
 
         case HRS:
             std::cout << "Planning using HRS Sampler" << std::endl;
             sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
+            samplerName = "HRS";
             break;
 
         case HMC:
             std::cout << "Planning using HMC Sampler" << std::endl;
             sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+            samplerName = "HMC";
             break;
     }
 
@@ -127,6 +132,7 @@ ompl::base::PlannerPtr createPlanner(SamplerType type, ompl::base::SpaceInformat
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);
     planner->setup();
+    planner.get()->as<ob::MyInformedRRTstar>()->initLogFile(caseName, samplerName, index);
 
     return planner;
 }
@@ -221,29 +227,33 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
-
-    // Hit And Run
+    int iteration_num = 1;
+    std::string caseName = "simple";
+    for(int i=0;i<iteration_num;i++)
     {
-        auto planner = createPlanner(HNR, si, base_pdef, dimt, start, goal);
-        ob::PlannerStatus solved = planner->solve(60.0);
-    }
+        // Hit And Run
+        {
+            auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
+        }
 
-    // HMC
-    {
-        auto planner = createPlanner(HMC, si, base_pdef, dimt, start, goal);
-        ob::PlannerStatus solved = planner->solve(60.0);
-    }
+        // HMC
+        {
+            auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
+        }
 
-    // HRS
-    {
-        auto planner = createPlanner(HRS, si, base_pdef, dimt, start, goal);
-        ob::PlannerStatus solved = planner->solve(60.0);
-    }
+        // HRS
+        {
+            auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
+        }
 
-    // Rejection
-    {
-        auto planner = createPlanner(RS, si, base_pdef, dimt, start, goal);
-        ob::PlannerStatus solved = planner->solve(60.0);
+        // Rejection
+        {
+            auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal);
+            ob::PlannerStatus solved = planner->solve(60.0);
+        }
     }
 
 }

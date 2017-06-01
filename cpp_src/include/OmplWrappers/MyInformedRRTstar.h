@@ -22,7 +22,6 @@ namespace ompl
                 ss << scenarioName.c_str() << "_" << samplerName.c_str() << "_" << id << ".csv";
                 out_.open(ss.str());
 
-
                 std::cout << "SAVING FILE TO " << ss.str() << " = " << out_.is_open() << std::endl;
             }
 
