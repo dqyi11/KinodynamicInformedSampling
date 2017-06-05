@@ -19,3 +19,27 @@ legend('HMC', 'HNR', 'RS', 'HRS');
 xlabel('Time - log(ms)');
 ylabel('Cost - log');
 hold off;
+
+allTime = vertcat(HMC(:,1), HNR(:,1), RS(:,1), HRS(:,1));
+maxT = max(allTime);
+
+stepNum = 500;
+stepSize = log(maxT) / stepNum;
+
+T = [0:stepSize:log(maxT)];
+T = exp(T);
+HMC1 = resample_data(HMC(:,2), HMC(:,1), T');
+HNR1 = resample_data(HNR(:,2), HNR(:,1), T');
+RS1 = resample_data(RS(:,2), RS(:,1), T');
+HRS1 = resample_data(HRS(:,2), HRS(:,1), T');
+
+figure;
+hold on;
+plot(log(T), log(HMC1), '.-r');
+plot(log(T), log(HNR1), '.-g');
+plot(log(T), log(RS1), '.-b');
+plot(log(T), log(HRS1), '.-c');
+legend('HMC', 'HNR', 'RS', 'HRS');
+xlabel('Time - log(ms)');
+ylabel('Cost - log');
+hold off;
