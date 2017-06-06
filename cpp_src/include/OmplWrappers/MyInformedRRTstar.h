@@ -4,6 +4,7 @@
 #include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 #include <iostream>
 #include <fstream>
+#include <ios>
 
 namespace ompl
 {
@@ -12,6 +13,7 @@ namespace ompl
         class MyInformedRRTstar : public ompl::geometric::InformedRRTstar
         {
         public:
+            typedef enum { LOAD_SAMPLES, SAVE_SAMPLES, RANDOM_SAMPLES } PlannerMode;
             MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si);
 
             virtual ompl::base::PlannerStatus solve(const ompl::base::PlannerTerminationCondition &ptc) override;
@@ -25,8 +27,41 @@ namespace ompl
                 std::cout << "SAVING FILE TO " << ss.str() << " = " << out_.is_open() << std::endl;
             }
 
+            ompl::base::PlannerStatus solve(double solveTime)
+            {
+                if (solveTime < 1.0)
+                    return solve(timedPlannerTerminationCondition(solveTime));
+                return solve(timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+            }
+
+            ompl::base::PlannerStatus solveAfterLoadingSamples(std::string filename, double solveTime)
+            {
+                mode_ = LOAD_SAMPLES;
+                sampleLoadStream_.open(filename.c_str(), std::ios::in);
+                if (solveTime < 1.0)
+                    return solve(timedPlannerTerminationCondition(solveTime));
+                return solve(timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+            }
+
+            ompl::base::PlannerStatus solveAndSaveSamples(std::string filename, double solveTime)
+            {
+                mode_ = SAVE_SAMPLES;
+                sampleSaveStream_.open(filename.c_str(), std::ios::out);
+                if (solveTime < 1.0)
+                    return solve(timedPlannerTerminationCondition(solveTime));
+                return solve(timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+            }
+
+            std::string fromState(ompl::base::State* fromState);
+            bool toState(std::string stateString, ompl::base::State* toState);
+
+
         private:
+            PlannerMode mode_;
             std::ofstream out_;
+            std::ofstream sampleSaveStream_;
+            std::ifstream sampleLoadStream_;
+
         };
 
         using MyInformedRRTstarPtr = std::shared_ptr<MyInformedRRTstar>;

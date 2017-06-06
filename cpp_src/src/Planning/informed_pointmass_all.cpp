@@ -228,31 +228,32 @@ void planWithSimpleSetup(void)
     base_pdef->setOptimizationObjective(base_opt);
 
     int iteration_num = 10;
+    double duration = 60.0; //run time in seconds
     std::string caseName = "simple";
     for(int i=0;i<iteration_num;i++)
     {
         // Hit And Run
         {
             auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(60.0);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // HMC
         {
             auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(60.0);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // HRS
         {
             auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(60.0);
+            ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // Rejection
         {
             auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(60.0);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
     }
 

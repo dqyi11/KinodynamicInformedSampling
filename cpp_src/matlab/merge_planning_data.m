@@ -18,7 +18,7 @@ end
 
 maxT = max(maxtimes);
 
-stepNum = 10;
+stepNum = 50;
 HMC1 = zeros(stepNum+1, datasetSize);
 HNR1 = zeros(stepNum+1, datasetSize);
 RS1 = zeros(stepNum+1, datasetSize);
@@ -48,6 +48,10 @@ end
   
 figure;
 hold on;
+errorbar(log(T), mean(log(HMC1),2), var(log(HMC1),1,2), 'r');
+errorbar(log(T), mean(log(HNR1),2), var(log(HNR1),1,2), 'g');
+errorbar(log(T), mean(log(RS1),2), var(log(RS1),1,2), 'b');
+errorbar(log(T), mean(log(HRS1),2), var(log(HRS1),1,2), 'c');
 plot(log(T), mean(log(HMC1),2),'-.r');
 plot(log(T), mean(log(HNR1),2), '.-g');
 plot(log(T), mean(log(RS1),2), '.-b');

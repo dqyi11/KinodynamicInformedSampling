@@ -56,6 +56,7 @@ namespace base
 
 MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) : InformedRRTstar(si)
 {
+    mode_ = RANDOM_SAMPLES;
     setTreePruning(false);
     useRejectionSampling_ = false;
     useNewStateRejection_ = false;
@@ -193,16 +194,32 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             // attempts), skip the remainder of this loop and return to try again
             // std::cout << "Printing state before: ";
             // print_out_states(rstate);
-            if (!sampleUniform(rstate))
+            if (opt_->isFinite(bestCost_))
             {
-                continue;
+                if (!sampleUniform(rstate))
+                {
+                    continue;
+                }
             }
-            else
+            else //(opt_->isFinite(bestCost_) == false)
             {
-                if (RRT_VERBOSE)
-                    std::cout << "Printing state after: ";
-                if (RRT_VERBOSE)
-                    print_out_states(rstate);
+                if(mode_ == SAVE_SAMPLES)
+                {
+                    if (!sampleUniform(rstate))
+                    {
+                        continue;
+                    }
+                    // append sample to file
+                    std::string stateStr = fromState(rstate);
+                    sampleSaveStream_ << stateStr << std::endl;
+                }
+                if (mode_ == LOAD_SAMPLES)
+                {
+                    // load sample to file
+                    std::string stateStr;
+                    std::getline(sampleLoadStream_, stateStr);
+                    toState(stateStr, rstate);
+                }
             }
         }
 
@@ -424,6 +441,17 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                             OMPL_INFORM("%s: Found an initial solution with a cost of %.2f "
                                         "in %u iterations (%u vertices in the graph)",
                                         getName().c_str(), goalMotions_[i]->cost.value(), iterations_, nn_->size());
+
+                            if(mode_==SAVE_SAMPLES)
+                            {
+                                sampleSaveStream_.close();
+                                return base::PlannerStatus(true, false);;
+                            }
+                            else if(mode_ == LOAD_SAMPLES)
+                            {
+                                sampleLoadStream_.close();
+                                startTime = std::chrono::high_resolution_clock::now();
+                            }
                         }
                         else
                         {
@@ -538,7 +566,32 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 "states in tree. Final solution cost %.3f",
                 getName().c_str(), statesGenerated, rewireTest, goalMotions_.size(), bestCost_.value());
 
+
+
     return base::PlannerStatus(addedSolution, approximate);
+}
+
+bool MyInformedRRTstar::toState(std::string stateString, ompl::base::State* toState)
+{
+    if(toState==nullptr)
+    {
+        return false;
+    }
+    std::stringstream iss( stateString );
+    int dimIdx = 0;
+    int intVal = 0;
+    while ( iss >> intVal )
+    {
+        toState->as<ompl::base::RealVectorStateSpace::StateType>()->values[dimIdx] = intVal;
+        dimIdx ++;
+    }
+
+    return true;
+}
+
+std::string MyInformedRRTstar::fromState(ompl::base::State* fromState)
+{
+
 }
 
 }
