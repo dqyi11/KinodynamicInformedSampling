@@ -84,7 +84,7 @@ public:
 
 bool MAIN_VERBOSE = true;
 
-ompl::base::PlannerPtr createPlanner(std::string caseName, int index,
+ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
                                      SamplerType type, ompl::base::SpaceInformationPtr si,
                                      ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
                                      const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
@@ -127,12 +127,12 @@ ompl::base::PlannerPtr createPlanner(std::string caseName, int index,
 
     pdef->setOptimizationObjective(opt);
 
-    ob::PlannerPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
+    ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
 
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);
     planner->setup();
-    planner.get()->as<ob::MyInformedRRTstar>()->initLogFile(caseName, samplerName, index);
+    planner->initLogFile(caseName, samplerName, index);
 
     return planner;
 }
@@ -227,33 +227,37 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
-    int iteration_num = 10;
+    int iteration_num = 30;
     double duration = 60.0; //run time in seconds
     std::string caseName = "simple";
     for(int i=0;i<iteration_num;i++)
     {
         // Hit And Run
         {
+            std::cout << " Hit And Run " << std::endl;
             auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal);
-            //ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // HMC
         {
+            std::cout << " HMC " << std::endl;
             auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal);
-            //ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // HRS
         {
+            std::cout << " HRS " << std::endl;
             auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal);
             ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // Rejection
         {
+            std::cout << " Rejection " << std::endl;
             auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal);
-            //ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solve(duration);
         }
     }
 
