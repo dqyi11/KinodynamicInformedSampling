@@ -202,7 +202,7 @@ void planWithSimpleSetup(void)
     // ob::PlannerPtr planner(new og::RRTstar(si));
     // ob::PlannerPtr planner(new og::InformedRRTstar(si));
     //ob::PlannerPtr planner(new MyInformedRRTstar(si));
-    ob::PlannerPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
+    ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
 
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);
@@ -212,11 +212,15 @@ void planWithSimpleSetup(void)
         std::cout << "Set up Informed RRT* planner!" << std::endl;
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(60.0);
+    //ob::PlannerStatus solved = planner->solve(60.0);
+
+    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     if (MAIN_VERBOSE)
         std::cout << "Planner solved!" << std::endl;
 
+    /*
     if (solved)
     {
         std::cout << "Found solution:" << std::endl;
@@ -232,6 +236,7 @@ void planWithSimpleSetup(void)
         // path->printAsMatrix(std::cout);
         // myfile.close();
     }
+    */
 }
 
 int main()

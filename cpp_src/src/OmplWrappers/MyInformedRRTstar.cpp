@@ -209,17 +209,28 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                     {
                         continue;
                     }
-                    // append sample to file
-                    std::string stateStr = fromState(rstate);
-                    sampleSaveStream_ << stateStr << std::endl;
+                    else
+                    {
+                        // append sample to file
+                        std::string stateStr = fromState(rstate);
+                        sampleSaveStream_ << stateStr << std::endl;
+                    }
                 }
-                if (mode_ == LOAD_SAMPLES)
+                else if (mode_ == LOAD_SAMPLES)
                 {
                     // load sample to file
                     std::string stateStr;
                     std::getline(sampleLoadStream_, stateStr);
                     toState(stateStr, rstate);
                 }
+                else
+                {
+                    if (!sampleUniform(rstate))
+                    {
+                        continue;
+                    }
+                }
+
             }
         }
 
@@ -577,10 +588,10 @@ bool MyInformedRRTstar::toState(std::string stateString, ompl::base::State* toSt
     }
     std::stringstream iss( stateString );
     int dimIdx = 0;
-    int intVal = 0;
-    while ( iss >> intVal && dimIdx < getSpaceInformation()->getStateDimension() )
+    double val = 0;
+    while ( iss >> val && dimIdx < getSpaceInformation()->getStateDimension() )
     {
-        toState->as<ompl::base::RealVectorStateSpace::StateType>()->values[dimIdx] = intVal;
+        toState->as<ompl::base::RealVectorStateSpace::StateType>()->values[dimIdx] = val;
         dimIdx ++;
     }
 
