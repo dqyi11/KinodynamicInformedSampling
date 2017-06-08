@@ -257,7 +257,8 @@ namespace ompl
 
             int steps = 0;
             const int maxSteps = 10;
-            while (cost > getLevelSet())
+            int maxTrials = 10;
+            while (cost > getLevelSet() && maxTrials > 0)
             {
                 double last_cost = cost;
                 Eigen::VectorXd inv_jacobian = getInvJacobian(end);
@@ -272,6 +273,8 @@ namespace ompl
                     end = MonteCarloSampler::getRandomSample();
                     cost = getCost(end);
                 }
+
+                maxTrials --;
             }
 
             return end;
