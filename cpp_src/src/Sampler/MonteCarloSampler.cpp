@@ -256,6 +256,7 @@ namespace ompl
             double cost = getCost(end);
 
             int steps = 0;
+            const int maxSteps = 10;
             while (cost > getLevelSet())
             {
                 double last_cost = cost;
@@ -265,9 +266,9 @@ namespace ompl
                 steps++;
 
                 // If the number of steps reaches some threshold, start over
-                const double trap_threshold = 0.0001;
-                if (last_cost - cost < trap_threshold)
+                if (steps > maxSteps)
                 {
+                    steps = 0;
                     end = MonteCarloSampler::getRandomSample();
                     cost = getCost(end);
                 }
