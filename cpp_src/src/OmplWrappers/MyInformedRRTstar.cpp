@@ -566,8 +566,6 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 "states in tree. Final solution cost %.3f",
                 getName().c_str(), statesGenerated, rewireTest, goalMotions_.size(), bestCost_.value());
 
-
-
     return base::PlannerStatus(addedSolution, approximate);
 }
 
