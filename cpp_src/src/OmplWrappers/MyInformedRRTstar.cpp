@@ -68,6 +68,8 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) 
     setRewireFactor(10000.);
 
     setTreePruning(false);
+    setNewStateRejection(false);
+    setDelayCC(false);
 }
 
 base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondition &ptc)
@@ -190,6 +192,12 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             goal_s->sampleGoal(rstate);
         else
         {
+            /*
+            std::cout << "GOAL STATE ";
+            getSpaceInformation()->printState(rstate, std::cout);
+            std::cout << std::endl;
+            */
+
             // Attempt to generate a sample, if we fail (e.g., too many rejection
             // attempts), skip the remainder of this loop and return to try again
             // std::cout << "Printing state before: ";
@@ -220,8 +228,16 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 {
                     // load sample to file
                     std::string stateStr;
-                    std::getline(sampleLoadStream_, stateStr);
-                    toState(stateStr, rstate);
+                    bool getSuccess = std::getline(sampleLoadStream_, stateStr);
+                    if( getSuccess == false )
+                    {
+                        std::cout << " GETLINE FAILED " << std::endl;
+                    }
+                    bool success = toState(stateStr, rstate);
+                    if( success == false)
+                    {
+                        std::cout << "FAIL " << std::endl;
+                    }
                 }
                 else
                 {
@@ -585,6 +601,10 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
 bool MyInformedRRTstar::toState(std::string stateString, ompl::base::State* toState)
 {
     if(toState==nullptr)
+    {
+        return false;
+    }
+    if(stateString == "")
     {
         return false;
     }
