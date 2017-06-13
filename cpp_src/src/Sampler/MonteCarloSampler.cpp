@@ -337,8 +337,8 @@ namespace ompl
             double sampleCost = std::numeric_limits<double>::infinity();
             q << lastSample_;
 
-            do
-            {
+            //do
+            //{
                 if (getCurrentStep() < 0)
                 {
                     Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
@@ -408,7 +408,7 @@ namespace ompl
                 }
 
 
-            } while(!isInLevelSet(q, sampleCost));
+            //} while(!isInLevelSet(q, sampleCost));
 
             sample << q, sampleCost;
 
