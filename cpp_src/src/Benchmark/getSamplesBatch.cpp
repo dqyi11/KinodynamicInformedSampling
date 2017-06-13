@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
             throw std::runtime_error("file not open");
     }
 
-    int samplerNum = 7;
+    int samplerNum = 4;
     for (int i = 0; i < numbatch; i++)
     {
         std::cout << "BATCH " << i << std::endl;
@@ -128,15 +128,6 @@ int main(int argc, char *argv[])
         }
         curr++;
 
-        {
-            MatrixXd mcmcSamples;
-            double sigma = 5;
-            int maxSteps = 20;
-            double alpha = 0.5;
-            ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, maxSteps);
-            mcmcSamples = mcmcSampler.sample(numSamples, times[2 * numbatch + i]);
-        }        
-        curr++;
 
         {
             MatrixXd rejSamples;
@@ -152,14 +143,6 @@ int main(int argc, char *argv[])
             dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
 
         }
-        curr++;
-
-        {
-            MatrixXd gibbsSamples;
-            ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
-            gibbsSamples = gibbsSampler.sample(numSamples, times[curr]);
-        }
-
         curr++;
 
         {

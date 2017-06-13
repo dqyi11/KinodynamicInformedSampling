@@ -150,20 +150,6 @@ int main(int argc, char *argv[])
         printTime(times[curr], std::cout);
         curr++;
 
-        /*
-        std::cout << " MCMC " << std::flush;
-        {
-            MatrixXd mcmcSamples;
-            double sigma = 5;
-            int maxSteps = 20;
-            double alpha = 0.5;
-            ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, maxSteps);
-            mcmcSamples = mcmcSampler.sample(numSamples, times[curr]);
-        }
-        printTime(times[curr], std::cout);
-        curr++;
-        */
-
         std::cout << " HRS " << std::flush;
         {
             MatrixXd dimthrsSamples;
@@ -175,16 +161,6 @@ int main(int argc, char *argv[])
         printTime(times[curr], std::cout);
         curr++;
 
-        /*
-        std::cout << " GIBBS " << std::flush;
-        {
-            MatrixXd gibbsSamples;
-            ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
-            gibbsSamples = gibbsSampler.sample(numSamples, times[curr]);
-        }
-        printTime(times[curr], std::cout);
-        curr++;
-        */
         int numTrials = 5;
         std::cout << " H&R (" << numTrials << ") " << std::flush;
         {
