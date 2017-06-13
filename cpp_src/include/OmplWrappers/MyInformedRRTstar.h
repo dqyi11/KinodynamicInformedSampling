@@ -2,6 +2,7 @@
 
 // OMPL
 #include <ompl/geometric/planners/rrt/InformedRRTstar.h>
+#include "ompl/datastructures/NearestNeighborsLinear.h"
 #include <iostream>
 #include <fstream>
 #include <ios>
@@ -37,6 +38,13 @@ namespace ompl
             ompl::base::PlannerStatus solveAfterLoadingSamples(std::string filename, double solveTime)
             {
                 mode_ = LOAD_SAMPLES;
+                if(nn_)
+                {
+                    nn_.reset();
+                    nn_ = std::make_shared<NearestNeighborsLinear<Motion *>>();
+                    nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+                }
+
                 sampleLoadStream_.open(filename.c_str(), std::ios::in);
                 if (solveTime < 1.0)
                     return solve(timedPlannerTerminationCondition(solveTime));
@@ -46,6 +54,13 @@ namespace ompl
             ompl::base::PlannerStatus solveAndSaveSamples(std::string filename, double solveTime)
             {
                 mode_ = SAVE_SAMPLES;
+                if(nn_)
+                {
+                    nn_.reset();
+                    nn_ = std::make_shared<NearestNeighborsLinear<Motion *>>();
+                    nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+                }
+
                 sampleSaveStream_.open(filename.c_str(), std::ios::out);
                 if (solveTime < 1.0)
                     return solve(timedPlannerTerminationCondition(solveTime));

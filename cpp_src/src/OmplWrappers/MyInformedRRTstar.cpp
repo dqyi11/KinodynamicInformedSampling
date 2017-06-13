@@ -187,17 +187,21 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
         // sample random state (with goal biasing)
         // Goal samples are only sampled until maxSampleCount() goals are in the
         // tree, to prohibit duplicate goal states.
-        if (goal_s && goalMotions_.size() < goal_s->maxSampleCount() && rng_.uniform01() < goalBias_ &&
-            goal_s->canSample())
+        if (goal_s && goalMotions_.size() < goal_s->maxSampleCount() &&
+            rng_.uniform01() < goalBias_ &&
+            goal_s->canSample() &&
+            (mode_ != LOAD_SAMPLES || opt_->isFinite(bestCost_)))
+        {
             goal_s->sampleGoal(rstate);
+            if(mode_ == SAVE_SAMPLES)
+            {
+                // append sample to file
+                std::string stateStr = fromState(rstate);
+                sampleSaveStream_ << stateStr << std::endl;
+            }
+        }
         else
         {
-            /*
-            std::cout << "GOAL STATE ";
-            getSpaceInformation()->printState(rstate, std::cout);
-            std::cout << std::endl;
-            */
-
             // Attempt to generate a sample, if we fail (e.g., too many rejection
             // attempts), skip the remainder of this loop and return to try again
             // std::cout << "Printing state before: ";
@@ -472,12 +476,24 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                             if(mode_==SAVE_SAMPLES)
                             {
                                 sampleSaveStream_.close();
-                                return base::PlannerStatus(true, false);;
+                                return base::PlannerStatus(true, false);
                             }
                             else if(mode_ == LOAD_SAMPLES)
                             {
-                                sampleLoadStream_.close();
+                                //close file stream
+                                sampleLoadStream_.close();                                
+
+                                //switch to apx NN data structure
+                                auto tmp = std::make_shared< NearestNeighborsSqrtApprox<Motion *>>();
+                                tmp->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+                                std::vector<Motion*> motions;
+                                nn_->list(motions);
+                                for (std::size_t j(0); j < motions.size(); ++j)
+                                    tmp->add(motions[j]);
+                                nn_ = tmp;
+
                                 startTime = std::chrono::high_resolution_clock::now();
+
                             }
                         }
                         else

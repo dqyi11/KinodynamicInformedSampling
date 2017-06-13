@@ -209,6 +209,8 @@ namespace ompl
         //
         Eigen::VectorXd MonteCarloSampler::gradDescent(const double alpha)
         {
+            // If the number of steps reaches some threshold, start over
+            const double thresh = 20;
             Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
             double cost = getCost(start);
             double prev_cost = cost;
@@ -226,8 +228,7 @@ namespace ompl
 
                 steps++;
 
-                // If the number of steps reaches some threshold, start over
-                const double thresh = 20;
+
                 // if(steps > thresh || cost > prev_cost)
                 if (steps > thresh || cost > 10 * getLevelSet() || grad.norm() < 0.001)
                 {
@@ -341,8 +342,7 @@ namespace ompl
                 if (getCurrentStep() < 0)
                 {
                     Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
-                    // q = newton_raphson(start);
-                    q = gradDescent(getAlpha());
+                    q =  newtonRaphson(start);
                 }
 
                 // Make a half step for momentum at the beginning
@@ -440,7 +440,7 @@ namespace ompl
                 std::cout << "Number of samples: " << numSamples << std::endl;
             if (VERBOSE)
                 std::cout << "Surfing" << std::endl;
-            Eigen::VectorXd q = MCMCSampler::gradDescent(getAlpha());
+            Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample());
             if (VERBOSE)
                 std::cout << "Got Through Gradient Descent" << std::endl;
 
@@ -458,7 +458,7 @@ namespace ompl
                 {
                     if (VERBOSE)
                         std::cout << "New start!" << std::endl;
-                    Eigen::VectorXd q = MCMCSampler::gradDescent(getAlpha());
+                    Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample());
                     if (VERBOSE)
                         std::cout << "Got Through Gradient Descent in loop" << std::endl;
                 }
