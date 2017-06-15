@@ -1,5 +1,4 @@
 
-
 hmc_filename = 'simple_HMC_0.csv';
 hnr_filename = 'simple_HNR_0.csv';
 rs_filename = 'simple_RS_0.csv';

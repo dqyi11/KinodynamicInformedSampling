@@ -90,14 +90,6 @@ namespace ompl
             virtual Eigen::VectorXd gradDescent(const double alpha = 0.01);
 
             ///
-            /// Surf down the cost function to get to the levelset
-            ///
-            /// @param start Starting state
-            /// @return Path to the level set
-            ///
-            virtual Eigen::VectorXd newtonRaphson(const Eigen::VectorXd &start);
-
-            ///
             /// Get the energy of the state from the cost function
             ///
             /// @param curr_state Current state to get the energy for
@@ -121,12 +113,6 @@ namespace ompl
             ///
             virtual double getProb(const Eigen::VectorXd &curr_state) const;
 
-            ///
-            /// Get one random uniform sample from the space
-            ///
-            /// @return Random uniform vector from the space
-            ///
-            virtual Eigen::VectorXd getRandomSample();
 
             ///
             /// Get a normal random vector for the momentum

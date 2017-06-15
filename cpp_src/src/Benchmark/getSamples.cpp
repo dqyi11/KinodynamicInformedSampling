@@ -36,10 +36,8 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         std::cout << "\t -samples - Number of samples to get" << std::endl;
         std::cout << "\t -time - Boolean (0,1)" << std::endl;
         std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
-        std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
         std::cout << "\t -rej - Boolean (0,1)" << std::endl;
         std::cout << "\t -hrs - Boolean(0,1)" << std::endl;
-        std::cout << "\t -gibbs - Boolean(0,1)" << std::endl;
         std::cout << "\t -hitnrun - Boolean(0,1)" << std::endl;
         std::cout << "\t -filename - Filename to save the samples to" << std::endl;
         std::cout << "________________________________________________" << std::endl;
@@ -67,12 +65,6 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         else
             args.push_back(1);  // Default to run hmc
 
-        // Get the boolean to determine if we run mcmc
-        if (cmdOptionExists(argv, argv + argc, "-mcmc"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-mcmc")));
-        else
-            args.push_back(1);  // Default to run mcmc
-
         // Get the boolean to determine if we run rej
         if (cmdOptionExists(argv, argv + argc, "-rej"))
             args.push_back(atoi(getCmdOption(argv, argv + argc, "-rej")));
@@ -83,12 +75,6 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         // sampling
         if (cmdOptionExists(argv, argv + argc, "-hrs"))
             args.push_back(atoi(getCmdOption(argv, argv + argc, "-hrs")));
-        else
-            args.push_back(1);  // Default to run dimthrs
-
-        // Get the boolean to determine if we run gibbs sampling
-        if (cmdOptionExists(argv, argv + argc, "-gibbs"))
-            args.push_back(atoi(getCmdOption(argv, argv + argc, "-gibbs")));
         else
             args.push_back(1);  // Default to run dimthrs
 
@@ -116,11 +102,9 @@ int main(int argc, char *argv[])
     int numSamples = args[0];
     bool time = (args[1] == 1) ? true : false;
     bool runHmc = (args[2] == 1) ? true : false;
-    bool runMcmc = (args[3] == 1) ? true : false;
-    bool runRej = (args[4] == 1) ? true : false;
-    bool runHrs = (args[5] == 1) ? true : false;
-    bool runGibbs = (args[6] == 1) ? true : false;
-    bool runHitnrun = (args[7] == 1) ? true : false;
+    bool runRej = (args[3] == 1) ? true : false;
+    bool runHrs = (args[4] == 1) ? true : false;
+    bool runHitnrun = (args[5] == 1) ? true : false;
 
     std::string filename;
     bool save;
@@ -173,23 +157,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    MatrixXd mcmcSamples;
-    if (runMcmc)
-    {
-        double sigma = 5;
-        int maxSteps = 20;
-        double alpha = 0.5;
-        ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, maxSteps);
-        std::cout << "Running MCMC Sampling..." << std::endl;
-        mcmcSamples = mcmcSampler.sample(numSamples, duration);
-        if (time)
-        {
-            std::cout << "Total time ";
-            printTime(duration, std::cout);
-            std::cout << std::endl;
-        }
-    }
-
     MatrixXd rejSamples;
     if (runRej)
     {
@@ -211,20 +178,6 @@ int main(int argc, char *argv[])
                                                                     levelSet, 100, 100);
         std::cout << "Running DIMT HRS..." << std::endl;
         dimthrsSamples = dimthrsSampler.sample(numSamples, duration);
-        if (time)
-        {
-            std::cout << "Total time ";
-            printTime(duration, std::cout);
-            std::cout << std::endl;
-        }
-    }
-
-    MatrixXd gibbsSamples;
-    if (runGibbs)
-    {
-        ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
-        std::cout << "Running Gibbs Sampler..." << std::endl;
-        gibbsSamples = gibbsSampler.sample(numSamples, duration);
         if (time)
         {
             std::cout << "Total time ";
@@ -256,12 +209,6 @@ int main(int argc, char *argv[])
             printSampleToFile(hmcSamples, hmcFile);
         }
 
-        if (runMcmc)
-        {
-            std::ofstream mcmcFile(filename + "_mcmc.log");
-            printSampleToFile(mcmcSamples, mcmcFile);
-        }
-
         if (runRej)
         {
             std::ofstream rejFile(filename + "_rej.log");
@@ -272,12 +219,6 @@ int main(int argc, char *argv[])
         {
             std::ofstream dimthrsFile(filename + "_hrs.log");
             printSampleToFile(dimthrsSamples, dimthrsFile);
-        }
-
-        if (runGibbs)
-        {
-            std::ofstream gibbsFile(filename + "_gibbs.log");
-            printSampleToFile(gibbsSamples, gibbsFile);
         }
 
         if (runHitnrun)

@@ -105,6 +105,10 @@ namespace ompl
             ///
             double getRandomDimension(const double max, const double min);
 
+#ifdef USE_NLOPT
+            static double inequalConstraint(const std::vector<double> &x,
+                                            std::vector<double> &grad, void *data);
+#endif
         protected:
             ompl::base::SpaceInformationPtr si_;
 
@@ -133,7 +137,7 @@ namespace ompl
             ///
             MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
                               const double levelSet, const unsigned int maxNumberCalls,
-                              const int sampleBatchSize, const double timelimit = 3600)
+                              const int sampleBatchSize, const double timelimit = 7200)
               : InformedSampler(problem, maxNumberCalls)
               , sampleBatchSize_(sampleBatchSize)
               , si_(si)
@@ -315,6 +319,23 @@ namespace ompl
             ///
             virtual bool isInBound(const Eigen::VectorXd &state) const;
 
+            ///
+            /// Get one random uniform sample from the space
+            ///
+            /// @return Random uniform vector from the space
+            ///
+            virtual Eigen::VectorXd getRandomSample();
+
+            ///
+            /// Surf down the cost function to get to the levelset
+            ///
+            /// @param start Starting state
+            /// @return Path to the level set
+            ///
+            virtual Eigen::VectorXd newtonRaphson(const Eigen::VectorXd &start, double levelSet_);
+
+
+            Eigen::VectorXd findSolutionInLevelSet(Eigen::VectorXd& init, double levelSet_);
 
 
         };  // MyInformedSampler

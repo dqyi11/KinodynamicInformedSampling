@@ -49,6 +49,10 @@
 #include <memory>
 #include <stdexcept>
 
+#ifdef USE_NLOPT
+#include <nlopt.hpp>
+#endif
+
 namespace
 {
     bool same_cost(double a, double b)
@@ -390,6 +394,115 @@ namespace ompl
                 if (state(i) > stateMax_(i) || state(i) < stateMin_(i))
                     return false;
             return true;
+        }
+
+
+        ///
+        /// Get one random uniform sample from the space
+        ///
+        /// @return Random uniform vector of length size
+        ///
+        Eigen::VectorXd MyInformedSampler::getRandomSample()
+        {
+            // Get the limits of the space
+            Eigen::VectorXd max_vals, min_vals;
+            std::tie(max_vals, min_vals) = getStateLimits();
+
+            int size = getSpaceDimension();
+            Eigen::VectorXd sample(size);
+            for (int i = 0; i < size; i++)
+            {
+                // Get a random distribution between the values of the joint
+                double min = min_vals(i);
+                double max = max_vals(i);
+                sample(i) = uniRndGnr_.sample(min, max);
+            }
+
+            return sample;
+        }
+
+        ///
+        /// Surf down the cost function to get to the levelset
+        ///
+        /// @param start Vector to start
+        /// @return A state in the level set
+        ///
+        Eigen::VectorXd MyInformedSampler::newtonRaphson(const Eigen::VectorXd &start, double levelSet_)
+        {
+            Eigen::VectorXd end = start;
+            double cost = getCost(end);
+
+            int steps = 0;
+            const int maxSteps = 10;
+            int maxTrials = 10;
+            while (cost > levelSet_ && maxTrials > 0)
+            {
+                double last_cost = cost;
+                Eigen::VectorXd inv_jacobian = getInvJacobian(end);
+                end = end - inv_jacobian * cost;
+                cost = getCost(end);
+                steps++;
+
+                // If the number of steps reaches some threshold, start over
+                if (steps > maxSteps)
+                {
+                    steps = 0;
+                    end = getRandomSample();
+                    cost = getCost(end);
+                }
+
+                maxTrials --;
+            }
+
+            return end;
+        }
+
+#ifdef USE_NLOPT
+        double MyInformedSampler::inequalConstraint(const std::vector<double> &x,
+                                        std::vector<double> &grad, void *data)
+        {
+            MyInformedSampler* sampler = (MyInformedSampler*)(data);
+            Eigen::Map<const Eigen::VectorXd> state(x.data(), x.size());
+            double delta = sampler->getCost(state) - sampler->getLevelSet();
+            return delta;
+        }
+
+        static double min_func(const std::vector<double> &x,
+                               std::vector<double> &grad, void *data)
+        {
+            double* ref = (double*) data;
+            double dist = 0.0;
+            for(unsigned i=0;i<x.size();++i)
+            {
+                dist += (x.data()[i] - ref[i])*(x.data()[i] - ref[i]);
+            }
+            return dist;
+        }
+#endif
+
+        Eigen::VectorXd MyInformedSampler::findSolutionInLevelSet(Eigen::VectorXd& init, double levelSet_)
+        {
+            if(isInLevelSet(init, levelSet_))
+            {
+                return init;
+            }
+
+#ifdef USE_NLOPT
+            nlopt::opt optProb( nlopt::LN_COBYLA, getSpaceDimension() );
+            optProb.add_inequality_constraint(inequalConstraint, this, 1e-4);
+            optProb.set_min_objective(min_func, init.data());
+            //optProb.set_maxeval(100);
+            optProb.set_xtol_rel(1e-4);
+            std::vector<double> x;
+            for(unsigned int i=0;i<getSpaceDimension();++i)
+            {
+                x.push_back(init[i]);
+            }
+            std::vector<double> result = optProb.optimize(x);
+            return Eigen::Map<Eigen::VectorXd>(result.data(), result.size());
+#else
+            return newtonRaphson(init, levelSet_);
+#endif
         }
 
     }  // base

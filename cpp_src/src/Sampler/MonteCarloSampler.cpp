@@ -141,29 +141,6 @@ namespace ompl
             return exp(-MonteCarloSampler::getEnergy(curr_state));
         }
 
-        //
-        // Get one random uniform sample from the space
-        //
-        // @return Random uniform vector of length size
-        //
-        Eigen::VectorXd MonteCarloSampler::getRandomSample()
-        {
-            // Get the limits of the space
-            Eigen::VectorXd max_vals, min_vals;
-            std::tie(max_vals, min_vals) = getStateLimits();
-
-            int size = getSpaceDimension();
-            Eigen::VectorXd sample(size);
-            for (int i = 0; i < size; i++)
-            {
-                // Get a random distribution between the values of the joint
-                double min = min_vals(i);
-                double max = max_vals(i);
-                sample(i) = uniRndGnr_.sample(min, max);
-            }
-
-            return sample;
-        }
 
         // //
         // // Surf down the cost function to get to the levelset
@@ -245,41 +222,6 @@ namespace ompl
             return start;
         }
 
-        //
-        // Surf down the cost function to get to the levelset
-        //
-        // @param start Vector to start
-        // @return A state in the level set
-        //
-        Eigen::VectorXd MonteCarloSampler::newtonRaphson(const Eigen::VectorXd &start)
-        {
-            Eigen::VectorXd end = start;
-            double cost = getCost(end);
-
-            int steps = 0;
-            const int maxSteps = 10;
-            int maxTrials = 10;
-            while (cost > getLevelSet() && maxTrials > 0)
-            {
-                double last_cost = cost;
-                Eigen::VectorXd inv_jacobian = getInvJacobian(end);
-                end = end - inv_jacobian * cost;
-                cost = getCost(end);
-                steps++;
-
-                // If the number of steps reaches some threshold, start over
-                if (steps > maxSteps)
-                {
-                    steps = 0;
-                    end = MonteCarloSampler::getRandomSample();
-                    cost = getCost(end);
-                }
-
-                maxTrials --;
-            }
-
-            return end;
-        }
 
         //
         // Get a normal random vector for the momentum
@@ -336,13 +278,21 @@ namespace ompl
             Eigen::VectorXd q = Eigen::VectorXd(getStartState().size());
             double sampleCost = std::numeric_limits<double>::infinity();
             q << lastSample_;
+            const int maxTrialNum = 10;
+            int currentTrialNum = 0;
+            do
+            {
+                currentTrialNum++;
+                if( currentTrialNum > maxTrialNum )
+                {
+                    currentTrialNum = 0;
+                    currentStep_ = -1;
+                }
 
-            //do
-            //{
                 if (getCurrentStep() < 0)
                 {
-                    Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
-                    q =  newtonRaphson(start);
+                    Eigen::VectorXd start = getRandomSample();
+                    q = findSolutionInLevelSet(start, getLevelSet());
                 }
 
                 // Make a half step for momentum at the beginning
@@ -356,8 +306,8 @@ namespace ompl
                     if (VERBOSE)
                         std::cout << "WARNING: Gradient too high" << std::endl;
 
-                    Eigen::VectorXd start = MonteCarloSampler::getRandomSample();
-                    q = newtonRaphson(start);
+                    Eigen::VectorXd start = getRandomSample();
+                    q = findSolutionInLevelSet(start, getLevelSet());
                     grad = getGradient(q);
                 }
 
@@ -408,7 +358,7 @@ namespace ompl
                 }
 
 
-            //} while(!isInLevelSet(q, sampleCost));
+            } while(!isInLevelSet(q, sampleCost));
 
             sample << q, sampleCost;
 
@@ -440,7 +390,7 @@ namespace ompl
                 std::cout << "Number of samples: " << numSamples << std::endl;
             if (VERBOSE)
                 std::cout << "Surfing" << std::endl;
-            Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample());
+            Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample(), getLevelSet());
             if (VERBOSE)
                 std::cout << "Got Through Gradient Descent" << std::endl;
 
@@ -458,7 +408,7 @@ namespace ompl
                 {
                     if (VERBOSE)
                         std::cout << "New start!" << std::endl;
-                    Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample());
+                    Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample(), getLevelSet());
                     if (VERBOSE)
                         std::cout << "Got Through Gradient Descent in loop" << std::endl;
                 }

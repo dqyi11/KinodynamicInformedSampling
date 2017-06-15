@@ -7,4 +7,5 @@ add_library(samplerLib SHARED
            )
 target_link_libraries(samplerLib
                       ${OMPL_LIBRARIES}
+                      ${NLOPT_LIBRARIES}
                      )

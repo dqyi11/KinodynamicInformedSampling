@@ -15,6 +15,12 @@ find_package(OMPL REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(EIGEN3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
+find_package(NLOPT)
+if(NLOPT_FOUND)
+    message("USE NLOPT")
+    include_directories(${NLOPT_INCLUDE_DIRS})
+    add_definitions( -DUSE_NLOPT=1 )
+endif()
 
 add_definitions( -DENABLE_BENCHMARK=1 )
 
