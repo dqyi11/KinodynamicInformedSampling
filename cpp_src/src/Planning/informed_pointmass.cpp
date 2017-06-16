@@ -214,8 +214,8 @@ void planWithSimpleSetup(void)
     // Run planner
     //ob::PlannerStatus solved = planner->solve(60.0);
 
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
-    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
+    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    //ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     if (MAIN_VERBOSE)
         std::cout << "Planner solved!" << std::endl;

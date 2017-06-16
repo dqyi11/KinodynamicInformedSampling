@@ -236,28 +236,28 @@ void planWithSimpleSetup(void)
         {
             std::cout << " Hit And Run " << std::endl;
             auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // HMC
         {
             std::cout << " HMC " << std::endl;
             auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // HRS
         {
             std::cout << " HRS " << std::endl;
             auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // Rejection
         {
             std::cout << " Rejection " << std::endl;
             auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal);
-            ob::PlannerStatus solved = planner->solve(duration);
+            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
     }
 
