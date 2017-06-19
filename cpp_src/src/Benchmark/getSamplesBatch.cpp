@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
 
         double rejectionRatio = 1.0;
         std::vector<std::chrono::high_resolution_clock::duration> times(samplerNum);
+        std::vector<uint> sampleNums;
 
         int curr = 0;
 
@@ -125,6 +126,7 @@ int main(int argc, char *argv[])
             int maxSteps = 20;
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
             hmcSamples = hmcSampler.sample(numSamples, times[curr]);
+            sampleNums[curr] = hmcSamples.cols();
         }
         curr++;
 
@@ -133,6 +135,7 @@ int main(int argc, char *argv[])
             MatrixXd rejSamples;
             ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
             rejSamples = rejSampler.sample(numSamples, times[3 * numbatch + i]);
+            sampleNums[curr] = rejSamples.cols();
         }        
         curr++;
 
@@ -141,6 +144,7 @@ int main(int argc, char *argv[])
             ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt, levelSet,
                                                                         100, 100);
             dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
+            sampleNums[curr] = dimthrsSamples.cols();
 
         }
         curr++;
@@ -149,11 +153,12 @@ int main(int argc, char *argv[])
             MatrixXd hitnrunSamples;
             ompl::base::HitAndRunSampler hitnrunSampler(si, pdef, levelSet, 100, 100);
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
+            sampleNums[curr] = hitnrunSamples.cols();
         }
 
         if(save)
         {
-            appendTimeAndRatioToFile(times, rejectionRatio, numSamples, timeFile);
+            appendTimeAndRatioToFile(times, rejectionRatio, sampleNums, timeFile);
         }
     }
 

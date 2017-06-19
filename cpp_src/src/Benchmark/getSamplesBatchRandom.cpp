@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "BATCH " << i << std::flush;
         std::vector<std::chrono::high_resolution_clock::duration> times(numSamplers);
+        std::vector<uint> sampleNums(numSamplers);
         double rejectionRatio = 1.0;
 
         // sample new start and goal
@@ -146,6 +147,7 @@ int main(int argc, char *argv[])
             int maxSteps = 50000000;
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
             hmcSamples = hmcSampler.sample(numSamples, times[curr]);
+            sampleNums[curr] = hmcSamples.cols();
         }
         printTime(times[curr], std::cout);
         curr++;
@@ -156,6 +158,7 @@ int main(int argc, char *argv[])
             ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt,
                                                                         levelSet, 100, 100);
             dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
+            sampleNums[curr] = dimthrsSamples.cols();
 
         }
         printTime(times[curr], std::cout);
@@ -167,6 +170,7 @@ int main(int argc, char *argv[])
             MatrixXd hitnrunSamples;
             ompl::base::HitAndRunSampler hitnrunSampler(si, pdef, levelSet, 100, 100, numTrials);
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
+            sampleNums[curr] = hitnrunSamples.cols();
         }
         printTime(times[curr], std::cout);
         curr++;
@@ -177,13 +181,14 @@ int main(int argc, char *argv[])
             ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
             rejSamples = rejSampler.sample(numSamples, times[curr]);
             rejectionRatio = rejSampler.getRejectionRatio();
+            sampleNums[curr] = rejSamples.cols();
         }
         printTime(times[curr], std::cout);
         curr++;
 
         std::cout << "        REJ RATIO[" << rejectionRatio << "]" << std::flush;
 
-        appendTimeAndRatioToFile(times, rejectionRatio, numSamples, logFile);
+        appendTimeAndRatioToFile(times, rejectionRatio, sampleNums, logFile);
 
         std::cout << std::endl;
     }

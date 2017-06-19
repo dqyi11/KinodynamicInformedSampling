@@ -227,7 +227,7 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
-    int iteration_num = 30;
+    int iteration_num = 5;
     double duration = 60.0; //run time in seconds
     std::string caseName = "simple";
     for(int i=0;i<iteration_num;i++)

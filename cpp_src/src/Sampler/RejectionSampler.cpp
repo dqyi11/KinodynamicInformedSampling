@@ -90,6 +90,12 @@ namespace ompl
             duration = timeElapsed;
             rejectionRatio_ = static_cast<double>(numAcceptedSamples) /
                               static_cast<double>(numAcceptedSamples+numRejectedSamples);
+
+            if(numAcceptedSamples < numSamples)
+            {
+                return samples.leftCols(numAcceptedSamples);
+            }
+
             return samples;
         }
 
@@ -152,6 +158,11 @@ namespace ompl
             // If you want to time the sampling and display it
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             duration = t2 - t1;
+
+            if(currNumSamples < numSamples)
+            {
+                return samples.leftCols(currNumSamples);
+            }
 
             return samples;
         }
