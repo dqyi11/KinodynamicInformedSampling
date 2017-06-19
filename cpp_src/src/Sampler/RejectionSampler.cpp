@@ -69,7 +69,7 @@ namespace ompl
             std::chrono::high_resolution_clock::time_point t2 = t1;
             std::chrono::high_resolution_clock::duration timeElapsed;
             double timeElapsedDouble = 0.0;
-            while (numAcceptedSamples < numSamples && timeElapsedDouble < timelimit_)
+            while (numAcceptedSamples < numSamples && timeElapsedDouble < batchTimelimit_)
             {
                 Eigen::VectorXd newsample( getSpaceDimension() + 1 );
                 if(sampleInLevelSet(newsample))

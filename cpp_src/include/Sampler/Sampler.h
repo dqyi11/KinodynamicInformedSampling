@@ -116,6 +116,7 @@ namespace ompl
 
             double levelSet_;
             double timelimit_;
+            double batchTimelimit_;
 
             /// random generator
             UniformRealRandomGenerator uniRndGnr_;
@@ -137,13 +138,14 @@ namespace ompl
             ///
             MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
                               const double levelSet, const unsigned int maxNumberCalls,
-                              const int sampleBatchSize, const double timelimit = 7200)
+                              const int sampleBatchSize, const double timelimit = 60)
               : InformedSampler(problem, maxNumberCalls)
               , sampleBatchSize_(sampleBatchSize)
               , si_(si)
               , problem_(problem)
               , levelSet_(levelSet)
               , timelimit_(timelimit)
+              , batchTimelimit_(7200)
             {
                 started_ = false;
                 std::tie(stateMin_, stateMax_) = getStateLimits();
