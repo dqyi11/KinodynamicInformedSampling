@@ -340,6 +340,11 @@ namespace ompl
             Eigen::VectorXd findSolutionInLevelSet(Eigen::VectorXd& init, double levelSet_);
 
 
+            void setSingleSampleTimelimit(double timelimit) { timelimit_ = timelimit; }
+            double getSingleSampleTimelimit() { return timelimit_; }
+            void setBatchSampleTimelimit(double timelimit) { batchTimelimit_ = timelimit; }
+            double getBatchSampleTimelimit() { return batchTimelimit_; }
+
         };  // MyInformedSampler
 
         using MyInformedSamplerPtr = std::shared_ptr<ompl::base::MyInformedSampler>;
