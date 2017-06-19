@@ -280,6 +280,12 @@ namespace ompl
             q << lastSample_;
             const int maxTrialNum = 10;
             int currentTrialNum = 0;
+
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
+
             do
             {
                 currentTrialNum++;
@@ -357,8 +363,11 @@ namespace ompl
                     q = q_last;
                 }
 
+                t2 = std::chrono::high_resolution_clock::now();
+                timeElapsed = t2-t1;
+                timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
 
-            } while(!isInLevelSet(q, sampleCost));
+            } while(!isInLevelSet(q, sampleCost) && (timeElapsedDouble < timelimit_));
 
             sample << q, sampleCost;
 

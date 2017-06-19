@@ -491,7 +491,7 @@ namespace ompl
             nlopt::opt optProb( nlopt::LN_COBYLA, getSpaceDimension() );
             optProb.add_inequality_constraint(inequalConstraint, this, 1e-4);
             optProb.set_min_objective(min_func, init.data());
-            //optProb.set_maxeval(100);
+            optProb.set_maxeval(20);
             optProb.set_xtol_rel(1e-4);
             std::vector<double> x;
             for(unsigned int i=0;i<getSpaceDimension();++i)

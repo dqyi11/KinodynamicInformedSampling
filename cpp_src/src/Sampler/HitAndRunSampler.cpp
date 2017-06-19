@@ -129,6 +129,11 @@ namespace ompl
             int trys = -1;
             bool retry = false;
 
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
+
             do
             {
                 retry = false;
@@ -163,7 +168,11 @@ namespace ompl
                     retry = true;
                 trys++;
 
-            } while (retry);
+                t2 = std::chrono::high_resolution_clock::now();
+                timeElapsed = t2-t1;
+                timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+
+            } while (retry && timeElapsedDouble < timelimit_);
 
             sample << newSample, newSampleCost;
             pushPrevSamples(newSample);
