@@ -83,7 +83,8 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
                                      SamplerType type, ompl::base::SpaceInformationPtr si,
                                      ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
                                      const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
-                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal)
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal,
+                                     double singleSampleLimit)
 {
     ompl::base::MyInformedSamplerPtr sampler;
     std::string samplerName;
@@ -113,6 +114,8 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
             samplerName = "HMC";
             break;
     }
+
+    sampler->setSingleSampleTimelimit(singleSampleLimit);
 
     // Set up the final problem with the full optimization objective
     ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
@@ -221,36 +224,36 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
-    int iteration_num = 50;
-    double duration = 60.0; //run time in seconds
+    int iteration_num = 100;
+    double duration = 120.0; //run time in seconds
     std::string caseName = "simple";
     for(int i=0;i<iteration_num;i++)
     {
         // Hit And Run
         {
             std::cout << " Hit And Run " << std::endl;
-            auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal);
+            auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // HMC
         {
             std::cout << " HMC " << std::endl;
-            auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal);
+            auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // HRS
         {
             std::cout << " HRS " << std::endl;
-            auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal);
+            auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // Rejection
         {
             std::cout << " Rejection " << std::endl;
-            auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal);
+            auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
     }
