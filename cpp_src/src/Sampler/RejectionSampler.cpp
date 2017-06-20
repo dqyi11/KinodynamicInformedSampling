@@ -171,7 +171,7 @@ namespace ompl
         {
             Eigen::VectorXd newSample( getSpaceDimension() );
             double newSampleCost = std::numeric_limits<double>::infinity();
-            HRS(0, dimension_ - 1, newSample);
+            HRS(0, dimension_ - 1, newSample, timelimit_);
 
             if (isInLevelSet(newSample, newSampleCost))
             {
@@ -191,7 +191,7 @@ namespace ompl
         /// @return (c_start, c_goal)
         ///
         std::tuple<double, double> HierarchicalRejectionSampler::HRS(const int startIndex, const int endIndex,
-                                                                     Eigen::VectorXd &sample)
+                                                                     Eigen::VectorXd &sample, double timeLeft)
         {
             // Initialize the costs
             double cStart = std::numeric_limits<double>::infinity();
@@ -199,6 +199,11 @@ namespace ompl
 
             // std::cout << " [ " << sample[0] << ", " << sample[1] <<  ", " <<
             //     sample[2] << ", " << sample[3] << " ]" << std::endl;
+
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
 
             if (startIndex == endIndex)
             {
@@ -208,6 +213,14 @@ namespace ompl
 
                     cStart = calculateLeaf(getStartState(), sample, startIndex);
                     cGoal = calculateLeaf(sample, getGoalState(), startIndex);
+
+                    t2 = std::chrono::high_resolution_clock::now();
+                    timeElapsed = t2-t1;
+                    timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+                    if (timeElapsedDouble > timeLeft )
+                    {
+                        break;
+                    }
                 }
             }
             else
@@ -218,12 +231,23 @@ namespace ompl
 
                 while (Cost(cStart) + Cost(cGoal) > getLevelSet())
                 {
-                    std::tie(cStart, cGoal) = HRS(startIndex, mid_index, sample);
-                    std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, endIndex, sample);
+                    t2 = std::chrono::high_resolution_clock::now();
+                    timeElapsed = t2-t1;
+                    timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+
+                    std::tie(cStart, cGoal) = HRS(startIndex, mid_index, sample, timeLeft-timeElapsedDouble);
+
+                    t2 = std::chrono::high_resolution_clock::now();
+                    timeElapsed = t2-t1;
+                    timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+
+                    std::tie(c_dash_start, c_dash_goal) = HRS(mid_index + 1, endIndex, sample, timeLeft-timeElapsedDouble);
                     cStart =
                         combineCosts(getStartState(), sample, startIndex, mid_index, endIndex, cStart, c_dash_start);
                     cGoal =
                         combineCosts(sample, getGoalState(), startIndex, mid_index, endIndex, cGoal, c_dash_goal);
+
+
                 }
             }
 

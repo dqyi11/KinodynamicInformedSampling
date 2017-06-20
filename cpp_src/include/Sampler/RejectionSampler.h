@@ -145,7 +145,8 @@ namespace ompl
             /// @param sample Reference to a sample that gets changed in place
             /// @return (c_start, c_goal)
             ///
-            virtual std::tuple<double, double> HRS(const int start_index, const int end_index, Eigen::VectorXd &sample);
+            virtual std::tuple<double, double> HRS(const int start_index, const int end_index, Eigen::VectorXd &sample,
+                                                   double timeLeft);
 
             ///
             /// Calculates the cost of a leaf node
