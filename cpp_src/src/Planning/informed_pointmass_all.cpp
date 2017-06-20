@@ -46,18 +46,6 @@ public:
     bool isValid(const ob::State *state) const
     {
         const ob::RealVectorStateSpace::StateType *state_rv = state->as<ob::RealVectorStateSpace::StateType>();
-        // for (int i=0; i<param.dimensions; i=i+2){
-        //   if(state_rv->values[i]<-1 || state_rv->values[i]>1)
-        //     return true;
-        // }
-        // return false;
-        // Narrow Corridor problem
-
-        if (state_rv->values[0] > -1 && state_rv->values[0] < 1 &&
-              state_rv->values[2] > -1 && state_rv->values[2] < 1  )
-        {
-            return false;
-        }
 
         for (int i = 0; i < param.dimensions; i = i + 2)
         {
@@ -77,8 +65,15 @@ public:
                 }
             }
         }
-        return true;
 
+        for (int i=0; i<param.dimensions; i=i+2)
+        {
+            if(state_rv->values[i] < -1 || state_rv->values[i] > 1)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 };
 
@@ -136,7 +131,6 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
 
     return planner;
 }
-
 
 void planWithSimpleSetup(void)
 {
