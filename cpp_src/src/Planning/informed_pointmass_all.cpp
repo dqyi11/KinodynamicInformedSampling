@@ -177,9 +177,9 @@ void planWithSimpleSetup(void)
     {
         if (i % 2 == 0)  // position
         {
-            start_state[i] = 0;
+            start_state[i] = -4;
             start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 0;
+            goal_state[i] = 4;
             goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
             int_state[i] = 0;
         }
@@ -192,14 +192,6 @@ void planWithSimpleSetup(void)
             int_state[i] = 2;
         }
     }
-    start_state[0] = -4;
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = start_state[0];
-    goal_state[0] = 4;
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] = goal_state[0];
-    start_state[2] = 0;
-    start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = start_state[2];
-    goal_state[2] = 0;
-    goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[2] = goal_state[2];
 
     std::cout << "MinTime b/w start and goal = "
               << dimt->getMinTime(start_state, int_state) +
