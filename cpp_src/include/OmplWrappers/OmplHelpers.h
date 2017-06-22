@@ -1,11 +1,7 @@
 #pragma once
 
 #include <OmplWrappers/MyOptimizationObjective.h>
-
 #include <ompl/base/OptimizationObjective.h>
-
-using Eigen::VectorXd;
-using Eigen::MatrixXd;
 
 ///
 /// Function to convert a State to a VectorXd

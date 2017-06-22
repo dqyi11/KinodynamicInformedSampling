@@ -17,59 +17,12 @@
 #include "OmplWrappers/DimtStateSpace.h"
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
+#include "OmplWrappers/ValidityChecker.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
 #include <limits>
-
-class ValidityChecker : public ob::StateValidityChecker
-{
-public:
-    ValidityChecker(const ob::SpaceInformationPtr &si) : ob::StateValidityChecker(si)
-    {
-    }
-    // rectangle obstacle
-    bool isValid(const ob::State *state) const
-    {
-        const ob::RealVectorStateSpace::StateType *state_rv = state->as<ob::RealVectorStateSpace::StateType>();
-
-        if (state_rv->values[0] > -1 && state_rv->values[0] < 1 &&
-              state_rv->values[2] > -1 && state_rv->values[2] < 1  )
-        {
-            return false;
-        }
-
-        for (int i = 0; i < param.dimensions; i = i + 2)
-        {
-            if (i % 2 == 0)
-            {
-                if (state_rv->values[i] < -10 || state_rv->values[i] > 10)
-                {
-                    return false;
-                }
-
-            }
-            else
-            {
-                if (state_rv->values[i] < - param.v_max ||
-                         state_rv->values[i] > param.v_max)
-                {
-                    return false;
-                }
-            }
-        }
-
-        for (int i=0; i<param.dimensions; i=i+2)
-        {
-            if(state_rv->values[i] < -1 || state_rv->values[i] > 1)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-};
 
 bool MAIN_VERBOSE = true;
 
@@ -85,11 +38,8 @@ void planWithSimpleSetup(void)
 
     // Intiatilizations for sampler
     const int dimension = param.dimensions;
-    const double minval = -10;
-    const double maxval = 10;
     VectorXd start_state(dimension);
     VectorXd goal_state(dimension);
-    VectorXd int_state(dimension);
 
     if (MAIN_VERBOSE)
         std::cout << "Got the start and goal states!" << std::endl;
@@ -97,11 +47,28 @@ void planWithSimpleSetup(void)
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
     ob::RealVectorBounds bounds(param.dimensions);
-    bounds.setLow(-10);
-    bounds.setHigh(10);
+    for(uint i=0;i<param.dimensions;i++)
+    {
+        if(i%2==0)
+        {
+            bounds.setLow(-param.s_max);
+            bounds.setHigh(param.s_max);
+        }
+        else
+        {
+            bounds.setLow(-param.v_max);
+            bounds.setHigh(param.v_max);
+        }
+    }
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-    si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
+    ValidityChecker* pVC = new ValidityChecker(si);
+    Eigen::VectorXd obs1_center(param.dimensions);
+    Eigen::VectorXd obs1_radius(param.dimensions);
+    obs1_center << 0.0, 0.0;
+    obs1_radius << 1.0, 1.0;
+    pVC->addHypercubeObstacle( obs1_center, obs1_radius );
+    si->setStateValidityChecker(ob::StateValidityCheckerPtr(pVC));
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
 
@@ -115,34 +82,26 @@ void planWithSimpleSetup(void)
     {
         if (i % 2 == 0)  // position
         {
-            start_state[i] = -4;
+            start_state[i] = -4.;
             start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 4;
+            goal_state[i] = 4.;
             goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
-            int_state[i] = 0;
         }
         else  // velocity
         {
-            start_state[i] = 2;
+            start_state[i] = 2.;
             start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 2;
+            goal_state[i] = 2.;
             goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
-            int_state[i] = 2;
         }
     }
 
-    std::cout << "MinTime b/w start and goal = "
-              << dimt->getMinTime(start_state, int_state) +
-                     dimt->getMinTime(int_state, goal_state) << std::endl;
     std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
     ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
     ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
 
     if (MAIN_VERBOSE)
         std::cout << "Got the vector start and goal state space ompl!" << std::endl;
-    if (MAIN_VERBOSE)
-        std::cout << start_s << std::endl
-                  << goal_s << std::endl;
 
     // Get a base problem definition that has the optimization objective with the
     // space
@@ -154,8 +113,6 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
-    if (MAIN_VERBOSE)
-        std::cout << "Set up the OMPL problem definition!" << std::endl;
 
     // Construct Sampler with the base pdef and base optimization objective
     double sigma = 1;
@@ -167,11 +124,11 @@ void planWithSimpleSetup(void)
     double L = 5;
     int num_trials = 5;
     const double level_set = std::numeric_limits<double>::infinity();
-    const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+    //const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
     //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
     //const auto sampler = std::make_shared<ompl::base::HitAndRun>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
-    //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
-    sampler->setSingleSampleTimelimit(600.);
+    const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+    sampler->setSingleSampleTimelimit(60.);
 
 
     // Set up the final problem with the full optimization objective
@@ -206,9 +163,9 @@ void planWithSimpleSetup(void)
         std::cout << "Set up Informed RRT* planner!" << std::endl;
 
     // Run planner
-    //ob::PlannerStatus solved = planner->solve(60.0);
+    ob::PlannerStatus solved = planner->solve(60.0);
 
-    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 1000.0);
+    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 120.0);
     //ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     if (MAIN_VERBOSE)
