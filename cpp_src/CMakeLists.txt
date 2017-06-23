@@ -22,12 +22,13 @@ if(NLOPT_FOUND)
     add_definitions( -DUSE_NLOPT=1 )
 endif()
 
-find_package(Jsoncpp REQUIRED)
-include_directories(${Jsoncpp_INCLUDE_DIR})
-link_libraries(${Jsoncpp_LIBRARY})
-if(NOT Jsoncpp_FOUND)
+find_package(JsonCpp REQUIRED)
+if(NOT JSONCPP_FOUND)
    message("Jsoncpp not found")
 endif()
+include_directories(${JSONCPP_INCLUDE_DIR})
+link_libraries(${JSONCPP_LIBRARY})
+
 
 add_definitions( -DENABLE_BENCHMARK=1 )
 
