@@ -133,8 +133,10 @@ namespace ompl
         Eigen::MatrixXd HierarchicalRejectionSampler::sample(const uint numSamples,
                                                              std::chrono::high_resolution_clock::duration &duration)
         {
+            // Reset acceptance rate
+            resetAcceptanceRatio();
+
             // Run until you get the correct number of samples
-            uint currNumSamples = 0;
             Eigen::MatrixXd samples(numSamples, getSpaceDimension()+1);
 
             // If you want to time the sampling
@@ -145,8 +147,12 @@ namespace ompl
                 Eigen::VectorXd sample(getSpaceDimension()+1);
                 if(sampleInLevelSet(sample))
                 {
-                    samples.row(currNumSamples) = sample;
-                    currNumSamples++;
+                    samples.row(numAcceptedSamples_) = sample;
+                    numAcceptedSamples_++;
+                }
+                else
+                {
+                    numRejectedSamples_++;
                 }
             }
 
