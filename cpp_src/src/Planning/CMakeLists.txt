@@ -6,7 +6,7 @@ target_link_libraries(kdp_pointmass2d
                       ${OMPL_LIBRARIES} 
                       ${Boost_FILESYSTEM_LIBRARY} 
                       ${Boost_SYSTEM_LIBRARY} 
-                      ${jsoncpp_LIBRARY}
+                      ${JSONCPP_LIBRARY}
                       dimtLib
                      )
 
@@ -18,7 +18,7 @@ target_link_libraries(informed_pointmass
                       ${OMPL_LIBRARIES} 
                       ${Boost_FILESYSTEM_LIBRARY} 
                       ${Boost_SYSTEM_LIBRARY} 
-                      ${jsoncpp_LIBRARY}
+                      ${JSONCPP_LIBRARY}
                       samplerLib 
                       dimtLib 
                       omplwrapperLib
@@ -32,7 +32,7 @@ target_link_libraries(informed_pointmass_all
                    ${OMPL_LIBRARIES}
                    ${Boost_FILESYSTEM_LIBRARY}
                    ${Boost_SYSTEM_LIBRARY}
-                   ${jsoncpp_LIBRARY}
+                   ${JSONCPP_LIBRARY}
                    samplerLib
                    dimtLib
                    omplwrapperLib

@@ -17,13 +17,20 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
 
     if(parseSuccess)
     {
-       for(size_t i=0;i<root.size();i++)
+       for(int i=0;i<root.size();i++)
        {
           std::string type = root.get("type","").asString();
           Json::Value center, radius;
-          root.get("center", center);
-          root.get("radius",radius);
-
+          center = root.get("center", 0);
+          for(int j=0;j<center.size();j++)
+          {
+            double p = center[j].asDouble();
+          }
+          radius = root.get("radius",0);
+          for(int j=0;j<radius.size();j++)
+          {
+            double p = radius[j].asDouble();
+          }
        }
     }
 
