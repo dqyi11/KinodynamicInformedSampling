@@ -63,7 +63,7 @@ void planWithSimpleSetup(void)
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     
-    ob::StateValidityCheckerPtr svc = createStateValidityChecker(si);
+    ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
