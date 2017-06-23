@@ -22,51 +22,39 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
        {
           std::string type = obstacles[i].get("type","").asString();
           Json::Value center, radius;
+
+          Eigen::VectorXd obs_center(param.dimensions / 2);
+          Eigen::VectorXd obs_radius(param.dimensions / 2);
+
           center = obstacles[i].get("center", 0);
           for(int j=0;j<center.size();j++)
           {
-            double p = center[j].asDouble();
-            std::cout << " P " << p << std::endl;
+            obs_center[j] = center[j].asDouble();
           }
           radius = obstacles[i].get("radius",0);
           for(int j=0;j<radius.size();j++)
           {
-            double p = radius[j].asDouble();
-            std::cout << " P " << p << std::endl;
+            obs_radius[j] = radius[j].asDouble();
           }
+          std::cout << "Add obstacle ";
+
+          if(type == "hypercube")
+          {
+             std::cout << type << " ";
+             std::cout << "center " << obs_center;
+             std::cout << "radius " << obs_radius;
+             pVC->addHypercubeObstacle( obs_center, obs_radius );
+          }
+          else if(type == "nsphere")
+          {
+             std::cout << type << " ";
+             std::cout << "center " << obs_center;
+             std::cout << "radius " << obs_radius;
+             pVC->addNSphereObstacle( obs_center, obs_radius[0] );
+          }
+          std::cout << std::endl;         
        }
     }
-
-    // obstacles
-    Eigen::VectorXd obs1_center(param.dimensions / 2);
-    Eigen::VectorXd obs1_radius(param.dimensions / 2);
-    obs1_center << 0.0, 0.0;
-    obs1_radius << 1.0, 1.0;
-    pVC->addHypercubeObstacle( obs1_center, obs1_radius );
-
-    Eigen::VectorXd obs2_center(param.dimensions / 2);
-    Eigen::VectorXd obs2_radius(param.dimensions / 2);
-    obs2_center << 2.0, 1.2;
-    obs2_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs2_center, obs2_radius );
-
-    Eigen::VectorXd obs3_center(param.dimensions / 2);
-    Eigen::VectorXd obs3_radius(param.dimensions / 2);
-    obs3_center << -2.0, 1.2;
-    obs3_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs3_center, obs3_radius );
-
-    Eigen::VectorXd obs4_center(param.dimensions / 2);
-    Eigen::VectorXd obs4_radius(param.dimensions / 2);
-    obs4_center << -2.0, -1.2;
-    obs4_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs4_center, obs4_radius );
-
-    Eigen::VectorXd obs5_center(param.dimensions / 2);
-    Eigen::VectorXd obs5_radius(param.dimensions / 2);
-    obs5_center << 2.0, -1.2;
-    obs5_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs5_center, obs5_radius );
 
     return ompl::base::StateValidityCheckerPtr(pVC);
 }
