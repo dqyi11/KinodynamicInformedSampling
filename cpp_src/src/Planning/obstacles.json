@@ -1,0 +1,12 @@
+{
+  "hypercube": {
+      "center" : [0.0, 0.0],
+      "radius" : [1.0, 1.0]
+  }
+
+  "hypercube": {
+      "center" : [2.0, 1.2],
+      "radius" : [0.5, 0.5]
+  }
+
+}

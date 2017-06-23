@@ -17,7 +17,7 @@
 #include "OmplWrappers/DimtStateSpace.h"
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
-#include "OmplWrappers/ValidityChecker.h"
+#include "create_obstacles.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -62,39 +62,9 @@ void planWithSimpleSetup(void)
     }
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-    ValidityChecker* pVC = new ValidityChecker(si);
-    // obstacles
-    Eigen::VectorXd obs1_center(param.dimensions / 2);
-    Eigen::VectorXd obs1_radius(param.dimensions / 2);
-    obs1_center << 0.0, 0.0;
-    obs1_radius << 1.0, 1.0;
-    pVC->addHypercubeObstacle( obs1_center, obs1_radius );
-
-    Eigen::VectorXd obs2_center(param.dimensions / 2);
-    Eigen::VectorXd obs2_radius(param.dimensions / 2);
-    obs2_center << 2.0, 1.2;
-    obs2_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs2_center, obs2_radius );
-
-    Eigen::VectorXd obs3_center(param.dimensions / 2);
-    Eigen::VectorXd obs3_radius(param.dimensions / 2);
-    obs3_center << -2.0, 1.2;
-    obs3_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs3_center, obs3_radius );
-
-    Eigen::VectorXd obs4_center(param.dimensions / 2);
-    Eigen::VectorXd obs4_radius(param.dimensions / 2);
-    obs4_center << -2.0, -1.2;
-    obs4_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs4_center, obs4_radius );
-
-    Eigen::VectorXd obs5_center(param.dimensions / 2);
-    Eigen::VectorXd obs5_radius(param.dimensions / 2);
-    obs5_center << 2.0, -1.2;
-    obs5_radius << 0.5, 0.5;
-    pVC->addHypercubeObstacle( obs5_center, obs5_radius );
-
-    si->setStateValidityChecker(ob::StateValidityCheckerPtr(pVC));
+    
+    ob::StateValidityCheckerPtr svc = createStateValidityChecker(si);
+    si->setStateValidityChecker(svc);
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
 
