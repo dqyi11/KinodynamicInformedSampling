@@ -56,12 +56,9 @@ namespace ompl
         Eigen::MatrixXd RejectionSampler::sample(const uint numSamples,
                                                  std::chrono::high_resolution_clock::duration &duration)
         {
-            // Reset rejection rate
-            rejectionRatio_ = 1.0;
+            // Reset acceptance rate
+            resetAcceptanceRatio();            
 
-            // Run until you get the correct number of samples
-            unsigned int numAcceptedSamples = 0;
-            unsigned int numRejectedSamples = 0;
             Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
 
             // If you want to time the sampling
@@ -69,17 +66,17 @@ namespace ompl
             std::chrono::high_resolution_clock::time_point t2 = t1;
             std::chrono::high_resolution_clock::duration timeElapsed;
             double timeElapsedDouble = 0.0;
-            while (numAcceptedSamples < numSamples && timeElapsedDouble < batchTimelimit_)
+            while (numAcceptedSamples_ < numSamples && timeElapsedDouble < batchTimelimit_)
             {
                 Eigen::VectorXd newsample( getSpaceDimension() + 1 );
                 if(sampleInLevelSet(newsample))
                 {
-                    samples.row(numAcceptedSamples) = newsample;
-                    numAcceptedSamples++;
+                    samples.row(numAcceptedSamples_) = newsample;
+                    numAcceptedSamples_++;
                 }
                 else
                 {
-                    numRejectedSamples++;
+                    numRejectedSamples_++;
                 }
 
                 t2 = std::chrono::high_resolution_clock::now();
@@ -88,12 +85,10 @@ namespace ompl
             }
 
             duration = timeElapsed;
-            rejectionRatio_ = static_cast<double>(numAcceptedSamples) /
-                              static_cast<double>(numAcceptedSamples+numRejectedSamples);
 
-            if(numAcceptedSamples < numSamples)
+            if(numAcceptedSamples_ < numSamples)
             {
-                return samples.leftCols(numAcceptedSamples);
+                return samples.leftCols(numAcceptedSamples_);
             }
 
             return samples;

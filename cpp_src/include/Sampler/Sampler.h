@@ -105,6 +105,7 @@ namespace ompl
             ///
             double getRandomDimension(const double max, const double min);
 
+
 #ifdef USE_NLOPT
             static double inequalConstraint(const std::vector<double> &x,
                                             std::vector<double> &grad, void *data);
@@ -123,6 +124,10 @@ namespace ompl
 
             Eigen::VectorXd stateMax_;
             Eigen::VectorXd stateMin_;
+
+            double acceptanceRatio_;
+            uint64_t numAcceptedSamples_;
+            uint64_t numRejectedSamples_; 
 
         public:
             ///
@@ -146,6 +151,9 @@ namespace ompl
               , levelSet_(levelSet)
               , timelimit_(timelimit)
               , batchTimelimit_(7200)
+              , acceptanceRatio_(1.0)
+              , numAcceptedSamples_(0)
+              , numRejectedSamples_(0)
             {
                 started_ = false;
                 std::tie(stateMin_, stateMax_) = getStateLimits();
@@ -344,6 +352,11 @@ namespace ompl
             double getSingleSampleTimelimit() { return timelimit_; }
             void setBatchSampleTimelimit(double timelimit) { batchTimelimit_ = timelimit; }
             double getBatchSampleTimelimit() { return batchTimelimit_; }
+
+            /// Get acceptance ratio
+            double getAcceptanceRatio();
+
+            void resetAcceptanceRatio();
 
         };  // MyInformedSampler
 

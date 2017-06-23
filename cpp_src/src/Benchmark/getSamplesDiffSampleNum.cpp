@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
                 MatrixXd rejSamples;
                 ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
                 rejSamples = rejSampler.sample(numSamples, times[curr]);
-                rejectionRatio = rejSampler.getRejectionRatio();
+                rejectionRatio = rejSampler.getAcceptanceRatio();
                 sampleNums[curr] = rejSamples.cols();
             }
             curr++;

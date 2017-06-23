@@ -505,5 +505,20 @@ namespace ompl
 #endif
         }
 
+	double MyInformedSampler::getAcceptanceRatio() 
+	{ 
+            acceptanceRatio_ = static_cast<double>(numAcceptedSamples_) /
+		              static_cast<double>(numAcceptedSamples_+numRejectedSamples_);
+	    return acceptanceRatio_; 
+	}
+
+        void MyInformedSampler::resetAcceptanceRatio()
+        {
+            acceptanceRatio_ = 1.0;
+            numAcceptedSamples_ = 0;
+            numRejectedSamples_ = 0;
+
+        }
+
     }  // base
 }  // oml
