@@ -505,12 +505,49 @@ namespace ompl
 #endif
         }
 
-	double MyInformedSampler::getAcceptanceRatio() 
-	{ 
-            acceptanceRatio_ = static_cast<double>(numAcceptedSamples_) /
-		              static_cast<double>(numAcceptedSamples_+numRejectedSamples_);
-	    return acceptanceRatio_; 
-	}
+        Eigen::MatrixXd MyInformedSampler::sample(const uint numSamples,
+                                                 std::chrono::high_resolution_clock::duration &duration)
+        {
+            // Reset acceptance rate
+            resetAcceptanceRatio();
+
+            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
+
+            // If you want to time the sampling
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
+            while (numAcceptedSamples_ < numSamples && timeElapsedDouble < batchTimelimit_)
+            {
+                Eigen::VectorXd newsample( getSpaceDimension() + 1 );
+                if(sampleInLevelSet(newsample))
+                {
+                    samples.row(numAcceptedSamples_) = newsample;
+
+                }
+
+                t2 = std::chrono::high_resolution_clock::now();
+                timeElapsed = t2-t1;
+                timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+            }
+
+            duration = timeElapsed;
+
+            if(numAcceptedSamples_ < numSamples)
+            {
+                return samples.leftCols(numAcceptedSamples_);
+            }
+
+            return samples;
+        }
+
+        double MyInformedSampler::getAcceptanceRatio()
+        {
+                acceptanceRatio_ = static_cast<double>(numAcceptedSamples_) /
+                          static_cast<double>(numAcceptedSamples_+numRejectedSamples_);
+            return acceptanceRatio_;
+        }
 
         void MyInformedSampler::resetAcceptanceRatio()
         {

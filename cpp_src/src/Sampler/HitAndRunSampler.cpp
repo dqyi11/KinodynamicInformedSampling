@@ -49,45 +49,50 @@ namespace ompl
             return prev_sample_;
         }
 
-        Eigen::MatrixXd GibbsSampler::sample(const uint numSamples,
-                                             std::chrono::high_resolution_clock::duration &duration)
+        bool GibbsSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {
-            // Get the limits of the space
-            Eigen::VectorXd max_vals, min_vals;
-            std::tie(max_vals, min_vals) = getStateLimits();
 
-            // Run until you get the correct number of samples
-            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
-
-            // If you want to time the sampling
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
-            Eigen::VectorXd sample;
             double sampleCost = std::numeric_limits<double>::infinity();
-            unsigned int skip = 0, trys = 0;
-            for (uint i = 0; i < numSamples; i++)
-            {
-                trys = 0;
-                do
-                {
-                    if (trys > 10000)
-                    {
-                        skip++;
-                        trys = 0;
-                    }
-                    sample = getRandomSample(min_vals[(i + skip) % getSpaceDimension()], max_vals[(i + skip) % getSpaceDimension()], (i + skip) % getSpaceDimension());
-                    trys++;
-                } while (!isInLevelSet(sample, sampleCost));
+            int trys = 0;
+            bool inLevelset = true;
 
-                Eigen::VectorXd newsample(getSpaceDimension() + 1);
-                prev_sample_ = sample;
-                newsample << sample, sampleCost;
-                samples.row(i) = newsample;
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
+            int skip = 0;
+            do
+            {
+                if(timeElapsedDouble >= timelimit_)
+                {
+                    inLevelset = false;
+                    break;
+                }
+                if (trys > 10000)
+                {
+                    skip++;
+                    trys = 0;
+                }
+                sample = getRandomSample(stateMin_[(numAcceptedSamples_ + skip) % getSpaceDimension()], stateMax_[(numAcceptedSamples_ + skip) % getSpaceDimension()], (numAcceptedSamples_ + skip) % getSpaceDimension());
+                trys++;
+
+                t2 = std::chrono::high_resolution_clock::now();
+                timeElapsed = t2-t1;
+                timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+
+            } while (!isInLevelSet(sample, sampleCost));
+            prev_sample_ = sample;
+
+            if(inLevelset)
+            {
+                numAcceptedSamples_++;
+            }
+            else
+            {
+                numRejectedSamples_++;
             }
 
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            duration = t2 - t1;
-            return samples;
+            return inLevelset;
         }
 
         void GibbsSampler::updateLevelSet(const double level_set)
@@ -96,28 +101,6 @@ namespace ompl
             MyInformedSampler::updateLevelSet(level_set);
             // std::cout << "Updated Level Set" << std::endl;
         }
-
-        Eigen::MatrixXd HitAndRunSampler::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
-        {
-            // Run until you get the correct number of samples
-            Eigen::MatrixXd samples(numSamples, getSpaceDimension() + 1);
-
-            // If you want to time the sampling
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
-            for (uint i = 0; i < numSamples; i++)
-            {
-                Eigen::VectorXd newSample(getSpaceDimension() + 1);
-
-                sampleInLevelSet(newSample);
-                samples.row(i) = newSample;
-            }
-
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            duration = t2 - t1;
-            return samples;
-        }
-
 
         bool HitAndRunSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {
@@ -134,8 +117,14 @@ namespace ompl
             std::chrono::high_resolution_clock::duration timeElapsed;
             double timeElapsedDouble = 0.0;
 
+            bool inLevelset = true;
             do
             {
+                if(timeElapsedDouble > timelimit_)
+                {
+                    inLevelset = false;
+                    break;
+                }
                 retry = false;
                 if (trys > numOfTries_ || trys == -1)
                 {
@@ -172,11 +161,20 @@ namespace ompl
                 timeElapsed = t2-t1;
                 timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
 
-            } while (retry && timeElapsedDouble < timelimit_);
+            } while (retry);
 
             sample << newSample, newSampleCost;
             pushPrevSamples(newSample);
-            return true;
+
+            if(inLevelset)
+            {
+                numAcceptedSamples_++;
+            }
+            else
+            {
+                numRejectedSamples_++;
+            }
+            return inLevelset;
         }
     }  // namespace base
 }  // namespace ompl

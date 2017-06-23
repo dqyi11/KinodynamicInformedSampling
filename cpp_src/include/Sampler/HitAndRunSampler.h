@@ -78,18 +78,7 @@ namespace ompl
                 prev_sample_ = getStartState();
             }
 
-            ///
-            /// Get a series of samples for the problem space
-            ///
-            /// @param numSamples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is
-            /// displayed
-            /// @return A series of samples of shape (number of samples, sample dimension)
-            ///
-            virtual Eigen::MatrixXd sample(const uint numSamples,
-                                           std::chrono::high_resolution_clock::duration &duration) override;
-
-            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override { return false; }
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
 
             virtual void updateLevelSet(const double level_set) override;
 
@@ -121,17 +110,6 @@ namespace ompl
                 prevSamples_.reserve(numOfPrevSamples_);
                 headOfPrevSamples_ = -1;
             }
-
-            ///
-            /// Get a series of samples for the problem space
-            ///
-            /// @param numSamples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is
-            /// displayed
-            /// @return A series of samples of shape (number of samples, sample dimension)
-            ///
-            virtual Eigen::MatrixXd sample(const uint numSamples,
-                                           std::chrono::high_resolution_clock::duration &duration) override;
 
             virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
 

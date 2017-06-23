@@ -202,7 +202,7 @@ namespace ompl
             /// @return A series of samples of shape (number of samples, sample dimension)
             ///
             virtual Eigen::MatrixXd sample(const uint numSamples,
-                                           std::chrono::high_resolution_clock::duration &duration) = 0;
+                                           std::chrono::high_resolution_clock::duration &duration);
 
             ///
             /// Get one sample for the problem space

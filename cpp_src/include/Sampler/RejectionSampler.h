@@ -81,10 +81,6 @@ namespace ompl
             {
             }
 
-            /// Only function that you must implement
-            virtual Eigen::MatrixXd sample(const uint numSamples,
-                                           std::chrono::high_resolution_clock::duration &duration) override;
-
             virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
 
             /// Can implement as many private functions as you want to help do the sampling
@@ -115,17 +111,6 @@ namespace ompl
               : RejectionSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize)
             {
             }
-
-            ///
-            /// Get a series of samples for the problem space
-            ///
-            /// @param numSamples Number of samples to get
-            /// @param time Boolean that determines if the time to run the proccess is
-            /// displayed
-            /// @return A series of samples of shape (number of samples, sample dimension)
-            ///
-            virtual Eigen::MatrixXd sample(const uint numSamples,
-                                           std::chrono::high_resolution_clock::duration &duration) override;
 
              virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
         private:

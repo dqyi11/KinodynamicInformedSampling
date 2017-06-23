@@ -244,34 +244,6 @@ namespace ompl
         // HMCSampler
         //
 
-        //
-        // Get a series of samples for the problem space
-        //
-        // @param numSamples Number of samples to get
-        // @param time Boolean that determines if the time to run the proccess is
-        // displayed
-        // @return A series of samples of shape (number of samples, sample dimension)
-        //
-        Eigen::MatrixXd HMCSampler::sample(const uint numSamples, std::chrono::high_resolution_clock::duration &duration)
-        {
-            Eigen::MatrixXd samples;
-            samples.conservativeResize(numSamples, getSpaceDimension() + 1);
-            // If you want to time the sampling
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
-            for(uint i=0;i<numSamples;++i)
-            {
-                Eigen::VectorXd newsample(getSpaceDimension()+1);
-                sampleInLevelSet(newsample);
-                samples.row(i) = newsample;
-            }
-
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            duration = t2 - t1;
-
-            return samples;
-        }
-
         bool HMCSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {      
             // last sample
@@ -286,8 +258,15 @@ namespace ompl
             std::chrono::high_resolution_clock::duration timeElapsed;
             double timeElapsedDouble = 0.0;
 
+            bool inLevelSet = true;
             do
             {
+                if (timeElapsedDouble > timelimit_)
+                {
+                    inLevelSet = false;
+                    break;
+                }
+
                 currentTrialNum++;
                 if( currentTrialNum > maxTrialNum )
                 {
@@ -367,7 +346,16 @@ namespace ompl
                 timeElapsed = t2-t1;
                 timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
 
-            } while(!isInLevelSet(q, sampleCost) && (timeElapsedDouble < timelimit_));
+            } while(!isInLevelSet(q, sampleCost) );
+
+            if(inLevelSet)
+            {
+                numAcceptedSamples_++;
+            }
+            else
+            {
+                numRejectedSamples_++;
+            }
 
             sample << q, sampleCost;
 
@@ -377,93 +365,98 @@ namespace ompl
                 updateCurrentStep(-1);
             }
 
-            return true;
+            return inLevelSet;
         }
 
-        //
-        // MCMC Sampler
-        //
-
-        //
-        // Get a series of samples for the problem space
-        //
-        // @param numSamples Number of samples to get
-        // @param time Boolean that determines if the time to run the proccess is
-        // displayed
-        // @return A series of samples of shape (number of samples, sample dimension)
-        //
-        Eigen::MatrixXd MCMCSampler::sample(const uint numSamples,
-                                            std::chrono::high_resolution_clock::duration &duration)
+        bool MCMCSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {
-            if (VERBOSE)
-                std::cout << "Number of samples: " << numSamples << std::endl;
-            if (VERBOSE)
-                std::cout << "Surfing" << std::endl;
-            Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample(), getLevelSet());
-            if (VERBOSE)
-                std::cout << "Got Through Gradient Descent" << std::endl;
+            // last sample
+            Eigen::VectorXd q = Eigen::VectorXd(getStartState().size());
+            double sampleCost = std::numeric_limits<double>::infinity();
+            q << lastSample_;
+            const int maxTrialNum = 10;
+            int currentTrialNum = 0;
 
-            // Store the samples
-            Eigen::MatrixXd samples(1, getSpaceDimension() + 1);
-            samples << q.transpose(), getCost(q);
-
-            uint accepted = 0;
-            uint rejected = 0;
-            // If you want to time the sampling
             std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-            while (accepted < numSamples)
+            std::chrono::high_resolution_clock::time_point t2 = t1;
+            std::chrono::high_resolution_clock::duration timeElapsed;
+            double timeElapsedDouble = 0.0;
+
+            bool inLevelSet = true;
+            do
             {
-                if (samples.rows() > 1)
+                if (timeElapsedDouble > timelimit_)
                 {
-                    if (VERBOSE)
-                        std::cout << "New start!" << std::endl;
-                    Eigen::VectorXd q = MCMCSampler::newtonRaphson(MonteCarloSampler::getRandomSample(), getLevelSet());
-                    if (VERBOSE)
-                        std::cout << "Got Through Gradient Descent in loop" << std::endl;
+                    inLevelSet = false;
+                    break;
                 }
 
-                int curr_rejections = 0;
-                int curr_step = 0;
-                while (curr_rejections < 10 and accepted < numSamples and curr_step < getSteps())
+                currentTrialNum++;
+                if( currentTrialNum > maxTrialNum )
                 {
-                    Eigen::VectorXd q_proposed = q + sampleNormal(0, getSigma());
-                    double prob_proposed = getProb(q_proposed);
-                    double prob_before = getProb(q);
-
-                    // if(prob_proposed / prob_before >= rand_uni() and
-                    //    // !any_dimensions_in_violation(q_proposed))
-                    if (prob_proposed / prob_before >= uniRndGnr_.sample())
-                    {
-                        Eigen::VectorXd newsample(getStartState().size() + 1);
-                        newsample << q_proposed, getCost(q_proposed);
-                        samples.row(accepted) = newsample;
-                        accepted++;
-                        q = q_proposed;
-                    }
-                    else
-                    {
-                        rejected++;
-                        curr_rejections++;
-                        if (VERBOSE)
-                            std::cout << "Rejected!" << std::endl;
-                    }
-                    curr_step++;
+                    currentTrialNum = 0;
+                    currentStep_ = -1;
                 }
 
+                if (getCurrentStep() < 0)
+                {
+                    Eigen::VectorXd start = getRandomSample();
+                    q = findSolutionInLevelSet(start, getLevelSet());
+                }
+
+                // Make a half step for momentum at the beginning
+                Eigen::VectorXd grad = getGradient(q);
                 if (VERBOSE)
-                    std::cout << "Number of accepted: " << accepted << std::endl;
+                    std::cout << "Got the gradient" << std::endl;
+
+                // Ensure that the gradient isn't two large
+                while (grad.maxCoeff() > 1e2)
+                {
+                    if (VERBOSE)
+                        std::cout << "WARNING: Gradient too high" << std::endl;
+
+                    Eigen::VectorXd start = getRandomSample();
+                    q = findSolutionInLevelSet(start, getLevelSet());
+                    grad = getGradient(q);
+                }
+
+                updateCurrentStep();
+
+                Eigen::VectorXd q_proposed = q + sampleNormal(0, getSigma());
+                double prob_proposed = getProb(q_proposed);
+                double prob_before = getProb(q);
+
+                // if(prob_proposed / prob_before >= rand_uni() and
+                //    // !any_dimensions_in_violation(q_proposed))
+                if (prob_proposed / prob_before >= uniRndGnr_.sample())
+                {
+                    q = q_proposed;
+                }
+
+                t2 = std::chrono::high_resolution_clock::now();
+                timeElapsed = t2-t1;
+                timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+
+            } while(!isInLevelSet(q, sampleCost) );
+
+            if(inLevelSet)
+            {
+                numAcceptedSamples_++;
+            }
+            else
+            {
+                numRejectedSamples_++;
             }
 
-            if (VERBOSE)
-                std::cout << "Number of accepted: " << accepted << std::endl;
+            sample << q, sampleCost;
 
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            duration = t2 - t1;
+            lastSample_ << q;
+            if (getCurrentStep() >= getSteps())
+            {
+                updateCurrentStep(-1);
+            }
 
-            if (VERBOSE)
-                std::cout << "Percentage Accepted: " << (accepted + 0.0) / (rejected + accepted) << std::endl;
-
-            return samples;
+            return inLevelSet;
         }
 
     }  // base
