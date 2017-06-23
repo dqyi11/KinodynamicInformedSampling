@@ -63,8 +63,8 @@ void planWithSimpleSetup(void)
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     ValidityChecker* pVC = new ValidityChecker(si);
-    Eigen::VectorXd obs1_center(param.dimensions);
-    Eigen::VectorXd obs1_radius(param.dimensions);
+    Eigen::VectorXd obs1_center(param.dimensions / 2);
+    Eigen::VectorXd obs1_radius(param.dimensions / 2);
     obs1_center << 0.0, 0.0;
     obs1_radius << 1.0, 1.0;
     pVC->addHypercubeObstacle( obs1_center, obs1_radius );

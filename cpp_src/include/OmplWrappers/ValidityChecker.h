@@ -12,6 +12,18 @@ class Obstacle
 public:
     Obstacle() {};
     virtual bool isValid(const ompl::base::State * state) const = 0;
+
+    Eigen::VectorXd getPosVec(const ompl::base::State* state) const
+    {
+        const ompl::base::RealVectorStateSpace::StateType *state_rv =
+                state->as<ompl::base::RealVectorStateSpace::StateType>();
+        Eigen::VectorXd vec(param.dimensions/2);
+        for(uint i=0; i<param.dimensions/2;i++)
+        {
+            vec[i] = state_rv->values[i*2];
+        }
+        return vec;
+    }
 };
 
 class NSphere : public Obstacle

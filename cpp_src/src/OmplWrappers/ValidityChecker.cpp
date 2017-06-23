@@ -2,7 +2,7 @@
 
 bool NSphere::isValid(const ompl::base::State *state) const
 {
-    Eigen::VectorXd stateVec = get_eigen_vector(state);
+    Eigen::VectorXd stateVec = getPosVec(state);
     Eigen::VectorXd delta = stateVec - center_;
     if( delta.norm() < radius_ )
     {
@@ -13,9 +13,9 @@ bool NSphere::isValid(const ompl::base::State *state) const
 
 bool Hypercube::isValid(const ompl::base::State *state) const
 {
-    Eigen::VectorXd stateVec = get_eigen_vector(state);
+    Eigen::VectorXd stateVec = getPosVec(state);
     Eigen::VectorXd delta = stateVec - center_;
-    for(uint i=0;i< param.dimensions; ++i)
+    for(uint i=0;i< param.dimensions/2; ++i)
     {
         if( abs(stateVec[i]-center_[i]) >= radius_[i] )
         {
@@ -51,7 +51,7 @@ bool ValidityChecker::addHypercubeObstacle(Eigen::VectorXd center, Eigen::Vector
 
 bool ValidityChecker::isValid(const ompl::base::State *state) const
 {
-    const ompl::base::RealVectorStateSpace::StateType *state_rv = state->as<ompl::base::RealVectorStateSpace::StateType>();
+
 
     if( false == si_->satisfiesBounds( state ) )
     {
