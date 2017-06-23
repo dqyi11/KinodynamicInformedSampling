@@ -6,7 +6,7 @@
 #include "jsoncpp/json/json.h"
 
 ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::SpaceInformationPtr si,
-                                                               std::string filename)
+                                                               std::string filename = "")
 {
     ValidityChecker* pVC = new ValidityChecker(si);
 
@@ -19,7 +19,8 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
     {
        for(size_t i=0;i<root.size();i++)
        {
-          std::string A = root[i];
+          std::string type = root.get("type","").asString();
+
        }
     }
 

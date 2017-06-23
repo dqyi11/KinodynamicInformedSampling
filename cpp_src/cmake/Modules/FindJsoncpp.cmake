@@ -1,25 +1,29 @@
-if( JsonCpp_DIR )
-  set( _jsoncpp_include_dir "${JsonCpp_DIR}/include" )
-  set( _jsoncpp_library "${JsonCpp_DIR}/lib"
-    "${JsonCpp_DIR}/lib/Release"
-    "${JsonCpp_DIR}/lib/MinSizeRel"
-    "${JsonCpp_DIR}/lib/RelWithDebInfo"
-    "${JsonCpp_DIR}/lib/Debug" )
-endif( JsonCpp_DIR )
+# - Try to find Jsoncpp
+# Once done, this will define
+#
+#  Jsoncpp_FOUND - system has Jsoncpp
+#  Jsoncpp_INCLUDE_DIRS - the Jsoncpp include directories
+#  Jsoncpp_LIBRARIES - link these to use Jsoncpp
 
-find_path( JsonCpp_INCLUDE_DIR NAMES json/json.h
-  HINTS ${_jsoncpp_include_dir}
-  PATH_SUFFIXES jsoncpp )
+include(LibFindMacros)
 
-find_library( JsonCpp_LIBRARY NAMES jsoncpp libjsoncpp
-  HINTS ${_jsoncpp_library} )
+# Use pkg-config to get hints about paths
+libfind_pkg_check_modules(Jsoncpp_PKGCONF jsoncpp)
 
-set( JsonCpp_INCLUDE_DIRS ${JsonCpp_INCLUDE_DIR} )
-set( JsonCpp_LIBRARIES ${JsonCpp_LIBRARY} )
+# Include dir
+find_path(Jsoncpp_INCLUDE_DIR
+  NAMES json/json.h
+#  PATHS ./jsoncpp/
+  PATHS ${Jsoncpp_PKGCONF_INCLUDE_DIRS} # /usr/include/jsoncpp/json
+)
 
-include( FindPackageHandleStandardArgs )
+# Finally the library itself
+find_library(Jsoncpp_LIBRARY
+  NAMES jsoncpp
+  PATHS ${Jsoncpp_PKGCONF_LIBRARY_DIRS}
+#  PATH ./jsoncpp/
+)
 
-find_package_handle_standard_args( JsonCpp DEFAULT_MSG JsonCpp_LIBRARIES
-  JsonCpp_INCLUDE_DIRS )
-
-mark_as_advanced( JsonCpp_INCLUDE_DIR JsonCpp_LIBRARY )
+set(Jsoncpp_PROCESS_INCLUDES Jsoncpp_INCLUDE_DIR)
+set(Jsoncpp_PROCESS_LIBS Jsoncpp_LIBRARY)
+libfind_process(Jsoncpp)

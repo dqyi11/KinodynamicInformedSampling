@@ -23,9 +23,9 @@ if(NLOPT_FOUND)
 endif()
 
 find_package(Jsoncpp REQUIRED)
-include_directories(${jsoncpp_INCLUDE_DIRS})
-link_libraries(${jsoncpp_LIBRARIES})
-if(NOT JSONCPP_FOUND)
+include_directories(${Jsoncpp_INCLUDE_DIR})
+link_libraries(${Jsoncpp_LIBRARY})
+if(NOT Jsoncpp_FOUND)
    message("Jsoncpp not found")
 endif()
 
