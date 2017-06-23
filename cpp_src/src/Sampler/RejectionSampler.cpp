@@ -45,7 +45,6 @@ namespace ompl
 {
     namespace base
     {
-
         bool RejectionSampler::sampleInLevelSet(Eigen::VectorXd& sample)
         {
             Eigen::VectorXd newSample = getRandomSample(stateMin_, stateMax_, getSpaceDimension());

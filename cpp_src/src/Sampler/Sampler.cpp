@@ -523,8 +523,7 @@ namespace ompl
                 Eigen::VectorXd newsample( getSpaceDimension() + 1 );
                 if(sampleInLevelSet(newsample))
                 {
-                    samples.row(numAcceptedSamples_) = newsample;
-
+                    samples.row(numAcceptedSamples_-1) = newsample;
                 }
 
                 t2 = std::chrono::high_resolution_clock::now();
