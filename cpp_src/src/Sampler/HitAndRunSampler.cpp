@@ -61,6 +61,7 @@ namespace ompl
             std::chrono::high_resolution_clock::duration timeElapsed;
             double timeElapsedDouble = 0.0;
             int skip = 0;
+            Eigen::VectorXd q;
             do
             {
                 if(timeElapsedDouble >= timelimit_)
@@ -73,16 +74,17 @@ namespace ompl
                     skip++;
                     trys = 0;
                 }
-                sample = getRandomSample(stateMin_[(numAcceptedSamples_ + skip) % getSpaceDimension()], stateMax_[(numAcceptedSamples_ + skip) % getSpaceDimension()], (numAcceptedSamples_ + skip) % getSpaceDimension());
+                q = getRandomSample(stateMin_[(numAcceptedSamples_ + skip) % getSpaceDimension()], stateMax_[(numAcceptedSamples_ + skip) % getSpaceDimension()], (numAcceptedSamples_ + skip) % getSpaceDimension());
                 trys++;
 
                 t2 = std::chrono::high_resolution_clock::now();
                 timeElapsed = t2-t1;
                 timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
 
-            } while (!isInLevelSet(sample, sampleCost));
-            prev_sample_ = sample;
+            } while (!isInLevelSet(q, sampleCost));
+            prev_sample_ = q;
 
+            sample << q, sampleCost;
             if(inLevelset)
             {
                 numAcceptedSamples_++;

@@ -84,6 +84,8 @@ namespace ompl
                 numAcceptedSamples_++;
                 return true;
             }
+
+            sample << newSample, newSampleCost;
             numRejectedSamples_++;
             return false;
         }
