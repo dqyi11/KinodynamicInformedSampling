@@ -141,6 +141,11 @@ namespace ompl
                     t2 = std::chrono::high_resolution_clock::now();
                     timeElapsed = t2-t1;
                     timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+                    timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
+                    if (timeElapsedDouble > timeLeft )
+                    {
+                        break;
+                    }
 
                     std::tie(cStart, cGoal) = HRS(startIndex, mid_index, sample, timeLeft-timeElapsedDouble);
 
