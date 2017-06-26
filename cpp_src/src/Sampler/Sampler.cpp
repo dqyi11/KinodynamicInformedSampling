@@ -535,7 +535,7 @@ namespace ompl
 
             if(numAcceptedSamples_ < numSamples)
             {
-                return samples.leftCols(numAcceptedSamples_);
+                return samples.topRows(numAcceptedSamples_);
             }
 
             return samples;
