@@ -145,10 +145,6 @@ void planWithSimpleSetup(void)
     if (MAIN_VERBOSE)
         std::cout << "Created the informed ompl sampler!" << std::endl;
 
-    // ob::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
-    // ob::PlannerPtr planner(new og::RRTstar(si));
-    // ob::PlannerPtr planner(new og::InformedRRTstar(si));
-    //ob::PlannerPtr planner(new MyInformedRRTstar(si));
     ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
 
     // Set the problem instance for our planner to solve
@@ -159,31 +155,13 @@ void planWithSimpleSetup(void)
         std::cout << "Set up Informed RRT* planner!" << std::endl;
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(60.0);
+    //ob::PlannerStatus solved = planner->solve(60.0);
 
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 120.0);
+    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     //ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     if (MAIN_VERBOSE)
         std::cout << "Planner solved!" << std::endl;
-
-    /*
-    if (solved)
-    {
-        std::cout << "Found solution:" << std::endl;
-        // get the goal representation from the problem definition (not the same as
-        // the goal state)
-        // and inquire about the found path
-        ob::PathPtr path = pdef->getSolutionPath();
-        // print the path to screen
-        path->print(std::cout);
-        // Print to File
-        // std::ofstream myfile;
-        // myfile.open("geometric_pointmass2d.txt");
-        // path->printAsMatrix(std::cout);
-        // myfile.close();
-    }
-    */
 }
 
 int main()

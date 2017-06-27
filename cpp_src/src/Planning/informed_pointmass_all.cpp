@@ -17,7 +17,7 @@
 #include "OmplWrappers/DimtStateSpace.h"
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
-#include "OmplWrappers/ValidityChecker.h"
+#include "create_obstacles.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -36,9 +36,6 @@ double epsilon = 0.1;
 double L = 5;
 int num_trials = 5;
 const double level_set = std::numeric_limits<double>::infinity();
-
-double state_bound = 5.;
-
 
 bool MAIN_VERBOSE = true;
 
@@ -119,11 +116,24 @@ void planWithSimpleSetup(void)
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
     ob::RealVectorBounds bounds(param.dimensions);
-    bounds.setLow(-state_bound);
-    bounds.setHigh(state_bound);
+    for(uint i=0;i<param.dimensions;i++)
+    {
+        if(i%2==0)
+        {
+            bounds.setLow(-param.s_max);
+            bounds.setHigh(param.s_max);
+        }
+        else
+        {
+            bounds.setLow(-param.v_max);
+            bounds.setHigh(param.v_max);
+        }
+    }
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-    si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
+    
+    ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
+    si->setStateValidityChecker(svc);
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
 
@@ -168,10 +178,12 @@ void planWithSimpleSetup(void)
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
     base_pdef->setOptimizationObjective(base_opt);
 
+    int start_idx = 0;
     int iteration_num = 10;
-    double duration = 600.0; //run time in seconds
+    double duration = 120.0; //run time in seconds
     std::string caseName = "simple";
-    for(int i=0;i<iteration_num;i++)
+
+    for(int i=start_idx;i<iteration_num;i++)
     {
         // Hit And Run
         {
