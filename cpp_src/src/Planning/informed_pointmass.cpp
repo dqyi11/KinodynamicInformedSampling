@@ -120,10 +120,10 @@ void planWithSimpleSetup(void)
     double L = 5;
     int num_trials = 5;
     const double level_set = std::numeric_limits<double>::infinity();
-    //const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+    const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
     //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
     //const auto sampler = std::make_shared<ompl::base::HitAndRun>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
-    const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+    //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
     sampler->setSingleSampleTimelimit(60.);
 
 

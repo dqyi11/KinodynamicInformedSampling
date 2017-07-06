@@ -73,12 +73,17 @@ namespace ompl
     {
         Cost GeometricObjective::stateCost(const State *s) const
         {
-            return Cost((startState_ - get_eigen_vector(s)).norm() + (goalState_ - get_eigen_vector(s)).norm());
+            Eigen::VectorXd stateVec(param.dimensions);
+            get_eigen_vector(s, stateVec);
+            return Cost((startState_ - stateVec).norm() + (goalState_ - stateVec).norm());
         }
 
         Cost GeometricObjective::motionCost(const State *s1, const State *s2) const
         {
-            return Cost((get_eigen_vector(s1) - get_eigen_vector(s2)).norm());
+            Eigen::VectorXd s1Vec, s2Vec;
+            get_eigen_vector(s1, s1Vec);
+            get_eigen_vector(s2, s2Vec);
+            return Cost((s1Vec - s2Vec).norm());
         }
 
         Cost GeometricObjective::combineCosts(Cost c1, Cost c2) const

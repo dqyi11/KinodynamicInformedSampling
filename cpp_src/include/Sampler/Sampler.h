@@ -129,6 +129,8 @@ namespace ompl
             uint64_t numAcceptedSamples_;
             uint64_t numRejectedSamples_; 
 
+            ompl::base::State* tmpState_ ;
+
         public:
             ///
             /// Constructor
@@ -157,6 +159,12 @@ namespace ompl
             {
                 started_ = false;
                 std::tie(stateMin_, stateMax_) = getStateLimits();
+                tmpState_ = si_->allocState();
+            }
+
+            virtual ~MyInformedSampler()
+            {
+                si_->freeState(tmpState_);
             }
 
             ///

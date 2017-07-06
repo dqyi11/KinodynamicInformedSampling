@@ -161,6 +161,8 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
     // our functor for sorting nearest neighbors
     CostIndexCompare compareFn(costs, *opt_);
 
+    samplesGeneratedNum_ = 0;
+
     std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
     while (ptc == false)
     {
@@ -172,7 +174,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
                 std::chrono::high_resolution_clock::duration duration = currentTime - startTime;
                 out_ << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << " , " <<
-                       goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << std::endl;
+                       goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << " , " << samplesGeneratedNum_ << std::endl;
             }
         }
 
@@ -221,9 +223,10 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             if (opt_->isFinite(bestCost_))
             {
                 if (!sampleUniform(rstate))
-                {
+                {                    
                     continue;
                 }
+                samplesGeneratedNum_++;
             }
             else //(opt_->isFinite(bestCost_) == false)
             {
@@ -521,7 +524,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                             std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
                             std::chrono::high_resolution_clock::duration duration = currentTime - startTime;
                             out_ << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << " , " <<
-                                   goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << std::endl;
+                                   goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << " , " << samplesGeneratedNum_ << std::endl;
                         }
                         bestCost_ = goalMotions_[i]->cost;
                         updatedSolution = true;

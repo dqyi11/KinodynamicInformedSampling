@@ -9,7 +9,7 @@
 /// @param s Ompl State
 /// @return Eigen VectorXd
 ///
-Eigen::VectorXd get_eigen_vector(const ompl::base::State *s);
+bool get_eigen_vector(const ompl::base::State *s, Eigen::VectorXd& vec);
 
 ///
 /// Function to convert a std::vector to a VectorXd

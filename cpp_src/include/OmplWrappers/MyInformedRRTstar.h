@@ -72,12 +72,16 @@ namespace ompl
             std::string fromState(ompl::base::State* fromState);
             bool toState(std::string stateString, ompl::base::State* toState);
 
+            uint64_t getSamplesGeneratedNum() { return samplesGeneratedNum_; }
+
 
         private:
             PlannerMode mode_;
             std::ofstream out_;
             std::ofstream sampleSaveStream_;
             std::ifstream sampleLoadStream_;
+
+            uint64_t samplesGeneratedNum_;
 
         };
 

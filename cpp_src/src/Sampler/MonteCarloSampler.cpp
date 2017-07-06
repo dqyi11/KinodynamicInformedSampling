@@ -286,6 +286,7 @@ namespace ompl
                 //if (VERBOSE)
                 //    std::cout << "Got the gradient" << std::endl;
 
+                /*
                 // Ensure that the gradient isn't two large
                 while (grad.maxCoeff() > 1e2)
                 {
@@ -296,6 +297,7 @@ namespace ompl
                     q = findSolutionInLevelSet(start, getLevelSet());
                     grad = getGradient(q);
                 }
+                */
 
                 updateCurrentStep();
 
@@ -312,6 +314,7 @@ namespace ompl
                 // Alternate Full steps for q and p
                 for (int i = 0; i < getL(); i++)
                 {
+                    grad = getGradient(q);
                     q = q + getEpsilon() * p;
                     if (i != getL())
                         p = p - getEpsilon() * grad;
@@ -321,6 +324,7 @@ namespace ompl
                 //    std::cout << "Integrated Along momentum" << std::endl;
 
                 // Make a half step for momentum at the end
+                grad = getGradient(q);
                 p = p - getEpsilon() * grad / 2;
 
                 // Negate the momentum at the end of the traj to make proposal
@@ -365,6 +369,8 @@ namespace ompl
             {
                 updateCurrentStep(-1);
             }
+
+            std::cout << "ACCEPTED  " << numAcceptedSamples_ << " REJECTED " << numRejectedSamples_ << std::endl;
 
             return inLevelSet;
         }

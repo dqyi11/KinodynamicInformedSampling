@@ -164,15 +164,16 @@ void planWithSimpleSetup(void)
     double epsilon_set [] = {0.1, 0.05, 0.2, 0.1, 0.05, 0.2};
     double L_set [] = {5, 5, 5, 10, 10, 10};
 
-    for(int j=0;j<case_num;j++)
+    for(int caseIdx=0;caseIdx<case_num;caseIdx++)
     {
         std::stringstream ss;
-        ss << "diffHMC" << j;
+        ss << "diffHMC" << caseIdx;
         std::string caseName = ss.str();
 
         for(int i=start_idx;i<iteration_num;i++)
         {
-            auto planner = createHMCPlanner(caseName, i, epsilon_set[i], L_set[i], si, base_pdef, dimt, start, goal, duration);
+            auto planner = createHMCPlanner(caseName, i, epsilon_set[caseIdx], L_set[caseIdx], si, base_pdef, dimt, start, goal, duration);
+            std::cout << "HMC with epsilon = " << epsilon_set[caseIdx] << " L = " << L_set[caseIdx] << std::endl;
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
     }

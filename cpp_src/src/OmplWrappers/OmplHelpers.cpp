@@ -64,14 +64,18 @@
 // @param s Ompl State
 // @return Eigen VectorXd
 //
-Eigen::VectorXd get_eigen_vector(const ompl::base::State *s)
+bool get_eigen_vector(const ompl::base::State *s, Eigen::VectorXd& vec)
 {
-    Eigen::VectorXd v(param.dimensions);
+    if(vec.SizeAtCompileTime != param.dimensions)
+    {
+        return false;
+    }
+
     for (uint i = 0; i < param.dimensions; i++)
     {
-        v[i] = s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i];
+        vec[i] = s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i];
     }
-    return v;
+    return true;
 }
 
 //

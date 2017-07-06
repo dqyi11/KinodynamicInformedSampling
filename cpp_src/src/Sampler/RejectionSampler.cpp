@@ -57,6 +57,11 @@ namespace ompl
             }
 
             numRejectedSamples_++;
+
+            static int cnt = 0;
+            if (cnt++%100000 == 0)
+                std::cout << "ACCEPTED  " << numAcceptedSamples_ << " REJECTED " << numRejectedSamples_ << std::endl;
+
             return false;
         }
 

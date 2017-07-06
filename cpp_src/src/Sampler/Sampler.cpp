@@ -110,7 +110,9 @@ namespace ompl
         ///
         Eigen::VectorXd MyInformedSampler::getStartState() const
         {
-            return get_eigen_vector(problem_->getStartState(0));
+            Eigen::VectorXd startState(param.dimensions);
+            get_eigen_vector(problem_->getStartState(0), startState);
+            return startState;
         }
 
         ///
@@ -121,11 +123,14 @@ namespace ompl
         Eigen::VectorXd MyInformedSampler::getGoalState() const
         {
             const auto goal_state = problem_->getGoal()->as<ompl::base::GoalState>();
-            return get_eigen_vector(goal_state->getState());
+            Eigen::VectorXd goalState(param.dimensions);
+            get_eigen_vector(goal_state->getState(), goalState);
+            return goalState;
         }
 
         Eigen::VectorXd MyInformedSampler::getGradient(const Eigen::VectorXd &curr_state)
         {
+
             // Assert that the matrix is not empty
             assert(curr_state.size() != 0 or curr_state.size() != 0);
 
@@ -134,13 +139,15 @@ namespace ompl
 
             // Loop through and calculate the gradients
             VectorXd grad(curr_state.size());
+            VectorXd state_plus(curr_state);
+            VectorXd state_min(curr_state);
             for (int dim = 0; dim < curr_state.size(); dim++)
             {
-                VectorXd state_plus = curr_state;
-                VectorXd state_min = curr_state;
                 state_plus(dim) = curr_state(dim) + h;
                 state_min(dim) = curr_state(dim) - h;
                 grad(dim) = (getCost(state_plus) - getCost(state_min)) / (2 * h);
+                state_plus(dim) = curr_state(dim) - h;
+                state_min(dim) = curr_state(dim) + h;
             }
 
             return grad;
@@ -192,15 +199,15 @@ namespace ompl
             const ompl::base::State *start_state = problem_->getStartState(0);
             const ompl::base::State *goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
 
-            ompl::base::State* state = si_->allocState();
-            get_ompl_state(curr_state, state);
+
+            get_ompl_state(curr_state, tmpState_);
 
             const ompl::base::OptimizationObjectivePtr optim_obj = problem_->getOptimizationObjective();
 
-            double cost =  optim_obj->motionCost(start_state, state).value() +
-                    optim_obj->motionCost(state, goal_state).value();
+            double cost =  optim_obj->motionCost(start_state, tmpState_).value() +
+                    optim_obj->motionCost(tmpState_, goal_state).value();
 
-            si_->freeState(state);
+
             return cost;
         }
 
@@ -215,23 +222,19 @@ namespace ompl
             const ompl::base::State *start_state = problem_->getStartState(0);
             const ompl::base::State *goal_state = problem_->getGoal()->as<ompl::base::GoalState>()->getState();
 
-            ompl::base::State* state = si_->allocState();
-            get_ompl_state(curr_state, state);
+            get_ompl_state(curr_state, tmpState_);
 
-            double costToCome = dimt_obj->getCostIfSmallerThan(start_state, state, Cost(thresholdCost)).value();
+            double costToCome = dimt_obj->getCostIfSmallerThan(start_state, tmpState_, Cost(thresholdCost)).value();
             if (costToCome == std::numeric_limits<double>::infinity() )
             {
-                si_->freeState(state);
                 return false;
             }
-            double costToGo = dimt_obj->getCostIfSmallerThan(state, goal_state, Cost(thresholdCost-costToCome)).value();
+            double costToGo = dimt_obj->getCostIfSmallerThan(tmpState_, goal_state, Cost(thresholdCost-costToCome)).value();
             if (costToGo == std::numeric_limits<double>::infinity() )
             {
-                si_->freeState(state);
                 return false;
             }
             stateCost = costToCome + costToGo;
-            si_->freeState(state);
             return true;
         }
 
