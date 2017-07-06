@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "BATCH " << i << std::endl;
 
-        double rejectionRatio = 1.0;
+        std::vector<double> rejectionRatios(samplerNum, 1.0);
         std::vector<std::chrono::high_resolution_clock::duration> times(samplerNum);
         std::vector<uint> sampleNums;
 
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 
         if(save)
         {
-            appendTimeAndRatioToFile(times, rejectionRatio, sampleNums, timeFile);
+            appendTimeAndRatioToFile(times, rejectionRatios, sampleNums, timeFile);
         }
     }
 

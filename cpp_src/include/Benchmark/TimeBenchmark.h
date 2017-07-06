@@ -61,15 +61,15 @@ void printTimeToFile(std::vector<std::chrono::high_resolution_clock::duration> d
 }
 
 void appendTimeAndRatioToFile(std::vector<std::chrono::high_resolution_clock::duration> durations,
-                              double ratio,
+                              std::vector<double> ratios,
                               std::vector<uint> sampleNums,
                               std::ofstream& fout)
 {
     for (unsigned int i = 0; i < durations.size(); i++)
     {
-        fout << std::chrono::duration_cast<std::chrono::milliseconds>(durations[i]).count() << " " << sampleNums[i] << " ";
+        fout << std::chrono::duration_cast<std::chrono::milliseconds>(durations[i]).count() << " " << sampleNums[i] << " " << ratios[i] << " ";
     }
-    fout << ratio << std::endl;
+    fout << std::endl;
 }
 
 void printTimeToFile(std::vector<std::chrono::high_resolution_clock::duration> durations,

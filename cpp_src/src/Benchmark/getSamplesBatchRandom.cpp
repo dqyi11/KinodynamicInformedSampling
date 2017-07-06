@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         std::cout << "BATCH " << i << std::flush;
         std::vector<std::chrono::high_resolution_clock::duration> times(numSamplers);
         std::vector<uint> sampleNums(numSamplers);
-        double rejectionRatio = 1.0;
+        std::vector<double> rejectionRatios(numSamplers, 1.0);
 
         // sample new start and goal
         for (int d = 0; d < numDim; d++)
@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
             int maxSteps = 50000000;
             ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
             hmcSamples = hmcSampler.sample(numSamples, times[curr]);
+            rejectionRatios[curr] = hmcSampler.getAcceptanceRatio();
             sampleNums[curr] = hmcSamples.rows();
         }
         printTime(times[curr], std::cout);
@@ -158,6 +159,7 @@ int main(int argc, char *argv[])
             ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt,
                                                                         levelSet, 100, 100);
             dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
+            rejectionRatios[curr] = dimthrsSampler.getAcceptanceRatio();
             sampleNums[curr] = dimthrsSamples.rows();
 
         }
@@ -170,6 +172,7 @@ int main(int argc, char *argv[])
             MatrixXd hitnrunSamples;
             ompl::base::HitAndRunSampler hitnrunSampler(si, pdef, levelSet, 100, 100, numTrials);
             hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
+            rejectionRatios[curr] = hitnrunSampler.getAcceptanceRatio();
             sampleNums[curr] = hitnrunSamples.rows();
         }
         printTime(times[curr], std::cout);
@@ -180,15 +183,15 @@ int main(int argc, char *argv[])
             MatrixXd rejSamples;
             ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
             rejSamples = rejSampler.sample(numSamples, times[curr]);
-            rejectionRatio = rejSampler.getAcceptanceRatio();
+            rejectionRatios[curr] = rejSampler.getAcceptanceRatio();
             sampleNums[curr] = rejSamples.rows();
         }
         printTime(times[curr], std::cout);
         curr++;
 
-        std::cout << "        REJ RATIO[" << rejectionRatio << "]" << std::flush;
+        std::cout << "        REJ RATIO[" << rejectionRatios[3] << "]" << std::flush;
 
-        appendTimeAndRatioToFile(times, rejectionRatio, sampleNums, logFile);
+        appendTimeAndRatioToFile(times, rejectionRatios, sampleNums, logFile);
 
         std::cout << std::endl;
     }

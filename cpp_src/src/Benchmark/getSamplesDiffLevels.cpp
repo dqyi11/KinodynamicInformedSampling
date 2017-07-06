@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
             std::vector<std::chrono::high_resolution_clock::duration> times(samplerNum);
             std::vector<uint> sampleNums(samplerNum);
-            double rejectionRatio = 0.0;
+            std::vector<double> rejectionRatios(samplerNum, 1.0);
 
             int curr = 0;
 
@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
                 int max_steps = 20;
                 ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, max_steps);
                 hmcSamples = hmcSampler.sample(numSamples, times[curr]);
+                rejectionRatios[curr] = hmcSampler.getAcceptanceRatio();
                 sampleNums[curr] = hmcSamples.cols();
             }
             curr++;
@@ -146,6 +147,7 @@ int main(int argc, char *argv[])
                 double alpha = 0.5;
                 ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, max_steps);
                 mcmcSamples = mcmcSampler.sample(numSamples, times[curr]);
+                rejectionRatios[curr] = mcmcSampler.getAcceptanceRatio();
                 sampleNums[curr] = mcmcSamples.cols();
             }
             curr++;
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
                 MatrixXd rejSamples;                
                 ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
                 rejSamples = rejSampler.sample(numSamples, times[curr]);
-                rejectionRatio = rejSampler.getAcceptanceRatio();
+                rejectionRatios[curr] = rejSampler.getAcceptanceRatio();
                 sampleNums[curr] = rejSamples.cols();
             }
             curr++;
@@ -164,6 +166,7 @@ int main(int argc, char *argv[])
                 ompl::base::DimtHierarchicalRejectionSampler dimthrsSampler(si, pdef, dimt, levelSet,
                                                                             100, 100);
                 dimthrsSamples = dimthrsSampler.sample(numSamples, times[curr]);
+                rejectionRatios[curr] = dimthrsSampler.getAcceptanceRatio();
                 sampleNums[curr] = dimthrsSamples.cols();
 
             }
@@ -173,6 +176,7 @@ int main(int argc, char *argv[])
                 MatrixXd gibbsSamples;
                 ompl::base::GibbsSampler gibbsSampler(si, pdef, levelSet, 100, 100);
                 gibbsSamples = gibbsSampler.sample(numSamples, times[curr]);
+                rejectionRatios[curr] = gibbsSampler.getAcceptanceRatio();
                 sampleNums[curr] = gibbsSamples.cols();
             }
             curr++;
@@ -181,10 +185,11 @@ int main(int argc, char *argv[])
                 MatrixXd hitnrunSamples;
                 ompl::base::HitAndRunSampler hitnrunSampler(si, pdef, levelSet, 100, 100);
                 hitnrunSamples = hitnrunSampler.sample(numSamples, times[curr]);
+                rejectionRatios[curr] = hitnrunSampler.getAcceptanceRatio();
                 sampleNums[curr] = hitnrunSamples.cols();
             }
 
-            appendTimeAndRatioToFile(times, rejectionRatio, sampleNums, timeFile);
+            appendTimeAndRatioToFile(times, rejectionRatios, sampleNums, timeFile);
         }
 
     }

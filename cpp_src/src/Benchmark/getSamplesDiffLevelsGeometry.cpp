@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
             std::cout << "BATCH " << i << std::endl;
             std::vector<std::chrono::high_resolution_clock::duration> times(numSampler);
             std::vector<uint> sampleNums;
-            double rejectionRatio = 1.0;
+            std::vector<double> rejectionRatios(numSampler, 1.0);
 
             int curr = 0;
 
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
                 sampleNums[curr] = hitnrunSamples.cols();
             }
 
-            appendTimeAndRatioToFile(times, rejectionRatio, sampleNums, timeFile);
+            appendTimeAndRatioToFile(times, rejectionRatios, sampleNums, timeFile);
         }
     }
 
