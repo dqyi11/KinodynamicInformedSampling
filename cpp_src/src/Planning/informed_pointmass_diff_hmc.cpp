@@ -156,17 +156,25 @@ void planWithSimpleSetup(void)
     base_pdef->setOptimizationObjective(base_opt);
 
 
-    double duration = 45.0; //run time in seconds
-    std::string caseName = "diffHMC";
+    double duration = 45.0; //run time in second
+    int start_idx = 0;
+    int iteration_num = 10;
 
     int case_num = 6;
     double epsilon_set [] = {0.1, 0.05, 0.2, 0.1, 0.05, 0.2};
     double L_set [] = {5, 5, 5, 10, 10, 10};
 
-    for(int i=0;i<case_num;i++)
+    for(int j=0;j<case_num;j++)
     {
-        auto planner = createHMCPlanner(caseName, i, epsilon_set[i], L_set[i], si, base_pdef, dimt, start, goal, duration);
-        ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+        std::stringstream ss;
+        ss << "diffHMC" << j;
+        std::string caseName = ss.str();
+
+        for(int i=start_idx;i<iteration_num;i++)
+        {
+            auto planner = createHMCPlanner(caseName, i, epsilon_set[i], L_set[i], si, base_pdef, dimt, start, goal, duration);
+            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+        }
     }
 
 }
