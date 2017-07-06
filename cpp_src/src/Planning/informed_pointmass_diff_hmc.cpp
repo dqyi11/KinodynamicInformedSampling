@@ -24,7 +24,53 @@ namespace og = ompl::geometric;
 
 #include <limits>
 
+typedef enum{ HNR, RS, HRS, HMC } SamplerType;
+
+// Construct Sampler with the base pdef and base optimization objective
+double sigma = 1;
+int max_steps = 20;
+double alpha = 0.5;
+double max_call_num = 100;
+double batch_size = 100;
+double epsilon = 0.1;
+double L = 5;
+int num_trials = 5;
+const double level_set = std::numeric_limits<double>::infinity();
+
 bool MAIN_VERBOSE = true;
+
+ompl::base::MyInformedRRTstarPtr createHMCPlanner(std::string caseName, int index, double hmcL, double hmcEpsilon,
+                                     ompl::base::SpaceInformationPtr si, ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal,
+                                     double singleSampleLimit)
+{
+    ompl::base::MyInformedSamplerPtr sampler;
+    std::string samplerName;
+
+    std::cout << "Planning using HMC Sampler" << std::endl;
+    sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, hmcL, hmcEpsilon, sigma, max_steps);
+    samplerName = "HMC";
+
+    sampler->setSingleSampleTimelimit(singleSampleLimit);
+
+    // Set up the final problem with the full optimization objective
+    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
+    pdef->setStartAndGoalStates(start, goal);
+
+    ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
+
+    pdef->setOptimizationObjective(opt);
+
+    ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
+
+    // Set the problem instance for our planner to solve
+    planner->setProblemDefinition(pdef);
+    planner->setup();
+    planner->initLogFile(caseName, samplerName, index);
+
+    return planner;
+}
 
 void planWithSimpleSetup(void)
 {
@@ -110,58 +156,19 @@ void planWithSimpleSetup(void)
     base_pdef->setOptimizationObjective(base_opt);
 
 
-    // Construct Sampler with the base pdef and base optimization objective
-    double sigma = 1;
-    int max_steps = 20;
-    double alpha = 0.5;
-    double max_call_num = 100;
-    double batch_size = 100;
-    double epsilon = 0.1;
-    double L = 5;
-    int num_trials = 5;
-    const double level_set = std::numeric_limits<double>::infinity();
-    //const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
-    //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
-    //const auto sampler = std::make_shared<ompl::base::HitAndRun>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
-    const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
-    sampler->setSingleSampleTimelimit(60.);
+    double duration = 45.0; //run time in seconds
+    std::string caseName = "diffHMC";
 
+    int case_num = 6;
+    double epsilon_set [] = {0.1, 0.05, 0.2, 0.1, 0.05, 0.2};
+    double L_set [] = {5, 5, 5, 10, 10, 10};
 
-    // Set up the final problem with the full optimization objective
-    ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
-    pdef->setStartAndGoalStates(start, goal);
+    for(int i=0;i<case_num;i++)
+    {
+        auto planner = createHMCPlanner(caseName, i, epsilon_set[i], L_set[i], si, base_pdef, dimt, start, goal, duration);
+        ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+    }
 
-    const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Set up the sampler!" << std::endl;
-
-    //opt->setCostThreshold(ob::Cost(1.51));
-    pdef->setOptimizationObjective(opt);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Created the optimization objection!" << std::endl;
-
-    if (MAIN_VERBOSE)
-        std::cout << "Created the informed ompl sampler!" << std::endl;
-
-    ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
-
-    // Set the problem instance for our planner to solve
-    planner->setProblemDefinition(pdef);
-    planner->setup();
-
-    if (MAIN_VERBOSE)
-        std::cout << "Set up Informed RRT* planner!" << std::endl;
-
-    // Run planner
-    //ob::PlannerStatus solved = planner->solve(60.0);
-
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
-    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Planner solved!" << std::endl;
 }
 
 int main()

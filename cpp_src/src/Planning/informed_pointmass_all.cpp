@@ -179,8 +179,8 @@ void planWithSimpleSetup(void)
     base_pdef->setOptimizationObjective(base_opt);
 
     int start_idx = 0;
-    int iteration_num = 10;
-    double duration = 300.0; //run time in seconds
+    int iteration_num = 20;
+    double duration = 45.0; //run time in seconds
     std::string caseName = "simple";
 
     for(int i=start_idx;i<iteration_num;i++)

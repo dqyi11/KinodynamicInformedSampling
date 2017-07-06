@@ -37,3 +37,17 @@ target_link_libraries(informed_pointmass_all
                    dimtLib
                    omplwrapperLib
                   )
+
+# Informed Pointmass all
+add_executable(informed_pointmass_diff_hmc
+               informed_pointmass_diff_hmc.cpp
+              )
+target_link_libraries(informed_pointmass_diff_hmc
+                   ${OMPL_LIBRARIES}
+                   ${Boost_FILESYSTEM_LIBRARY}
+                   ${Boost_SYSTEM_LIBRARY}
+                   ${JSONCPP_LIBRARY}
+                   samplerLib
+                   dimtLib
+                   omplwrapperLib
+                  )

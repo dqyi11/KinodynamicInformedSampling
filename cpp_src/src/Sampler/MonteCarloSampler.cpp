@@ -54,7 +54,7 @@ namespace
     }
 
     // Verbose constant
-    const bool VERBOSE = false;
+    const bool VERBOSE = true;
 
     ///
     /// Sigmoid function
@@ -278,12 +278,13 @@ namespace ompl
                 {
                     Eigen::VectorXd start = getRandomSample();
                     q = findSolutionInLevelSet(start, getLevelSet());
+
                 }
 
                 // Make a half step for momentum at the beginning
                 Eigen::VectorXd grad = getGradient(q);
-                if (VERBOSE)
-                    std::cout << "Got the gradient" << std::endl;
+                //if (VERBOSE)
+                //    std::cout << "Got the gradient" << std::endl;
 
                 // Ensure that the gradient isn't two large
                 while (grad.maxCoeff() > 1e2)
@@ -303,8 +304,8 @@ namespace ompl
                 Eigen::VectorXd p = MonteCarloSampler::sampleNormal(0, getSigma());
                 Eigen::VectorXd p_last = p;
 
-                if (VERBOSE)
-                    std::cout << "Sampled the momentum" << std::endl;
+                //if (VERBOSE)
+                //    std::cout << "Sampled the momentum" << std::endl;
 
                 p = p - getEpsilon() * grad / 2;
 
@@ -316,8 +317,8 @@ namespace ompl
                         p = p - getEpsilon() * grad;
                 }
 
-                if (VERBOSE)
-                    std::cout << "Integrated Along momentum" << std::endl;
+                //if (VERBOSE)
+                //    std::cout << "Integrated Along momentum" << std::endl;
 
                 // Make a half step for momentum at the end
                 p = p - getEpsilon() * grad / 2;
@@ -332,8 +333,8 @@ namespace ompl
                 double U_proposed = getEnergy(q);
                 double K_proposed = p_last.norm() / 2;
 
-                if (VERBOSE)
-                    std::cout << "Got energies" << std::endl;
+                //if (VERBOSE)
+                //    std::cout << "Got energies" << std::endl;
 
                 // Accept or reject the state at the end of trajectory
                 double alpha = std::min(1.0, std::exp(U_last - U_proposed + K_last - K_proposed));
@@ -406,8 +407,8 @@ namespace ompl
 
                 // Make a half step for momentum at the beginning
                 Eigen::VectorXd grad = getGradient(q);
-                if (VERBOSE)
-                    std::cout << "Got the gradient" << std::endl;
+                //if (VERBOSE)
+                //    std::cout << "Got the gradient" << std::endl;
 
                 // Ensure that the gradient isn't two large
                 while (grad.maxCoeff() > 1e2)

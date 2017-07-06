@@ -67,7 +67,7 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) 
     // A hack to approximate an infinite connection radius
     setRewireFactor(10000.);
 
-    setTreePruning(false);
+    setTreePruning(true);
     setNewStateRejection(false);
     setDelayCC(false);
 }
@@ -164,6 +164,18 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
     std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
     while (ptc == false)
     {
+
+        if(out_.is_open() && nn_->size() % 250==0)
+        {
+            for (size_t i = 0; i < goalMotions_.size(); ++i)
+            {
+                std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
+                std::chrono::high_resolution_clock::duration duration = currentTime - startTime;
+                out_ << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << " , " <<
+                       goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << std::endl;
+            }
+        }
+
         //first iteration, try to explicitly connect start to goal
         if (iterations_ == 0)
         {
@@ -284,7 +296,9 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             motion->cost = opt_->combineCosts(nmotion->cost, motion->incCost);
 
             // Find nearby neighbors of the new motion
-            getNeighbors(motion, nbh);
+            //getNeighbors(motion, nbh);
+            nbh.clear();
+            nn_->list(nbh);
 
             rewireTest += nbh.size();
             ++statesGenerated;
