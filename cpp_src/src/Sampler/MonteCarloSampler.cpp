@@ -370,7 +370,7 @@ namespace ompl
                 updateCurrentStep(-1);
             }
 
-            std::cout << "ACCEPTED  " << numAcceptedSamples_ << " REJECTED " << numRejectedSamples_ << std::endl;
+            //std::cout << "ACCEPTED  " << numAcceptedSamples_ << " REJECTED " << numRejectedSamples_ << std::endl;
 
             return inLevelSet;
         }
