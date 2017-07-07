@@ -13,10 +13,12 @@ namespace ompl
         {
         private:
             std::shared_ptr<DIMT> dimt_;
+            mutable Eigen::VectorXd eig_from, eig_to;
 
         public:
             DimtStateSpace(const std::shared_ptr<DIMT> dimt)
-              : RealVectorStateSpace(param.dimensions)
+              : RealVectorStateSpace(param.dimensions),
+                eig_from(param.dimensions), eig_to(param.dimensions)
             {
                 dimt_ = dimt;
             }
@@ -26,7 +28,7 @@ namespace ompl
                 const double *s1 = static_cast<const StateType *>(state1)->values;
                 const double *s2 = static_cast<const StateType *>(state2)->values;
 
-                Eigen::VectorXd eig_from(param.dimensions), eig_to(param.dimensions);
+                //Eigen::VectorXd eig_from(param.dimensions), eig_to(param.dimensions);
                 for (unsigned int i = 0; i < dimension_; ++i)
                 {
                     eig_from[i] = s1[i];

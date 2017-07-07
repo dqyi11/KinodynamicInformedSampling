@@ -150,6 +150,10 @@ namespace ompl
 
             const DIMTPtr dimt_;
 
+            mutable Eigen::VectorXd fromState_;
+            mutable Eigen::VectorXd toState_;
+
+            /*
             Eigen::VectorXd get_eigen_vector(const ompl::base::State* s) const
             {
                 const ompl::base::RealVectorStateSpace::StateType * state =
@@ -163,7 +167,7 @@ namespace ompl
                 }
 
                 return v;
-            }
+            }*/
 
         public:
             ///
@@ -178,7 +182,7 @@ namespace ompl
                           const Eigen::VectorXd &goalState, const DIMTPtr dimt)
               : OptimizationObjective(si),
                 startState_(startState), goalState_(goalState),
-                dimt_(dimt)
+                dimt_(dimt), fromState_(param.dimensions), toState_(param.dimensions)
             {
             }
 
@@ -188,11 +192,7 @@ namespace ompl
             /// @param s State to get the cost for
             /// @return Cost of the state
             ///
-            virtual Cost stateCost(const State *s) const override
-            {
-                return Cost(dimt_->getMinTime(startState_, get_eigen_vector(s)) +
-                            dimt_->getMinTime(get_eigen_vector(s), goalState_));
-            }
+            virtual Cost stateCost(const State *s) const override;
 
             ///
             /// Return the cost of moving from s1 to s2
@@ -201,10 +201,7 @@ namespace ompl
             /// @param s2 Goal state
             /// @return Cost of going from s1 to s2
             ///
-            virtual Cost motionCost(const State *s1, const State *s2) const override
-            {
-                return Cost(dimt_->getMinTime(get_eigen_vector(s1), get_eigen_vector(s2)));
-            }
+            virtual Cost motionCost(const State *s1, const State *s2) const override;
 
             ///
             /// Combines cost
@@ -219,10 +216,7 @@ namespace ompl
             }
 
 
-            Cost getCostIfSmallerThan(const State* s1, const State *s2, Cost thresholdCost) const
-            {
-                return Cost(dimt_->getMinTimeIfSmallerThan(get_eigen_vector(s1), get_eigen_vector(s2), thresholdCost.value()));
-            }
+            Cost getCostIfSmallerThan(const State* s1, const State *s2, Cost thresholdCost) const;
         };
     }
 }

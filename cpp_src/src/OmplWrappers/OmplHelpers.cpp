@@ -66,10 +66,11 @@
 //
 bool get_eigen_vector(const ompl::base::State *s, Eigen::VectorXd& vec)
 {
+    /*
     if(vec.SizeAtCompileTime != param.dimensions)
     {
         return false;
-    }
+    }*/
 
     for (uint i = 0; i < param.dimensions; i++)
     {

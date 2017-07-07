@@ -67,6 +67,9 @@ ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInforme
     return sampler_;
 }
 
+
+
+
 namespace ompl
 {
     namespace base
@@ -89,6 +92,27 @@ namespace ompl
         Cost GeometricObjective::combineCosts(Cost c1, Cost c2) const
         {
             return Cost(c1.value() + c2.value());
+        }
+
+        Cost DimtObjective::stateCost(const State *s) const
+        {
+            get_eigen_vector(s, fromState_);
+            return Cost(dimt_->getMinTime(startState_, fromState_) +
+                        dimt_->getMinTime(fromState_, goalState_));
+        }
+
+        Cost DimtObjective::motionCost(const State *s1, const State *s2) const
+        {
+            get_eigen_vector(s1, fromState_);
+            get_eigen_vector(s2, toState_);
+            return Cost(dimt_->getMinTime(fromState_, toState_));
+        }
+
+        Cost DimtObjective::getCostIfSmallerThan(const State* s1, const State *s2, Cost thresholdCost) const
+        {
+            get_eigen_vector(s1, fromState_);
+            get_eigen_vector(s2, toState_);
+            return Cost(dimt_->getMinTimeIfSmallerThan(fromState_, toState_, thresholdCost.value()));
         }
     }  // namespace base
 }  // namespace ompl

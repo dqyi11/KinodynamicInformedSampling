@@ -39,7 +39,7 @@ const double level_set = std::numeric_limits<double>::infinity();
 
 bool MAIN_VERBOSE = true;
 
-ompl::base::MyInformedRRTstarPtr createHMCPlanner(std::string caseName, int index, double hmcL, double hmcEpsilon,
+ompl::base::MyInformedRRTstarPtr createHMCPlanner(std::string caseName, int index, double hmcL, double hmcEpsilon, int maxSteps,
                                      ompl::base::SpaceInformationPtr si, ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
                                      const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
                                      const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal,
@@ -51,6 +51,40 @@ ompl::base::MyInformedRRTstarPtr createHMCPlanner(std::string caseName, int inde
     std::cout << "Planning using HMC Sampler" << std::endl;
     sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, hmcL, hmcEpsilon, sigma, max_steps);
     samplerName = "HMC";
+
+    sampler->setSingleSampleTimelimit(singleSampleLimit);
+
+    // Set up the final problem with the full optimization objective
+    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
+    pdef->setStartAndGoalStates(start, goal);
+
+    ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
+
+    pdef->setOptimizationObjective(opt);
+
+    ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
+
+    // Set the problem instance for our planner to solve
+    planner->setProblemDefinition(pdef);
+    planner->setup();
+    planner->initLogFile(caseName, samplerName, index);
+
+    return planner;
+}
+
+ompl::base::MyInformedRRTstarPtr createHRSPlanner(std::string caseName, int index,
+                                     ompl::base::SpaceInformationPtr si,
+                                     ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
+                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal,
+                                     double singleSampleLimit)
+{
+    ompl::base::MyInformedSamplerPtr sampler;
+    std::string samplerName;
+
+    std::cout << "Planning using HRS Sampler" << std::endl;
+    sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
+    samplerName = "HRS";
 
     sampler->setSingleSampleTimelimit(singleSampleLimit);
 
@@ -160,9 +194,10 @@ void planWithSimpleSetup(void)
     int start_idx = 0;
     int iteration_num = 10;
 
-    int case_num = 6;
-    double epsilon_set [] = {0.1, 0.05, 0.2, 0.1, 0.05, 0.2};
-    double L_set [] = {5, 5, 5, 10, 10, 10};
+    int case_num = 3;
+    double epsilon_set [] = {0.1, 0.1, 0.1};
+    double L_set [] = {5, 5, 5};
+    int maxSteps_set [] = {20, 200, 2000};
 
     for(int caseIdx=0;caseIdx<case_num;caseIdx++)
     {
@@ -172,9 +207,12 @@ void planWithSimpleSetup(void)
 
         for(int i=start_idx;i<iteration_num;i++)
         {
-            auto planner = createHMCPlanner(caseName, i, epsilon_set[caseIdx], L_set[caseIdx], si, base_pdef, dimt, start, goal, duration);
-            std::cout << "HMC with epsilon = " << epsilon_set[caseIdx] << " L = " << L_set[caseIdx] << std::endl;
+            auto planner = createHMCPlanner(caseName, i, epsilon_set[caseIdx], L_set[caseIdx], maxSteps_set[caseIdx], si, base_pdef, dimt, start, goal, duration);
+            std::cout << "HMC with epsilon = " << epsilon_set[caseIdx] << " L = " << L_set[caseIdx] << " MAXSTEP = " << maxSteps_set[caseIdx] << std::endl;
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+
+            auto planner2 = createHRSPlanner(caseName, i, si, base_pdef, dimt, start, goal, duration);
+            solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
     }
 

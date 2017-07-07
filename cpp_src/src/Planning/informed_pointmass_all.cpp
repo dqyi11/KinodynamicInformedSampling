@@ -28,7 +28,8 @@ typedef enum{ HNR, RS, HRS, HMC } SamplerType;
 
 // Construct Sampler with the base pdef and base optimization objective
 double sigma = 1;
-int max_steps = 20;
+//int max_steps = 20;
+int max_steps = 200;
 double alpha = 0.5;
 double max_call_num = 100;
 double batch_size = 100;
