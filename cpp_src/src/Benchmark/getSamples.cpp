@@ -114,27 +114,28 @@ int main(int argc, char *argv[])
     int numDim = param.dimensions;
     double maxval = 25;
     double minval = -25;
-    VectorXd startVec(numDim);
-    VectorXd goalVec(numDim);    
     UniformRealRandomGenerator uniRndGnr;
-    for (int i = 0; i < numDim; i++)
-    {
-        startVec(i) = uniRndGnr.sample(minval, maxval);
-        goalVec(i) = uniRndGnr.sample(minval, maxval);
-    }
+    std::chrono::high_resolution_clock::duration duration;
 
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
+    //maxVelocities[1] = 0.1;
+    //maxAccelerations[1] = 0.1;
     DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
-    const double levelSet = 1.1 * dimt->getMinTime(startVec, goalVec);
-    std::chrono::high_resolution_clock::duration duration;
-    std::cout << "Level set: " << levelSet << std::endl;
-
     ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, minval, maxval);
+    auto startState = si->allocState();
+    auto goalState = si->allocState();
+    for (int i = 0; i < numDim; i++)
+    {
+        startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = uniRndGnr.sample(minval, maxval);
+        goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = uniRndGnr.sample(minval, maxval);
+    }
 
-    ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);
+    ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startState, goalState, si, dimt);
+
+    const double levelSet = 1.4 * dimt->getMinTime(startState, goalState);
 
     // Initialize the sampler
     // HMC parameters

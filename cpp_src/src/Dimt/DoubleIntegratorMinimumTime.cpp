@@ -6,14 +6,13 @@ class DoubleIntegratorTobiasImpl : public DoubleIntegratorImpl
 {
     using DI = DoubleIntegrator<param.dof>;
 public:
-    Eigen::VectorXd newX1;
-    Eigen::VectorXd newX2;
-    Eigen::VectorXd newX;
+    DI::StateVector newX1;
+    DI::StateVector newX2;
+    DI::StateVector newX;
 
     DoubleIntegratorTobiasImpl(std::vector<double>& maxAccelerations,
                                std::vector<double>& maxVelocities)
-        : maxAccelerations_(maxAccelerations), maxVelocities_(maxVelocities),
-          newX1(param.dimensions), newX2(param.dimensions), newX(param.dimensions)
+        : maxAccelerations_(maxAccelerations), maxVelocities_(maxVelocities)
     {
         DI::Vector maxA;
         DI::Vector maxV;
@@ -25,54 +24,32 @@ public:
         doubleIntegrator_ = std::make_shared< DI > (maxA, maxV);
     }
 
-    Eigen::VectorXd convertToTobiasFormat(const Eigen::VectorXd& x)
-    {
-        // convert [x1, v1, x2, v2] to [x1, x2, v1, v2]
-        Eigen::VectorXd newX(param.dimensions);
-        for(int i=0;i<param.dof;i++)
-        {
-            newX[i] = x[2*i];
-            newX[param.dof+i] = x[2*i+1];
-        }
-        return newX;
-    }
-
-    void convertToTobiasFormat(const Eigen::VectorXd& x, Eigen::VectorXd& newX)
+    void convertToTobiasFormat(const ompl::base::State* x, DI::StateVector& newX)
     {
         // convert [x1, v1, x2, v2] to [x1, x2, v1, v2]
         for(int i=0;i<param.dof;i++)
         {
-            newX[i] = x[2*i];
-            newX[param.dof+i] = x[2*i+1];
+            newX[i] = x->as<ompl::base::RealVectorStateSpace::StateType>()->values[2*i];
+            newX[param.dof+i] = x->as<ompl::base::RealVectorStateSpace::StateType>()->values[2*i+1];
         }
         return ;
     }
 
-    Eigen::VectorXd convertFromTobiasFormat(const Eigen::VectorXd& x)
-    {
-        // convert [x1, x2, v1, v2] to [x1, v1, x2, v2]
-        Eigen::VectorXd newX(param.dimensions);
-        for(int i=0;i<param.dof;i++)
-        {
-            newX[2*i] = x[i];
-            newX[2*i+1] = x[param.dof+i];
-        }
-        return newX;
-    }
 
-    void convertFromTobiasFormat(const Eigen::VectorXd& x, Eigen::VectorXd& newX)
+
+    void convertFromTobiasFormat(const DI::StateVector& x, ompl::base::State* newX)
     {
         // convert [x1, x2, v1, v2] to [x1, v1, x2, v2]
         for(int i=0;i<param.dof;i++)
         {
-            newX[2*i] = x[i];
-            newX[2*i+1] = x[param.dof+i];
+            newX->as<ompl::base::RealVectorStateSpace::StateType>()->values[2*i] = x[i];
+            newX->as<ompl::base::RealVectorStateSpace::StateType>()->values[2*i+1] = x[param.dof+i];
         }
         return;
     }
 
 
-    virtual double getMinTime(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2)
+    virtual double getMinTime(const ompl::base::State* x1, const ompl::base::State* x2)
     {
         convertToTobiasFormat(x1, newX1);
         convertToTobiasFormat(x2, newX2);
@@ -80,7 +57,7 @@ public:
     }
 
 
-    virtual double getMinTimeIfSmallerThan(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
+    virtual double getMinTimeIfSmallerThan(const ompl::base::State* x1, const ompl::base::State* x2,
                                     double timeThreshold)
     {     
         convertToTobiasFormat(x1, newX1);
@@ -110,8 +87,8 @@ public:
         return std::make_tuple(minTime, infeasibleInterval.first, infeasibleInterval.second);
     }
 
-    virtual void interpolate(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
-                             double t, Eigen::VectorXd& x)
+    virtual void interpolate(const ompl::base::State* x1, const ompl::base::State* x2,
+                             double t, ompl::base::State* x)
     {
         convertToTobiasFormat(x1, newX1);
         convertToTobiasFormat(x2, newX2);

@@ -82,14 +82,7 @@ int main(int argc, char *argv[])
     int numDim = param.dimensions;
     double maxval = 25;
     double minval = -25;
-    VectorXd startVec(numDim);
-    VectorXd goalVec(numDim);
     UniformRealRandomGenerator uniRndGnr;
-    for (int i = 0; i < numDim; i++)
-    {
-        startVec(i) = uniRndGnr.sample(minval, maxval);
-        goalVec(i) = uniRndGnr.sample(minval, maxval);
-    }
 
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
@@ -98,11 +91,12 @@ int main(int argc, char *argv[])
     //maxAccelerations[1] = 0.1;
     DIMTPtr dimt = std::make_shared<DIMT>(maxVelocities, maxAccelerations);
 
-    const double levelSet = 1.4 * dimt->getMinTime(startVec, goalVec);
-
     ompl::base::SpaceInformationPtr si = createDimtSpaceInformation(dimt, minval, maxval);
+    auto startState = si->allocState();
+    auto goalState = si->allocState();
 
-    ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startVec, goalVec, si, dimt);
+
+    const double levelSet = 1.4 * dimt->getMinTime(startState, goalState);
 
     std::ofstream logFile(filename + ".log");
     if(!logFile.is_open())
@@ -119,21 +113,19 @@ int main(int argc, char *argv[])
         std::vector<double> rejectionRatios(numSamplers, 1.0);
 
         // sample new start and goal
-        for (int d = 0; d < numDim; d++)
+        for (int i = 0; i < numDim; i++)
         {
-            startVec(d) = uniRndGnr.sample(minval, maxval);
-            goalVec(d) = uniRndGnr.sample(minval, maxval);
+            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = uniRndGnr.sample(minval, maxval);
+            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = uniRndGnr.sample(minval, maxval);
         }
-
         // create a level set
         double rndNum = uniRndGnr.sample(1.0, 1.1);
-        const double levelSet = rndNum * dimt->getMinTime(startVec, goalVec);
+        const double levelSet = rndNum * dimt->getMinTime(startState, goalState);
 
         std::cout <<  " ratio " << rndNum << " " << std::flush;
 
         // create new problem definition
-        ompl::base::ProblemDefinitionPtr pdef =
-                createDimtProblem(startVec, goalVec, si, dimt);
+        ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startState, goalState, si, dimt);
 
         int curr=0;
 
