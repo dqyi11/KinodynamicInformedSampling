@@ -334,12 +334,19 @@ public:
     }
 
     static void adjustForInfeasibleIntervals(int i, double time, double maxTime,
-                                             const Eigen::Ref<const Vector> &startVelocities,
-                                             const Eigen::Ref<const Vector> &goalVelocities,
-                                             const Eigen::Ref<const Vector> &distances,
-                                             const Eigen::Ref<const Vector> &firstAccelerations,
-                                             const Eigen::Ref<const Vector> &maxAccelerations,
-                                             const Eigen::Ref<const Vector> &maxVelocities, double &minTime,
+                                             //const Eigen::Ref<const Vector> &startVelocities,
+                                             //const Eigen::Ref<const Vector> &goalVelocities,
+                                             //const Eigen::Ref<const Vector> &distances,
+                                             //const Eigen::Ref<const Vector> &firstAccelerations,
+                                             //const Eigen::Ref<const Vector> &maxAccelerations,
+                                             //const Eigen::Ref<const Vector> &maxVelocities,
+                                             const Vector& startVelocities,
+                                             const Vector& goalVelocities,
+                                             const Vector& distances,
+                                             const Vector& firstAccelerations,
+                                             const Vector& maxAccelerations,
+                                             const Vector& maxVelocities,
+                                             double &minTime,
                                              std::pair<double, double> *infeasibleIntervals, int &limitDof)
     {
         if (time >= maxTime)
@@ -486,6 +493,8 @@ public:
                        double maxTime = std::numeric_limits<double>::infinity()) const
     {
         const Vector distances = state2.template head<dof>() - state1.template head<dof>();
+        const Vector vel1 = state1.template tail<dof>();
+        const Vector vel2 = state2.template tail<dof>();
         double minTime = 0.0;
         int limitDof = -1;  // DOF for which the min time but not the infeasible
                             // interval has been calculated yet
@@ -496,13 +505,23 @@ public:
         {
             const double time = getMinTime1D(state1[dof + i], state2[dof + i], distances[i], maxAccelerations_[i],
                                              maxVelocities_[i], maxTime, firstAccelerations[i]);
+            /*
             adjustForInfeasibleIntervals(i, time, maxTime, state1.template tail<dof>(), state2.template tail<dof>(),
                                          distances, firstAccelerations, maxAccelerations_, maxVelocities_, minTime,
+                                         infeasibleIntervals, limitDof);
+                                         */
+            adjustForInfeasibleIntervals(i, time, maxTime,
+                                         vel1, vel2, distances, //does not change
+                                         firstAccelerations,
+                                         maxAccelerations_, maxVelocities_,  //does not change
+                                         minTime,
                                          infeasibleIntervals, limitDof);
         }
         assert(minTime < std::numeric_limits<double>::infinity());
         return minTime;
     }
+
+
 
     double getMinTimeIfSmallerThan(const StateVector &state1, const StateVector &state2, double timeThreshold) const
     {

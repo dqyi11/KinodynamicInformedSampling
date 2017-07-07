@@ -48,7 +48,7 @@ public:
     /// @param x1 Initial state
     /// @param x2 Final state
     /// @return T Maximum time
-    double getMinTime(const Eigen::VectorXd x1, const Eigen::VectorXd x2) const
+    double getMinTime(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2) const
     {
         return doubleIntegratorImpl_->getMinTime(x1, x2);
     }
@@ -63,7 +63,7 @@ public:
                                                                  dof_index);
     }
 
-    double getMinTimeIfSmallerThan(const Eigen::VectorXd x1, const Eigen::VectorXd x2, double timeThreshold) const
+    double getMinTimeIfSmallerThan(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2, double timeThreshold) const
     {
         return doubleIntegratorImpl_->getMinTimeIfSmallerThan(x1, x2, timeThreshold);
     }

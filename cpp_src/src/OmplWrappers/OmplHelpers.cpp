@@ -72,9 +72,11 @@ bool get_eigen_vector(const ompl::base::State *s, Eigen::VectorXd& vec)
         return false;
     }*/
 
+    auto tmp = s->as<ompl::base::RealVectorStateSpace::StateType>();
     for (uint i = 0; i < param.dimensions; i++)
     {
-        vec[i] = s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i];
+        //vec[i] = s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i];
+        vec[i] = tmp->values[i];
     }
     return true;
 }
