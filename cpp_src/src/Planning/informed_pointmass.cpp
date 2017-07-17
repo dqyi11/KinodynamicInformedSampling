@@ -33,16 +33,8 @@ void planWithSimpleSetup(void)
     std::vector<double> maxAccelerations(param.dof, param.a_max);
     DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
-    if (MAIN_VERBOSE)
-        std::cout << "Created the double integrator model!" << std::endl;
-
     // Intiatilizations for sampler
     const int dimension = param.dimensions;
-    VectorXd start_state(dimension);
-    VectorXd goal_state(dimension);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Got the start and goal states!" << std::endl;
 
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
@@ -68,36 +60,25 @@ void planWithSimpleSetup(void)
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
 
-    if (MAIN_VERBOSE)
-        std::cout << "Set up the state space!" << std::endl;
-
     // Set custom start and goal
-    ompl::base::State *start_s = space->allocState();
-    ompl::base::State *goal_s = space->allocState();
+    ompl::base::State *start_state = space->allocState();
+    ompl::base::State *goal_state = space->allocState();
     for (int i = 0; i < param.dimensions; i++)
     {
         if (i % 2 == 0)  // position
         {
-            start_state[i] = -4.;
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 4.;
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -4.;
+            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 4.;
         }
         else  // velocity
         {
-            start_state[i] = 2.;
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 2.;
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
+            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
         }
     }
 
-    std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
-    ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
-    ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Got the vector start and goal state space ompl!" << std::endl;
+    ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_state);
+    ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_state);
 
     // Get a base problem definition that has the optimization objective with the
     // space
@@ -132,19 +113,11 @@ void planWithSimpleSetup(void)
     ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
     pdef->setStartAndGoalStates(start, goal);
 
-    const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Set up the sampler!" << std::endl;
+    const ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler, start_state, goal_state);
 
     //opt->setCostThreshold(ob::Cost(1.51));
     pdef->setOptimizationObjective(opt);
 
-    if (MAIN_VERBOSE)
-        std::cout << "Created the optimization objection!" << std::endl;
-
-    if (MAIN_VERBOSE)
-        std::cout << "Created the informed ompl sampler!" << std::endl;
 
     ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
 
@@ -152,17 +125,13 @@ void planWithSimpleSetup(void)
     planner->setProblemDefinition(pdef);
     planner->setup();
 
-    if (MAIN_VERBOSE)
-        std::cout << "Set up Informed RRT* planner!" << std::endl;
-
     // Run planner
     //ob::PlannerStatus solved = planner->solve(60.0);
 
     //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
-    if (MAIN_VERBOSE)
-        std::cout << "Planner solved!" << std::endl;
+
 }
 
 int main()

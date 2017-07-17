@@ -12,20 +12,22 @@
 #include <Eigen/Dense>
 #include "Dimt/Params.h"
 
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+
 class DoubleIntegratorImpl
 {
 public:
-    virtual double getMinTime(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2) = 0;
+    virtual double getMinTime(const ompl::base::State* x1, const ompl::base::State* x2) = 0;
 
     virtual std::tuple<double, double, double>
     getMinTimeAndIntervals1Dof(const double x1, const double v1,
                                const double x2, const double v2,
                                int dof_index = 0) = 0;
 
-    virtual void interpolate(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
-                             double t, Eigen::VectorXd& x) = 0;
+    virtual void interpolate(const ompl::base::State* x1, const ompl::base::State* x2,
+                             double t, ompl::base::State* x) = 0;
 
-    virtual double getMinTimeIfSmallerThan(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
+    virtual double getMinTimeIfSmallerThan(const ompl::base::State* x1, const ompl::base::State* x2,
                                     double timeThreshold)  = 0;
 };
 
@@ -48,10 +50,10 @@ public:
     /// @param x1 Initial state
     /// @param x2 Final state
     /// @return T Maximum time
-    double getMinTime(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2) const
+    double getMinTime(const ompl::base::State* x1, const ompl::base::State* x2) const
     {
         return doubleIntegratorImpl_->getMinTime(x1, x2);
-    }
+    }  
 
     std::tuple<double, double, double>
     getMinTimeAndIntervals1Dof(const double x1, const double v1,
@@ -63,13 +65,13 @@ public:
                                                                  dof_index);
     }
 
-    double getMinTimeIfSmallerThan(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2, double timeThreshold) const
+    double getMinTimeIfSmallerThan(const ompl::base::State* x1, const ompl::base::State* x2, double timeThreshold) const
     {
         return doubleIntegratorImpl_->getMinTimeIfSmallerThan(x1, x2, timeThreshold);
     }
 
-    void interpolate(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2,
-                     double t, Eigen::VectorXd& x) const
+    void interpolate(const ompl::base::State* x1, const ompl::base::State* x2,
+                     double t, ompl::base::State* x) const
     {
         return doubleIntegratorImpl_->interpolate(x1, x2, t, x);
     }

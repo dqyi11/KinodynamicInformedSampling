@@ -39,6 +39,10 @@ namespace ompl
             /// objective
             OptimizationObjectivePtr opt_ = nullptr;
 
+        protected:
+            const ompl::base::State* startState_;
+            const ompl::base::State* goalState_;
+
         public:
             ///
             /// Constructor
@@ -50,8 +54,10 @@ namespace ompl
             /// @param stateCostFn Cost function for a single point in space
             /// @param motionCostFn Cost function between two states
             ///
-            MyOptimizationObjective(const SpaceInformationPtr &si, const MyInformedSamplerPtr sampler)
+            MyOptimizationObjective(const SpaceInformationPtr &si, const MyInformedSamplerPtr sampler,
+                                    const ompl::base::State* startState, const ompl::base::State* goalState)
               : OptimizationObjective(si), sampler_(sampler), opt_(sampler_->problem()->getOptimizationObjective())
+              , startState_(startState), goalState_(goalState)
             {
             }
 
@@ -95,11 +101,11 @@ namespace ompl
 
         class GeometricObjective : public OptimizationObjective
         {
-        private:
-            const Eigen::VectorXd startState_;
-
-            const Eigen::VectorXd goalState_;
-
+        protected:
+            const ompl::base::State* startState_;
+            const ompl::base::State* goalState_;
+            Eigen::VectorXd startVec_;
+            Eigen::VectorXd goalVec_;
         public:
             ///
             /// Constructor
@@ -108,9 +114,14 @@ namespace ompl
             /// @param startState Start state of the problem
             /// @param goalState Goal state of the problem
             ///
-            GeometricObjective(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
-                               const Eigen::VectorXd &goalState)
-              : OptimizationObjective(si), startState_(startState), goalState_(goalState)
+            GeometricObjective(const SpaceInformationPtr &si,
+                               const ompl::base::State* startState,
+                               const ompl::base::State* goalState)
+              : OptimizationObjective(si),
+                startState_(startState),
+                goalState_(goalState),
+                startVec_(param.dimensions),
+                goalVec_(param.dimensions)
             {
             }
 
@@ -143,31 +154,11 @@ namespace ompl
 
         class DimtObjective : public OptimizationObjective
         {
+        protected:
+            const ompl::base::State* startState_;
+            const ompl::base::State* goalState_;
         private:
-            const Eigen::VectorXd startState_;
-
-            const Eigen::VectorXd goalState_;
-
             const DIMTPtr dimt_;
-
-            mutable Eigen::VectorXd fromState_;
-            mutable Eigen::VectorXd toState_;
-
-            /*
-            Eigen::VectorXd get_eigen_vector(const ompl::base::State* s) const
-            {
-                const ompl::base::RealVectorStateSpace::StateType * state =
-                        static_cast<const ompl::base::RealVectorStateSpace::StateType *>(s);
-
-                Eigen::VectorXd v(param.dimensions);
-
-                for (uint i = 0; i < param.dimensions; i++)
-                {
-                    v[i] = state->values[i];
-                }
-
-                return v;
-            }*/
 
         public:
             ///
@@ -178,12 +169,15 @@ namespace ompl
             /// @param goalState Goal state of the problem
             /// @param di Double Integrator model
             ///
-            DimtObjective(const SpaceInformationPtr &si, const Eigen::VectorXd &startState,
-                          const Eigen::VectorXd &goalState, const DIMTPtr dimt)
-              : OptimizationObjective(si),
-                startState_(startState), goalState_(goalState),
-                dimt_(dimt), fromState_(param.dimensions), toState_(param.dimensions)
+            DimtObjective(const SpaceInformationPtr &si,
+                          const ompl::base::State* startState,
+                          const ompl::base::State* goalState,
+                          const DIMTPtr dimt)
+              : OptimizationObjective(si)
+              , dimt_(dimt)
             {
+                startState_ = startState;
+                goalState_ = goalState;
             }
 
             ///

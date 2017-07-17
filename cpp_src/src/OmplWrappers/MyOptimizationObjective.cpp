@@ -68,8 +68,6 @@ ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInforme
 }
 
 
-
-
 namespace ompl
 {
     namespace base
@@ -78,7 +76,7 @@ namespace ompl
         {
             Eigen::VectorXd stateVec(param.dimensions);
             get_eigen_vector(s, stateVec);
-            return Cost((startState_ - stateVec).norm() + (goalState_ - stateVec).norm());
+            return Cost((startVec_ - stateVec).norm() + (goalVec_ - stateVec).norm());
         }
 
         Cost GeometricObjective::motionCost(const State *s1, const State *s2) const
@@ -96,23 +94,18 @@ namespace ompl
 
         Cost DimtObjective::stateCost(const State *s) const
         {
-            get_eigen_vector(s, fromState_);
-            return Cost(dimt_->getMinTime(startState_, fromState_) +
-                        dimt_->getMinTime(fromState_, goalState_));
+            return Cost(dimt_->getMinTime(startState_, s) +
+                        dimt_->getMinTime(s, goalState_));
         }
 
         Cost DimtObjective::motionCost(const State *s1, const State *s2) const
         {
-            get_eigen_vector(s1, fromState_);
-            get_eigen_vector(s2, toState_);
-            return Cost(dimt_->getMinTime(fromState_, toState_));
+            return Cost(dimt_->getMinTime(s1, s2));
         }
 
         Cost DimtObjective::getCostIfSmallerThan(const State* s1, const State *s2, Cost thresholdCost) const
         {
-            get_eigen_vector(s1, fromState_);
-            get_eigen_vector(s2, toState_);
-            return Cost(dimt_->getMinTimeIfSmallerThan(fromState_, toState_, thresholdCost.value()));
+            return Cost(dimt_->getMinTimeIfSmallerThan(s1, s2, thresholdCost.value()));
         }
     }  // namespace base
 }  // namespace ompl

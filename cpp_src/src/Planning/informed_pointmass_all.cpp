@@ -29,12 +29,12 @@ typedef enum{ HNR, RS, HRS, HMC } SamplerType;
 // Construct Sampler with the base pdef and base optimization objective
 double sigma = 1;
 //int max_steps = 20;
-int max_steps = 200;
+int max_steps = 2000;
 double alpha = 0.5;
 double max_call_num = 100;
 double batch_size = 100;
-double epsilon = 0.1;
-double L = 5;
+double epsilon = 0.2;
+double L = 1;
 int num_trials = 5;
 const double level_set = std::numeric_limits<double>::infinity();
 
@@ -42,13 +42,28 @@ bool MAIN_VERBOSE = true;
 
 ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
                                      SamplerType type, ompl::base::SpaceInformationPtr si,
-                                     ompl::base::ProblemDefinitionPtr base_pdef, DIMTPtr dimt,
-                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& start,
-                                     const ompl::base::ScopedState<ompl::base::RealVectorStateSpace>& goal,
+                                     DIMTPtr dimt,
+                                     const ompl::base::State* start_state,
+                                     const ompl::base::State* goal_state,
                                      double singleSampleLimit)
 {
     ompl::base::MyInformedSamplerPtr sampler;
     std::string samplerName;
+
+    ob::ScopedState<ompl::base::RealVectorStateSpace> start(si->getStateSpace(), start_state);
+    ob::ScopedState<ompl::base::RealVectorStateSpace> goal(si->getStateSpace(), goal_state);
+
+    // Set up the final problem with the full optimization objective
+    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
+    pdef->setStartAndGoalStates(start, goal);
+
+    ob::ProblemDefinitionPtr base_pdef = std::make_shared<ob::ProblemDefinition>(si);
+    base_pdef->setStartAndGoalStates(start, goal);
+
+    const ompl::base::OptimizationObjectivePtr base_opt =
+            std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
+    base_pdef->setOptimizationObjective(base_opt);
+
     switch(type)
     {
         case HNR:
@@ -78,11 +93,7 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
 
     sampler->setSingleSampleTimelimit(singleSampleLimit);
 
-    // Set up the final problem with the full optimization objective
-    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
-    pdef->setStartAndGoalStates(start, goal);
-
-    ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler);
+    ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler, start_state, goal_state);
 
     pdef->setOptimizationObjective(opt);
 
@@ -103,16 +114,9 @@ void planWithSimpleSetup(void)
     std::vector<double> maxAccelerations(param.dof, param.a_max);
     DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
-    if (MAIN_VERBOSE)
-        std::cout << "Created the double integrator model!" << std::endl;
-
     // Intiatilizations for sampler
     const int dimension = param.dimensions;
-    VectorXd start_state(dimension);
-    VectorXd goal_state(dimension);
 
-    if (MAIN_VERBOSE)
-        std::cout << "Got the start and goal states!" << std::endl;
 
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
@@ -138,46 +142,22 @@ void planWithSimpleSetup(void)
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
 
-    if (MAIN_VERBOSE)
-        std::cout << "Set up the state space!" << std::endl;
-
     // Set custom start and goal
-    ompl::base::State *start_s = space->allocState();
-    ompl::base::State *goal_s = space->allocState();
+    ompl::base::State *start_state = space->allocState();
+    ompl::base::State *goal_state = space->allocState();
     for (int i = 0; i < param.dimensions; i++)
     {
         if (i % 2 == 0)  // position
         {
-            start_state[i] = -4.;
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 4.;
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -4.;
+            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 4.;
         }
         else  // velocity
         {
-            start_state[i] = 2.;
-            start_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = start_state[i];
-            goal_state[i] = 2.;
-            goal_s->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goal_state[i];
+            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
+            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
         }
     }
-
-    std::cout << "Start_State: " << start_state << " Goal_State: " << goal_state << std::endl;
-    ob::ScopedState<ompl::base::RealVectorStateSpace> start(space, start_s);
-    ob::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goal_s);
-
-    if (MAIN_VERBOSE)
-        std::cout << "Got the vector start and goal state space ompl!" << std::endl;
-
-    // Get a base problem definition that has the optimization objective with the
-    // space
-    // This probably should be changed
-    ob::ProblemDefinitionPtr base_pdef = std::make_shared<ob::ProblemDefinition>(si);
-    base_pdef->setStartAndGoalStates(start, goal);
-
-    const ompl::base::OptimizationObjectivePtr base_opt =
-            std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
-    base_pdef->setOptimizationObjective(base_opt);
 
     int start_idx = 0;
     int iteration_num = 20;
@@ -189,28 +169,28 @@ void planWithSimpleSetup(void)
         // Hit And Run
         {
             std::cout << " Hit And Run " << std::endl;
-            auto planner = createPlanner(caseName, i, HNR, si, base_pdef, dimt, start, goal, duration);
+            auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // HMC
         {
             std::cout << " HMC " << std::endl;
-            auto planner = createPlanner(caseName, i, HMC, si, base_pdef, dimt, start, goal, duration);
+            auto planner = createPlanner(caseName, i, HMC, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // HRS
         {
             std::cout << " HRS " << std::endl;
-            auto planner = createPlanner(caseName, i, HRS, si, base_pdef, dimt, start, goal, duration);
+            auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // Rejection
         {
             std::cout << " Rejection " << std::endl;
-            auto planner = createPlanner(caseName, i, RS, si, base_pdef, dimt, start, goal, duration);
+            auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
     }

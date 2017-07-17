@@ -521,7 +521,96 @@ public:
         return minTime;
     }
 
+    /*
+    void getGradient(const StateVector &state, const StateVector &grad, double h) const
+    {
+        //compute cost of state
+        std::vector<double> oneDofTimesLoc(0.0, dof);
+        std::vector<double> oneDofTimesVel(0.0, dof);
 
+        std::vector<double> firstAccelLoc(0.0, dof);
+        std::vector<double> firstAccelVel(0.0, dof);
+        const Vector vels = state1.template tail<dof>();
+        double maxTime = std::numeric_limits<double>::infinity();
+        for (int i(0); i < dof; ++i)
+        {
+            double vel = vels[i];
+            oneDofTimesLoc[i] = getMinTime1D(vel, vel, h,
+                                             maxAccelerations_[i], maxVelocities_[i],
+                                             maxTime,
+                                             firstAccelLoc[i]);
+        }
+        for (int i(0); i < dof; ++i)
+        {
+            double vel = vels[i];
+            oneDofTimesVel[i] = getMinTime1D(vel, vel+h, 0,
+                                             maxAccelerations_[i], maxVelocities_[i],
+                                             maxTime,
+                                             firstAccelVel[i]);
+        }
+
+        Vector distances;
+        //compute first elements of grad (location)
+        for (int i(0); i < dof; ++i)
+        {
+            distances[i] = h;
+            Vector firstAccelerations;
+            double minTime = 0.0;
+            for (unsigned int j = 0; j < dof && minTime < maxTime; ++j)
+            {
+                double time = (i==j) ? oneDofTimesLoc[i] : 0;
+                firstAccelerations[j] = (i==j) ? firstAccelLoc[i] : maxAccelerations_[i];
+
+                adjustForInfeasibleIntervals(j, time, maxTime,
+                                             vel, vel, distances, //does not change
+                                             firstAccelerations,
+                                             maxAccelerations_, maxVelocities_,  //does not change
+                                             minTime,
+                                             infeasibleIntervals, limitDof);
+            }
+            grad[i] = minTime;
+            distances[i] = 0;
+        }
+
+
+        VectorXd grad(curr_state.size());
+        VectorXd state_plus(curr_state);
+        double cost = getCost(curr_state);
+
+        for (int dim = 0; dim < curr_state.size(); dim++)
+        {
+            state_plus(dim) = curr_state(dim) + h;
+            grad(dim) = (getCost(state_plus) - cost) / (h);
+            state_plus(dim) = curr_state(dim) - h;
+
+        }
+
+        const Vector distances = state2.template head<dof>() - state1.template head<dof>();
+        const Vector vel1 = state1.template tail<dof>();
+        const Vector vel2 = state2.template tail<dof>();
+        double minTime = 0.0;
+        int limitDof = -1;  // DOF for which the min time but not the infeasible
+                            // interval has been calculated yet
+        std::pair<double, double> infeasibleIntervals[dof];
+        Vector firstAccelerations;
+
+        for (unsigned int i = 0; i < dof && minTime < maxTime; ++i)
+        {
+            const double time = getMinTime1D(state1[dof + i], state2[dof + i], distances[i], maxAccelerations_[i],
+                                             maxVelocities_[i], maxTime, firstAccelerations[i]);
+
+            adjustForInfeasibleIntervals(i, time, maxTime,
+                                         vel1, vel2, distances, //does not change
+                                         firstAccelerations,
+                                         maxAccelerations_, maxVelocities_,  //does not change
+                                         minTime,
+                                         infeasibleIntervals, limitDof);
+        }
+        assert(minTime < std::numeric_limits<double>::infinity());
+        return minTime;
+    }
+
+    */
 
     double getMinTimeIfSmallerThan(const StateVector &state1, const StateVector &state2, double timeThreshold) const
     {

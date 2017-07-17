@@ -39,29 +39,13 @@ ompl::base::SpaceInformationPtr createDimtSpaceInformation(DIMTPtr dimt,
     return si;
 }
 
-ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startVec,
-                                                   const Eigen::VectorXd& goalVec,
+ompl::base::ProblemDefinitionPtr createDimtProblem(const ompl::base::State* startState,
+                                                   const ompl::base::State* goalState,
                                                    ompl::base::SpaceInformationPtr si,
                                                    DIMTPtr dimt
                                                   )
 {
     ompl::base::StateSpacePtr space = si->getStateSpace();
-    // Set custom start and goal
-    auto startState = space->allocState();
-    auto goalState = space->allocState();
-    for (unsigned int d = 0; d < space->getDimension(); d++)
-    {
-        if (d % 2 == 0)  // position
-        {
-            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = startVec[d];
-            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = goalVec[d];
-        }
-        else  // velocity
-        {
-            startState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = startVec[d];
-            goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[d] = goalVec[d];
-        }
-    }
     ompl::base::ScopedState<ompl::base::RealVectorStateSpace> start(space, startState);
     ompl::base::ScopedState<ompl::base::RealVectorStateSpace> goal(space, goalState);
 
@@ -70,11 +54,8 @@ ompl::base::ProblemDefinitionPtr createDimtProblem(const Eigen::VectorXd& startV
     pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr opt =
-            std::make_shared<ompl::base::DimtObjective>(si, startVec, goalVec, dimt);
+            std::make_shared<ompl::base::DimtObjective>(si, startState, goalState, dimt);
     pdef->setOptimizationObjective(opt);
-
-    space->freeState(startState);
-    space->freeState(goalState);
 
     return pdef;
 }

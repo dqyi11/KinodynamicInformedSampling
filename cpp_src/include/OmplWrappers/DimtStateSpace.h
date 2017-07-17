@@ -25,16 +25,7 @@ namespace ompl
 
             virtual double distance(const State *state1, const State *state2) const
             {
-                const double *s1 = static_cast<const StateType *>(state1)->values;
-                const double *s2 = static_cast<const StateType *>(state2)->values;
-
-                //Eigen::VectorXd eig_from(param.dimensions), eig_to(param.dimensions);
-                for (unsigned int i = 0; i < dimension_; ++i)
-                {
-                    eig_from[i] = s1[i];
-                    eig_to[i] = s2[i];
-                }
-                double time = dimt_->getMinTime(eig_from, eig_to);
+                double time = dimt_->getMinTime(state1, state2);
                 return time;
             }
 
