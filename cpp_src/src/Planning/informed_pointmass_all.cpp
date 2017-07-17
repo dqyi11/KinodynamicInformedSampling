@@ -29,12 +29,12 @@ typedef enum{ HNR, RS, HRS, HMC } SamplerType;
 // Construct Sampler with the base pdef and base optimization objective
 double sigma = 1;
 //int max_steps = 20;
-int max_steps = 200;
+int max_steps = 2000;
 double alpha = 0.5;
 double max_call_num = 100;
 double batch_size = 100;
-double epsilon = 0.1;
-double L = 5;
+double epsilon = 0.2;
+double L = 1;
 int num_trials = 5;
 const double level_set = std::numeric_limits<double>::infinity();
 

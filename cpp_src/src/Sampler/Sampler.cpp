@@ -138,7 +138,7 @@ namespace ompl
             double h = 0.001;
 
             // Loop through and calculate the gradients
-            VectorXd grad(curr_state.size());
+            /*VectorXd grad(curr_state.size());
             VectorXd state_plus(curr_state);
             VectorXd state_min(curr_state);
             for (int dim = 0; dim < curr_state.size(); dim++)
@@ -148,6 +148,18 @@ namespace ompl
                 grad(dim) = (getCost(state_plus) - getCost(state_min)) / (2 * h);
                 state_plus(dim) = curr_state(dim) - h;
                 state_min(dim) = curr_state(dim) + h;
+            }*/
+
+            VectorXd grad(curr_state.size());
+            VectorXd state_plus(curr_state);
+            double cost = getCost(curr_state);
+
+            for (int dim = 0; dim < curr_state.size(); dim++)
+            {
+                state_plus(dim) = curr_state(dim) + h;
+                grad(dim) = (getCost(state_plus) - cost) / (h);
+                state_plus(dim) = curr_state(dim) - h;
+
             }
 
             return grad;

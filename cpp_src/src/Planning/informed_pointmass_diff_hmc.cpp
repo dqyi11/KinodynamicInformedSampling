@@ -179,11 +179,11 @@ void planWithSimpleSetup(void)
 
     double duration = 45.0; //run time in second
     int start_idx = 0;
-    int iteration_num = 10;
+    int iteration_num = 20;
 
     int case_num = 3;
-    double epsilon_set [] = {0.1, 0.1, 0.1};
-    double L_set [] = {5, 5, 5};
+    double epsilon_set [] = {0.2, 0.2, 0.2};
+    double L_set [] = {1, 1, 1};
     int maxSteps_set [] = {20, 200, 2000};
 
 

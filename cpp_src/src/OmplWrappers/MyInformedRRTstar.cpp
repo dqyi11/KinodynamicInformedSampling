@@ -166,7 +166,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
     std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
     while (ptc == false)
     {
-
+        /*
         if(out_.is_open() && nn_->size() % 250==0)
         {
             for (size_t i = 0; i < goalMotions_.size(); ++i)
@@ -176,7 +176,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 out_ << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << " , " <<
                        goalMotions_[i]->cost.value() << ", " << iterations_ << " , " << nn_->size() << " , " << samplesGeneratedNum_ << std::endl;
             }
-        }
+        }*/
 
         //first iteration, try to explicitly connect start to goal
         if (iterations_ == 0)
