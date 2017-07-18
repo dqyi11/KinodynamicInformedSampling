@@ -52,6 +52,25 @@ namespace ompl
 {
     namespace base
     {
+        class LangevinSampler : public MyInformedSampler
+        {
+        public:
+            LangevinSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem, const double levelSet,
+                              const unsigned int maxNumberCalls, const int sampleBatchSize, const double step)
+              : MyInformedSampler(si, problem, levelSet, maxNumberCalls, sampleBatchSize), step_(step), currentStep_(-1)
+            {
+                lastSample_ = Eigen::VectorXd(getSpaceDimension());
+            }
+
+            virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
+
+        protected:
+            double step_;
+            int currentStep_;
+            /// Last sample
+            Eigen::VectorXd lastSample_;
+        };
+
         class MonteCarloSampler : public MyInformedSampler
         {
         public:
@@ -97,6 +116,12 @@ namespace ompl
             /// @return Energy of the state
             ///
             virtual double getEnergy(const Eigen::VectorXd &curr_state) const;
+
+            double getEnergyGradient(double cost) const;
+
+            double getEnergy(double cost) const;
+
+            virtual Eigen::VectorXd getGradient(const Eigen::VectorXd &curr_state);
 
             ///
             /// Get the probability of the state from the cost function
@@ -238,6 +263,7 @@ namespace ompl
             }
 
             virtual bool sampleInLevelSet(Eigen::VectorXd& sample) override;
+
 
         private:
             /// Distance of integration for HMC step

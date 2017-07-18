@@ -40,6 +40,7 @@
 #include <math.h> /* exp, tanh, log */
 #include <limits>
 #include <algorithm>
+#include "Dimt/Params.h"
 
 namespace
 {
@@ -75,6 +76,11 @@ namespace ompl
 {
     namespace base
     {
+        bool LangevinSampler::sampleInLevelSet(Eigen::VectorXd& sample)
+        {
+            return false;
+        }
+
         ///
         /// Function to determine if any of the joint limits are violated
         /// @param sample Sample to check
@@ -109,6 +115,7 @@ namespace ompl
             // double E_grad = tanh(cost);
             const double E_grad = log(1 + log(1 + cost));
             const double E_informed = 100 * sigmoid(cost - getLevelSet());
+
             double E_region = 0;
             std::tuple<Eigen::VectorXd, Eigen::VectorXd> limits = getStateLimits();
             for (int i = 0; i < curr_state.size(); i++)
@@ -117,6 +124,34 @@ namespace ompl
                 E_region += 100 * sigmoid(curr_state(i) - std::get<1>(limits)(i));  // Higher Limits
             }
             return E_region + E_grad + E_informed;
+
+            //return E_grad + E_informed;
+        }
+
+        double MonteCarloSampler::getEnergy(double cost) const
+        {
+            const double E_grad = log(1 + log(1 + cost));
+            const double E_informed = 100 * sigmoid(cost - getLevelSet());
+            return E_grad + E_informed;
+        }
+
+        double MonteCarloSampler::getEnergyGradient(double cost) const
+        {
+            static const double costStep = 0.0001;
+            double energy1 = getEnergy(cost);
+            double energy2 = getEnergy(cost + costStep);
+            return (energy2 - energy1) / costStep;
+        }
+
+        Eigen::VectorXd MonteCarloSampler::getGradient(const Eigen::VectorXd &curr_state)
+        {
+            /*
+            Eigen::VectorXd grad = MyInformedSampler::getGradient(curr_state);
+            double cost = getCost(curr_state);
+            double energyGrad = getEnergyGradient(cost);
+            return energyGrad * grad;
+            */
+            return MyInformedSampler::getGradient(curr_state);
         }
 
         ///
@@ -140,43 +175,6 @@ namespace ompl
         {
             return exp(-MonteCarloSampler::getEnergy(curr_state));
         }
-
-
-        // //
-        // // Surf down the cost function to get to the levelset
-        // //
-        // // @param alpha Learning rate
-        // // @return Path to the level set
-        // //
-        // VectorXd MonteCarloSampler::grad_descent(const double& alpha) const
-        // {
-        //  VectorXd start = MonteCarloSampler::get_random_sample();
-        //  double cost = problem().get_cost(start);
-
-        //  int steps = 0;
-        //     while(cost > problem().level_set())
-        //     {
-        //         double last_cost = cost;
-        //         VectorXd inv_jacobian = problem().get_inv_jacobian(start);
-        //         //std::cout << "inv jacobian " << inv_jacobian << std::endl;
-        //         start = start - inv_jacobian * cost;
-        //      cost = problem().get_cost(start);
-        //      steps++;
-
-        //      // If the number of steps reaches some threshold, start over
-        //      const double thresh = 50;
-        //      if( abs(last_cost - cost) < 0.0001 )
-        //         //if(steps > thresh)
-        //      {
-        //          //std::cout << "RESTART GRAD DESCENT" << std::endl;
-        //          //return grad_descent();
-        //          start = MonteCarloSampler::get_random_sample();
-        //          cost = problem().get_cost(start);
-        //      }
-        //  }
-
-        //  return start;
-        // }
 
         //
         // Surf down the cost function to get to the levelset

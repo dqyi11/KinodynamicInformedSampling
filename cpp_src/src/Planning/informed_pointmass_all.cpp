@@ -33,7 +33,7 @@ int max_steps = 2000;
 double alpha = 0.5;
 double max_call_num = 100;
 double batch_size = 100;
-double epsilon = 0.2;
+double epsilon = 2;//0.2;
 double L = 1;
 int num_trials = 5;
 const double level_set = std::numeric_limits<double>::infinity();
@@ -166,12 +166,14 @@ void planWithSimpleSetup(void)
 
     for(int i=start_idx;i<iteration_num;i++)
     {
+        /*
         // Hit And Run
         {
             std::cout << " Hit And Run " << std::endl;
             auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
         }
+        */
 
         // HMC
         {
