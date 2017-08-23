@@ -36,6 +36,7 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         std::cout << "\t -samples - Number of samples to get" << std::endl;
         std::cout << "\t -time - Boolean (0,1)" << std::endl;
         std::cout << "\t -hmc - Boolean (0,1)" << std::endl;
+        std::cout << "\t -mcmc - Boolean (0,1)" << std::endl;
         std::cout << "\t -rej - Boolean (0,1)" << std::endl;
         std::cout << "\t -hrs - Boolean(0,1)" << std::endl;
         std::cout << "\t -hitnrun - Boolean(0,1)" << std::endl;
@@ -62,6 +63,12 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         // Get the boolean to determine if we run hmc
         if (cmdOptionExists(argv, argv + argc, "-hmc"))
             args.push_back(atoi(getCmdOption(argv, argv + argc, "-hmc")));
+        else
+            args.push_back(1);  // Default to run hmc
+
+        // Get the boolean to determine if we run mcmc
+        if (cmdOptionExists(argv, argv + argc, "-mcmc"))
+            args.push_back(atoi(getCmdOption(argv, argv + argc, "-mcmc")));
         else
             args.push_back(1);  // Default to run hmc
 
@@ -102,9 +109,10 @@ int main(int argc, char *argv[])
     int numSamples = args[0];
     bool time = (args[1] == 1) ? true : false;
     bool runHmc = (args[2] == 1) ? true : false;
-    bool runRej = (args[3] == 1) ? true : false;
-    bool runHrs = (args[4] == 1) ? true : false;
-    bool runHitnrun = (args[5] == 1) ? true : false;
+    bool runMcmc = (args[3] == 1) ? true : false;
+    bool runRej = (args[4] == 1) ? true : false;
+    bool runHrs = (args[5] == 1) ? true : false;
+    bool runHitnrun = (args[6] == 1) ? true : false;
 
     std::string filename;
     bool save;
@@ -158,11 +166,28 @@ int main(int argc, char *argv[])
         }
     }
 
+    MatrixXd mcmcSamples;
+    if (runMcmc)
+    {
+        double alpha = 0.5;
+        double sigma = 1;
+        int maxSteps = 50000000;
+        ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, alpha, sigma, maxSteps);
+        mcmcSamples = mcmcSampler.sample(numSamples, duration);
+        std::cout << "Running MCMC Sampler..." << std::endl;
+        if (time)
+        {
+            std::cout << "Total time ";
+            printTime(duration, std::cout);
+            std::cout << std::endl;
+        }
+    }
+
     MatrixXd rejSamples;
     if (runRej)
     {
         ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
-        std::cout << "Running Rejection Sampling..." << std::endl;
+        std::cout << "Running Rejection Sampler..." << std::endl;
         rejSamples = rejSampler.sample(numSamples, duration);
         if (time)
         {
@@ -208,6 +233,12 @@ int main(int argc, char *argv[])
         {
             std::ofstream hmcFile(filename + "_hmc.log");
             printSampleToFile(hmcSamples, hmcFile);
+        }
+
+        if (runMcmc)
+        {
+            std::ofstream mcmcFile(filename + "_mcmc.log");
+            printSampleToFile(mcmcSamples, mcmcFile);
         }
 
         if (runRej)

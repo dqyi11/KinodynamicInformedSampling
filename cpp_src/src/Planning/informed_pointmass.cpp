@@ -65,14 +65,14 @@ void planWithSimpleSetup(void)
     ompl::base::State *goal_state = space->allocState();
     for (int i = 0; i < param.dimensions; i++)
     {
-        if (i % 2 == 0)  // position
+        if (i <  param.dimensions/2)  // position
         {
-            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -4.;
-            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 4.;
+            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -0.5;
+            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 0.5;
         }
         else  // velocity
         {
-            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
+            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -2.;
             goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
         }
     }
@@ -103,8 +103,9 @@ void planWithSimpleSetup(void)
     int num_trials = 5;
     const double level_set = std::numeric_limits<double>::infinity();
     //const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+    const auto sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
     //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
-    const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
+    //const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
     //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
     sampler->setSingleSampleTimelimit(60.);
 
@@ -128,9 +129,8 @@ void planWithSimpleSetup(void)
     // Run planner
     //ob::PlannerStatus solved = planner->solve(60.0);
 
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
-    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
-
+    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    //ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
 }
 

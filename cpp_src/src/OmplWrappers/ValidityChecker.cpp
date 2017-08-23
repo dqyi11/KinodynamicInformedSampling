@@ -17,7 +17,7 @@ bool Hypercube::isValid(const ompl::base::State *state) const
     Eigen::VectorXd delta = stateVec - center_;
     for(uint i=0;i< param.dimensions/2; ++i)
     {
-        if( abs(stateVec[i]-center_[i]) >= radius_[i] )
+        if( std::abs(stateVec[i]-center_[i]) >= radius_[i] )
         {
             return true;
         }

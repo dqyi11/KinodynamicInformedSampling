@@ -38,11 +38,25 @@ target_link_libraries(informed_pointmass_all
                    omplwrapperLib
                   )
 
-# Informed Pointmass all
+# Informed Pointmass diff HMC
 add_executable(informed_pointmass_diff_hmc
                informed_pointmass_diff_hmc.cpp
               )
 target_link_libraries(informed_pointmass_diff_hmc
+                   ${OMPL_LIBRARIES}
+                   ${Boost_FILESYSTEM_LIBRARY}
+                   ${Boost_SYSTEM_LIBRARY}
+                   ${JSONCPP_LIBRARY}
+                   samplerLib
+                   dimtLib
+                   omplwrapperLib
+                  )
+
+# Informed Pointmass diff velocity bounds
+add_executable(informed_pointmass_diff_velocity_bounds
+               informed_pointmass_diff_velocity_bounds.cpp
+              )
+target_link_libraries(informed_pointmass_diff_velocity_bounds
                    ${OMPL_LIBRARIES}
                    ${Boost_FILESYSTEM_LIBRARY}
                    ${Boost_SYSTEM_LIBRARY}

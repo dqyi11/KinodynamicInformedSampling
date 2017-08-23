@@ -24,7 +24,7 @@ namespace og = ompl::geometric;
 
 #include <limits>
 
-typedef enum{ HNR, RS, HRS, HMC, MCMC } SamplerType;
+typedef enum{ HNR, RS, HRS, HMC } SamplerType;
 
 // Construct Sampler with the base pdef and base optimization objective
 double sigma = 1;
@@ -70,12 +70,6 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
             std::cout << "Planning using Hit&Run Sampler" << std::endl;
             sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
             samplerName = "HNR";
-            break;
-
-        case MCMC:
-            std::cout << "Planning using MCMC Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
-            samplerName = "MCMC";
             break;
 
         case RS:
@@ -124,92 +118,99 @@ void planWithSimpleSetup(void)
     const int dimension = param.dimensions;
 
 
-    // Construct the state space we are planning in
-    ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
-    ob::RealVectorBounds bounds(param.dimensions);
-    for(uint i=0;i<param.dimensions;i++)
-    {
-        if(i%2==0)
-        {
-            bounds.setLow(-param.s_max);
-            bounds.setHigh(param.s_max);
-        }
-        else
-        {
-            bounds.setLow(-param.v_max);
-            bounds.setHigh(param.v_max);
-        }
-    }
-    space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
-    ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-    
-    ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
-    si->setStateValidityChecker(svc);
-    si->setStateValidityCheckingResolution(0.01);  // 3%
-    si->setup();
 
-    // Set custom start and goal
-    ompl::base::State *start_state = space->allocState();
-    ompl::base::State *goal_state = space->allocState();
-    for (int i = 0; i < param.dimensions; i++)
-    {
-        if (i <  param.dimensions/2)  // position
-        {
-            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -0.5;
-            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 0.5;
-        }
-        else  // velocity
-        {
-            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -2.;
-            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
-        }
-    }
 
     int start_idx = 0;
-    int iteration_num = 10;
-    double duration = 120.0; //run time in seconds
-    std::string caseName = "simple";
+    int iteration_num = 20;
+    double duration = 45.0; //run time in seconds
+    std::string caseName = "velBound";
 
-    for(int i=start_idx;i<iteration_num;i++)
+    double startVelocities [] = {-10, -6, -2, 0,  2, 6, 10};
+    double goalVelocities [] = {-10, -6, -2,  0,  2, 6, 10};
+
+    for(int svIdx=0; svIdx<7;svIdx++)
     {
-        /*
-        // Hit And Run
+        for(int gvIdx=0; gvIdx<7; gvIdx++)
         {
-            std::cout << " Hit And Run " << std::endl;
-            auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-        }
-        */
+            for(int i=start_idx;i<iteration_num;i++)
+            {
+                // Construct the state space we are planning in
+                ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
+                ob::RealVectorBounds bounds(param.dimensions);
+                for(uint i=0;i<param.dimensions;i++)
+                {
+                    if(i%2==0)
+                    {
+                        bounds.setLow(-param.s_max);
+                        bounds.setHigh(param.s_max);
+                    }
+                    else
+                    {
+                        bounds.setLow(-param.v_max);
+                        bounds.setHigh(param.v_max);
+                    }
+                }
+                space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
+                ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
 
-        // HMC
-        {
-            std::cout << " HMC " << std::endl;
-            auto planner = createPlanner(caseName, i, HMC, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-        }
+                ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
+                si->setStateValidityChecker(svc);
+                si->setStateValidityCheckingResolution(0.01);  // 3%
+                si->setup();
+
+                // Set custom start and goal
+                ompl::base::State *start_state = space->allocState();
+                ompl::base::State *goal_state = space->allocState();
+                for (int i = 0; i < param.dimensions; i++)
+                {
+                    if (i % 2 == 0)  // position
+                    {
+                        start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -4.;
+                        goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 4.;
+                    }
+                    else  // velocity
+                    {
+                        start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVelocities[svIdx];
+                        goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVelocities[gvIdx];
+                    }
+                }
+
+                std::stringstream ss;
+                ss << "VelBounds-SV=" << startVelocities[svIdx] << ",GV=" << goalVelocities[gvIdx];
+                caseName = ss.str();
 
 
-        // MCMC
-        {
-            std::cout << " HMC " << std::endl;
-            auto planner = createPlanner(caseName, i, MCMC, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-        }
+                // Hit And Run
+                {
+                    std::cout << " Hit And Run " << std::endl;
+                    auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
+                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                }
 
-        // HRS
-        {
-            std::cout << " HRS " << std::endl;
-            auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-        }
+                // HMC
+                {
+                    std::cout << " HMC " << std::endl;
+                    auto planner = createPlanner(caseName, i, HMC, si, dimt, start_state, goal_state, duration);
+                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                }
 
-        // Rejection
-        {
-            std::cout << " Rejection " << std::endl;
-            auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                // HRS
+                {
+                    std::cout << " HRS " << std::endl;
+                    auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
+                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                }
+
+                // Rejection
+                {
+                    std::cout << " Rejection " << std::endl;
+                    auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
+                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                }
+            }
         }
     }
+
 
 }
 
