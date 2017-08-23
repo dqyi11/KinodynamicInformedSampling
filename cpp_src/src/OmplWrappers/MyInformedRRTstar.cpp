@@ -253,10 +253,11 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                         std::cout << " GETLINE FAILED " << std::endl;
                     }
                     bool success = toState(stateStr, rstate);
-                    if( success == false)
+                    if( success == false )
                     {
                         std::cout << "FAIL " << std::endl;
                     }
+                    std::cout << stateStr.c_str() << std::endl;
                 }
                 else
                 {
