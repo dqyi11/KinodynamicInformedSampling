@@ -34,8 +34,8 @@ constexpr Params param_4dof = {
     4,   // dof
     8,   // dimensions
     5.0,  // s_max
-    0.2,  // a_max
-    4  // v_max
+    1.0,  // a_max
+    10  // v_max
 };
 constexpr Params param_6dof = {
     6, // dof

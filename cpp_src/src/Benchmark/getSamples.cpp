@@ -120,8 +120,8 @@ int main(int argc, char *argv[])
 
     // Create a problem definition
     int numDim = param.dimensions;
-    double maxval = 25;
-    double minval = -25;
+    double maxval = param.s_max;
+    double minval = -param.s_max;
     UniformRealRandomGenerator uniRndGnr;
     std::chrono::high_resolution_clock::duration duration;
 

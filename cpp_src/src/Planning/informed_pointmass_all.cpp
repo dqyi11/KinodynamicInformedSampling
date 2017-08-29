@@ -18,6 +18,7 @@
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "create_obstacles.h"
+#include "load_problem.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -57,42 +58,39 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
     ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
     pdef->setStartAndGoalStates(start, goal);
 
-    ob::ProblemDefinitionPtr base_pdef = std::make_shared<ob::ProblemDefinition>(si);
-    base_pdef->setStartAndGoalStates(start, goal);
-
     const ompl::base::OptimizationObjectivePtr base_opt =
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
-    base_pdef->setOptimizationObjective(base_opt);
+    pdef->setOptimizationObjective(base_opt);
 
     switch(type)
     {
         case HNR:
             std::cout << "Planning using Hit&Run Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
+            sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, pdef, level_set, max_call_num, batch_size, num_trials);
             samplerName = "HNR";
             break;
 
         case MCMC:
             std::cout << "Planning using MCMC Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
+            sampler = std::make_shared<ompl::base::MCMCSampler>(si, pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
             samplerName = "MCMC";
             break;
 
         case RS:
             std::cout << "Planning using Rejection Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+            sampler = std::make_shared<ompl::base::RejectionSampler>(si, pdef, level_set, max_call_num, batch_size);
             samplerName = "RS";
             break;
 
         case HRS:
             std::cout << "Planning using HRS Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
+            sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, pdef, dimt, level_set, max_call_num, batch_size);
             samplerName = "HRS";
             break;
 
         case HMC:
             std::cout << "Planning using HMC Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+            sampler = std::make_shared<ompl::base::HMCSampler>(si, pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
             samplerName = "HMC";
             break;
     }
@@ -149,24 +147,11 @@ void planWithSimpleSetup(void)
     si->setup();
 
     // Set custom start and goal
-    ompl::base::State *start_state = space->allocState();
-    ompl::base::State *goal_state = space->allocState();
-    for (int i = 0; i < param.dimensions; i++)
-    {
-        if (i <  param.dimensions/2)  // position
-        {
-            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -0.5;
-            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 0.5;
-        }
-        else  // velocity
-        {
-            start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = -2.;
-            goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = 2.;
-        }
-    }
+    ompl::base::State *start_state = getStart(si, "problem.json");
+    ompl::base::State *goal_state = getGoal(si, "problem.json");
 
     int start_idx = 0;
-    int iteration_num = 10;
+    int iteration_num = 2;
     double duration = 120.0; //run time in seconds
     std::string caseName = "simple";
 

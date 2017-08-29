@@ -36,7 +36,9 @@ add_definitions( -DENABLE_BENCHMARK=1 )
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 FILE(GLOB_RECURSE LibFiles "include/*.h"
-                           "include/*.hpp")
+                           "include/*.hpp"
+                           "src/*.h"
+                           "src/*.hpp")
 add_custom_target(headers SOURCES ${LibFiles})
 
 add_subdirectory("src")

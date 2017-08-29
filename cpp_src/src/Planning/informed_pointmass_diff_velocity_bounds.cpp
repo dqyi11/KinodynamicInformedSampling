@@ -24,7 +24,7 @@ namespace og = ompl::geometric;
 
 #include <limits>
 
-typedef enum{ HNR, RS, HRS, HMC } SamplerType;
+typedef enum{ HNR, RS, HRS, HMC, MCMC } SamplerType;
 
 // Construct Sampler with the base pdef and base optimization objective
 double sigma = 1;
@@ -88,6 +88,12 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
             std::cout << "Planning using HMC Sampler" << std::endl;
             sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
             samplerName = "HMC";
+            break;
+
+        case MCMC:
+            std::cout << "Planning using MCMC Sampler" << std::endl;
+            sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
+            samplerName = "MCMC";
             break;
     }
 
@@ -180,10 +186,10 @@ void planWithSimpleSetup(void)
                 caseName = ss.str();
 
 
-                // Hit And Run
+                // MCMC
                 {
-                    std::cout << " Hit And Run " << std::endl;
-                    auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
+                    std::cout << " MCMC " << std::endl;
+                    auto planner = createPlanner(caseName, i, MCMC, si, dimt, start_state, goal_state, duration);
                     ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
                 }
 

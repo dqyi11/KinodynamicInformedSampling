@@ -178,6 +178,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             }
         }*/
 
+        /* DISABLE
         //first iteration, try to explicitly connect start to goal
         if (iterations_ == 0)
         {
@@ -193,6 +194,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 return base::PlannerStatus(false, false);
             }
         }
+        */
 
         iterations_++;
 
@@ -257,7 +259,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                     {
                         std::cout << "FAIL " << std::endl;
                     }
-                    std::cout << stateStr.c_str() << std::endl;
+                    //std::cout << stateStr.c_str() << std::endl;
                 }
                 else
                 {
@@ -365,7 +367,9 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                         break;
                     }
                     else
+                    {
                         valid[*i] = -1;
+                    }
                 }
             }
             else  // if not delayCC
