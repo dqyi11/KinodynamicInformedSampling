@@ -34,7 +34,7 @@ constexpr Params param_4dof = {
     4,   // dof
     8,   // dimensions
     5.0,  // s_max
-    1.0,  // a_max
+    0.05,  // a_max
     10  // v_max
 };
 constexpr Params param_6dof = {
@@ -44,5 +44,5 @@ constexpr Params param_6dof = {
     1.0, // a_max
     10 // v_max
 };
-constexpr Params param = param_4dof;
+constexpr Params param = param_3dof;
 // constexpr Params param = param_1dof;

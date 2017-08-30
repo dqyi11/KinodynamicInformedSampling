@@ -25,6 +25,7 @@ ompl::base::State* getStart(ompl::base::SpaceInformationPtr si, std::string file
           start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVal[i].asDouble();
         }
     }
+    file.close();
     return start_state;
 }
 
@@ -45,6 +46,7 @@ ompl::base::State* getGoal(ompl::base::SpaceInformationPtr si, std::string filen
             goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVal[i].asDouble();
         }
     }
+    file.close();
     return goal_state;
 }
 

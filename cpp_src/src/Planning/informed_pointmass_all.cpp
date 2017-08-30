@@ -55,42 +55,42 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
     ob::ScopedState<ompl::base::RealVectorStateSpace> goal(si->getStateSpace(), goal_state);
 
     // Set up the final problem with the full optimization objective
-    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
-    pdef->setStartAndGoalStates(start, goal);
+    ob::ProblemDefinitionPtr base_pdef = std::make_shared<ob::ProblemDefinition>(si);
+    base_pdef->setStartAndGoalStates(start, goal);
 
     const ompl::base::OptimizationObjectivePtr base_opt =
             std::make_shared<ob::DimtObjective>(si, start_state, goal_state, dimt);
-    pdef->setOptimizationObjective(base_opt);
+    base_pdef->setOptimizationObjective(base_opt);
 
     switch(type)
     {
         case HNR:
             std::cout << "Planning using Hit&Run Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, pdef, level_set, max_call_num, batch_size, num_trials);
+            sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
             samplerName = "HNR";
             break;
 
         case MCMC:
             std::cout << "Planning using MCMC Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::MCMCSampler>(si, pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
+            sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
             samplerName = "MCMC";
             break;
 
         case RS:
             std::cout << "Planning using Rejection Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::RejectionSampler>(si, pdef, level_set, max_call_num, batch_size);
+            sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
             samplerName = "RS";
             break;
 
         case HRS:
             std::cout << "Planning using HRS Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, pdef, dimt, level_set, max_call_num, batch_size);
+            sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
             samplerName = "HRS";
             break;
 
         case HMC:
             std::cout << "Planning using HMC Sampler" << std::endl;
-            sampler = std::make_shared<ompl::base::HMCSampler>(si, pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
+            sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
             samplerName = "HMC";
             break;
     }
@@ -99,6 +99,8 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
 
     ompl::base::OptimizationObjectivePtr opt = std::make_shared<ompl::base::MyOptimizationObjective>(si, sampler, start_state, goal_state);
 
+    ob::ProblemDefinitionPtr pdef = std::make_shared<ob::ProblemDefinition>(si);
+    pdef->setStartAndGoalStates(start, goal);
     pdef->setOptimizationObjective(opt);
 
     ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);

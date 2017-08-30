@@ -1,3 +1,10 @@
+add_library(multilink-di-validity-checker
+            MultiLinkDIValidityChecker.cpp
+            )
+target_link_libraries(multilink-di-validity-checker
+                      multilink-di-dart
+                     )
+
 # Ompl Planner
 add_executable(kdp_pointmass2d 
                kdp_pointmass2d.cpp
@@ -8,10 +15,11 @@ target_link_libraries(kdp_pointmass2d
                       ${Boost_SYSTEM_LIBRARY} 
                       ${JSONCPP_LIBRARY}
                       dimtLib
+                      multilink-di-validity-checker
                      )
 
 # Informed Pointmass
-add_executable(informed_pointmass 
+add_executable(informed_pointmass
                informed_pointmass.cpp
               )
 target_link_libraries(informed_pointmass 
@@ -22,6 +30,7 @@ target_link_libraries(informed_pointmass
                       samplerLib 
                       dimtLib 
                       omplwrapperLib
+                      multilink-di-validity-checker
                      )
 
 # Informed Pointmass all
@@ -36,6 +45,7 @@ target_link_libraries(informed_pointmass_all
                    samplerLib
                    dimtLib
                    omplwrapperLib
+                   multilink-di-validity-checker
                   )
 
 # Informed Pointmass diff HMC
@@ -50,6 +60,7 @@ target_link_libraries(informed_pointmass_diff_hmc
                    samplerLib
                    dimtLib
                    omplwrapperLib
+                   multilink-di-validity-checker
                   )
 
 # Informed Pointmass diff velocity bounds
@@ -64,4 +75,5 @@ target_link_libraries(informed_pointmass_diff_velocity_bounds
                    samplerLib
                    dimtLib
                    omplwrapperLib
+                   multilink-di-validity-checker
                   )

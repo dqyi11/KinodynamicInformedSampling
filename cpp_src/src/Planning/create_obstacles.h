@@ -4,6 +4,7 @@
 #include "Dimt/Params.h"
 #include "OmplWrappers/ValidityChecker.h"
 #include "jsoncpp/json/json.h"
+#include "MultiLinkDIValidityChecker.hpp"
 
 ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::SpaceInformationPtr si,
                                                                std::string filename)
@@ -56,6 +57,15 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
        }
     }
 
+    file.close();
+
+    return ompl::base::StateValidityCheckerPtr(pVC);
+}
+
+ompl::base::StateValidityCheckerPtr createMultiLinkDIStateValidityChecker(ompl::base::SpaceInformationPtr si,
+                                                                          MultiLinkDI* di)
+{
+    MultiLinkDIValidityChecker* pVC = new MultiLinkDIValidityChecker(si, di);
     return ompl::base::StateValidityCheckerPtr(pVC);
 }
 
