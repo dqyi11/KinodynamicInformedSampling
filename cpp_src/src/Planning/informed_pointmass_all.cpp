@@ -19,6 +19,7 @@
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "create_obstacles.h"
 #include "load_problem.h"
+#include "../External/multiLinkDI-dart/include/MultiLinkDIUtil.hpp"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -143,7 +144,9 @@ void planWithSimpleSetup(void)
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     
-    ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
+    std::shared_ptr<MultiLinkDI> di = createMultiLinkDI("problem.json");
+    ob::StateValidityCheckerPtr svc = createMultiLinkDIStateValidityChecker(si, di);
+    //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
     si->setStateValidityCheckingResolution(0.01);  // 3%
     si->setup();
@@ -153,7 +156,7 @@ void planWithSimpleSetup(void)
     ompl::base::State *goal_state = getGoal(si, "problem.json");
 
     int start_idx = 0;
-    int iteration_num = 2;
+    int iteration_num = 10;
     double duration = 120.0; //run time in seconds
     std::string caseName = "simple";
 

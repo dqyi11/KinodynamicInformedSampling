@@ -30,7 +30,6 @@ endif()
 include_directories(${JSONCPP_INCLUDE_DIR})
 link_libraries(${JSONCPP_LIBRARY})
 
-
 add_definitions( -DENABLE_BENCHMARK=1 )
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

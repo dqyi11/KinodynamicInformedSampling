@@ -63,10 +63,10 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
 }
 
 ompl::base::StateValidityCheckerPtr createMultiLinkDIStateValidityChecker(ompl::base::SpaceInformationPtr si,
-                                                                          MultiLinkDI* di)
+                                                                          std::shared_ptr<MultiLinkDI> di)
 {
-    MultiLinkDIValidityChecker* pVC = new MultiLinkDIValidityChecker(si, di);
-    return ompl::base::StateValidityCheckerPtr(pVC);
+    ompl::base::StateValidityCheckerPtr pVC = std::make_shared<MultiLinkDIValidityChecker>(si, di);
+    return pVC;
 }
 
 #endif // CREATE_OBSTACLES_H_

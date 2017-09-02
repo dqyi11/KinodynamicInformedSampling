@@ -4,6 +4,31 @@
 #include <dart/dart.hpp>
 #include "MultiLinkDIWindow.hpp"
 
+constexpr double default_height = 0.1; // m
+constexpr double default_width = 1.0;  // m
+constexpr double default_depth = 0.1;  // m
+
+constexpr double default_distance_to_ground = 0.05;
+
+constexpr double default_torque = 15.0; // N-m
+constexpr double default_force =  15.0; // N
+constexpr int default_countdown = 200;  // Number of timesteps for applying force
+
+constexpr double default_rest_position = 0.0;
+constexpr double delta_rest_position = 10.0 * M_PI / 180.0;
+
+constexpr double default_stiffness = 0.0;
+constexpr double delta_stiffness = 10;
+
+constexpr double default_damping = 5.0;
+constexpr double delta_damping = 1.0;
+
+constexpr double default_resolution_size = 0.02;
+constexpr double default_cube_mass = 1.0;
+const static Eigen::Vector4d default_force_line_color = Eigen::Vector4d(1.0, 0.63, 0.0, 1.0);
+const static Eigen::Vector3d default_plane_pos = Eigen::Vector3d(0.0, 0.0, 0.0);
+const static Eigen::Vector3d default_plane_size = Eigen::Vector3d(8.0, 8.0, 0.02);
+
 class MultiLinkDI
 {
 public:
@@ -14,6 +39,8 @@ public:
     void setConfiguration(const Eigen::VectorXd& config);
     void setDofConfiguration(unsigned int idx, double config);
 
+    void addPlane(const Eigen::Vector3d & pos = default_plane_pos,
+                  const Eigen::Vector3d & size = default_plane_size );
     void addCube(const Eigen::Vector3d& _poisition,
                  const Eigen::Vector3d& _size);
 
@@ -24,42 +51,55 @@ public:
 
     Eigen::Vector3d getEndEffectorPos(const Eigen::VectorXd& config);
     Eigen::Vector3d getEndEffectorPos();
+
+    unsigned int getNumOfLinks() { return num_of_links_; }
+
+    void addWaypoint( Eigen::VectorXd waypoint ) { waypoints_.push_back(waypoint); }
+    void clearWaypoints() { waypoints_.clear(); }
+    size_t getWaypointNum() { return waypoints_.size(); }
+    Eigen::VectorXd getWaypoint(size_t idx) { return waypoints_[idx]; }
+
+    double getResolutionSize() { return default_resolution_size; }
+
+    dart::dynamics::BodyNode* makeRootBody(const std::string& name,
+                                           const double width = default_width,
+                                           const double height = default_height,
+                                           const double depth = default_depth)
+    {
+        return makeRootBody(di_, name, width, height, depth);
+    }
+
+    dart::dynamics::BodyNode* addBody(dart::dynamics::BodyNode* parent,
+                                      const std::string& name,
+                                      const double width = default_width,
+                                      const double height = default_height,
+                                      const double depth = default_depth)
+    {
+        return addBody(di_, parent, name, width, height, depth);
+    }
+
 protected:
-    void setGeometry(const dart::dynamics::BodyNodePtr& bn);
+    void setGeometry(const dart::dynamics::BodyNodePtr& bn, const double width,
+                     const double height, const double depth);
 
     dart::dynamics::SkeletonPtr createCube(const Eigen::Vector3d& _position,
                                            const Eigen::Vector3d& _size,
                                            double _mass);
 
     dart::dynamics::BodyNode* makeRootBody(const dart::dynamics::SkeletonPtr& di,
-                                           const std::string& name);
+                                           const std::string& name,
+                                           const double width, const double height,
+                                           const double depth);
 
     dart::dynamics::BodyNode* addBody(const dart::dynamics::SkeletonPtr& di,
                                       dart::dynamics::BodyNode* parent,
-                                      const std::string& name);
+                                      const std::string& name,
+                                      const double width, const double height,
+                                      const double depth);
+
+    void initLineSegment();
 
     unsigned int num_of_links_;
-
-    const double default_distance_to_ground = 0.05;
-
-    const double default_height = 0.1; // m
-    const double default_width = 1.0;  // m
-    const double default_depth = 0.1;  // m
-
-    const double default_torque = 15.0; // N-m
-    const double default_force =  15.0; // N
-    const int default_countdown = 200;  // Number of timesteps for applying force
-
-    const double default_rest_position = 0.0;
-    const double delta_rest_position = 10.0 * M_PI / 180.0;
-
-    const double default_stiffness = 0.0;
-    const double delta_stiffness = 10;
-
-    const double default_damping = 5.0;
-    const double delta_damping = 1.0;
-
-    const double default_cube_mass = 1.0;
 
     dart::simulation::WorldPtr world_;
     dart::dynamics::SkeletonPtr di_;
@@ -70,6 +110,8 @@ protected:
 
     std::vector<dart::dynamics::SkeletonPtr> objects_;
 
+    std::vector<Eigen::VectorXd> waypoints_;
+    std::vector<dart::dynamics::LineSegmentShapePtr> lineSegments_;
 
     MultiLinkDIWindow window_;
 };

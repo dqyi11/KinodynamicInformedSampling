@@ -7,7 +7,8 @@
 class MultiLinkDIValidityChecker : public ompl::base::StateValidityChecker
 {
 public:
-    MultiLinkDIValidityChecker(const ompl::base::SpaceInformationPtr &si, MultiLinkDI* di)
+    MultiLinkDIValidityChecker(const ompl::base::SpaceInformationPtr &si,
+                               std::shared_ptr<MultiLinkDI> di)
         : ompl::base::StateValidityChecker(si), di_(di)
     {
     }
@@ -15,7 +16,7 @@ public:
 
     bool isValid(const ompl::base::State *state) const;
 protected:
-    MultiLinkDI* di_;
+    std::shared_ptr<MultiLinkDI> di_;
 };
 
 #endif // MULTI_LINKDI_VALIDITY_CHECKER_H_

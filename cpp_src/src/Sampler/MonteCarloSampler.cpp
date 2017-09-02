@@ -414,16 +414,17 @@ namespace ompl
                 //if (VERBOSE)
                 //    std::cout << "Got the gradient" << std::endl;
 
+                /*
                 // Ensure that the gradient isn't two large
                 while (grad.maxCoeff() > 1e2)
-                {
+                {        
                     if (VERBOSE)
                         std::cout << "WARNING: Gradient too high" << std::endl;
 
                     Eigen::VectorXd start = getRandomSample();
                     q = findSolutionInLevelSet(start, getLevelSet());
                     grad = getGradient(q);
-                }
+                }*/
 
                 updateCurrentStep();
 

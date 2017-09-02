@@ -18,7 +18,8 @@
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "create_obstacles.h"
 #include "load_problem.h"
-#include "../External/multiLinkDI-dart/include/MultiLinkDI.hpp"
+#include "../External/multiLinkDI-dart/include/MultiLinkDIUtil.hpp"
+#include "file_util.hpp"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -56,10 +57,8 @@ void planWithSimpleSetup(void)
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     
-    Eigen::Vector3d diPos;
-    diPos << 0.0, 0.0, 0.0;
-    std::shared_ptr<MultiLinkDI> di = std::make_shared<MultiLinkDI>(3, diPos);
-    ob::StateValidityCheckerPtr svc = createMultiLinkDIStateValidityChecker(si, di.get());
+    std::shared_ptr<MultiLinkDI> di = createMultiLinkDI("problem.json");
+    ob::StateValidityCheckerPtr svc = createMultiLinkDIStateValidityChecker(si, di);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
     si->setStateValidityCheckingResolution(0.01);  // 3%
@@ -69,7 +68,6 @@ void planWithSimpleSetup(void)
 
     const ompl::base::OptimizationObjectivePtr base_opt = createDimtOptimizationObjective(si, dimt, "problem.json");
     base_pdef->setOptimizationObjective(base_opt);
-
 
     // Construct Sampler with the base pdef and base optimization objective
     double sigma = 1;
@@ -83,8 +81,8 @@ void planWithSimpleSetup(void)
     int num_trials = 5;
     const double level_set = std::numeric_limits<double>::infinity();
     //const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
-    const auto sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
-    //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
+    //const auto sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
+    const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
     //const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
     //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
     sampler->setSingleSampleTimelimit(60.);
@@ -106,6 +104,14 @@ void planWithSimpleSetup(void)
 
     //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     //ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
+
+    //return;
+    if(pdef->hasSolution())
+    {
+        std::cout << "Has a solution" << std::endl;
+        ob::PathPtr path = pdef->getSolutionPath();
+        dumpPathToFile(path, "path.txt");
+    }
 
 }
 

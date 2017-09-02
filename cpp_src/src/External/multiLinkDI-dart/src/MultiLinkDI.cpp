@@ -18,34 +18,23 @@ MultiLinkDI::MultiLinkDI(const unsigned int num_of_links, Eigen::Vector3d& pos)
   world_->setGravity(gravity);
 
   di_ = Skeleton::create("di");
-
-  // Add each body to the last BodyNode in the di
-  BodyNode* bn = makeRootBody(di_, "body1");
-  bodyNodes_.push_back(bn);
-
-  for(unsigned int i=1; i<num_of_links_; i++)
-  {
-    std::stringstream ss;
-    ss << "body" << i+1;
-    bn = addBody(di_, bn, ss.str());
-    bodyNodes_.push_back(bn);
-  }
-
-  Eigen::Vector3d planePos;
-  Eigen::Vector3d planeSize;
-  planeSize << 8.0, 8.0, 0.02;
-  plane_ = createCube(planePos, planeSize, default_cube_mass);
-
   world_->addSkeleton(di_);
-  world_->addSkeleton(plane_);
 
   window_.setWorld(world_);
   window_.setMultiLinkDI(this);
+
+  plane_ = nullptr;
 }
 
 MultiLinkDI::~MultiLinkDI()
 {
 
+}
+
+void MultiLinkDI::addPlane(const Eigen::Vector3d & pos, const Eigen::Vector3d & size )
+{
+  plane_ = createCube(pos, size, default_cube_mass);
+  world_->addSkeleton(plane_);
 }
 
 void MultiLinkDI::setDofConfiguration(unsigned int idx, double config)
@@ -81,6 +70,7 @@ void MultiLinkDI::addCube(const Eigen::Vector3d& _position,
 
 void MultiLinkDI::initVisualization()
 {
+  initLineSegment();
   int argc = 0;
   char* argv[] = {};
   glutInit(&argc, argv);
@@ -128,16 +118,18 @@ Eigen::Vector3d MultiLinkDI::getEndEffectorPos(const Eigen::VectorXd& config)
 
 Eigen::Vector3d MultiLinkDI::getEndEffectorPos()
 {
-    dart::dynamics::BodyNode* node = bodyNodes_[num_of_links_-1];
-    Eigen::Vector3d pos = node->getWorldTransform() * basePos_;
+    dart::dynamics::BodyNode* node = bodyNodes_.back();
+    Eigen::Isometry3d trans = node->getWorldTransform() * node->getRelativeTransform();
+    Eigen::Vector3d pos = trans * basePos_;
     return pos;
 }
 
-void MultiLinkDI::setGeometry(const BodyNodePtr& bn)
+void MultiLinkDI::setGeometry(const BodyNodePtr& bn, const double width,
+                              const double height, const double depth)
 {
   // Create a BoxShape to be used for both visualization and collision checking
   std::shared_ptr<BoxShape> box(new BoxShape(
-      Eigen::Vector3d(default_width, default_depth, default_height)));
+      Eigen::Vector3d(width, depth, height)));
 
   // Create a shape node for visualization and collision checking
   auto shapeNode = bn->createShapeNodeWith<VisualAspect, CollisionAspect, DynamicsAspect>(box);
@@ -145,7 +137,7 @@ void MultiLinkDI::setGeometry(const BodyNodePtr& bn)
 
   // Set the location of the shape node
   Eigen::Isometry3d box_tf(Eigen::Isometry3d::Identity());
-  Eigen::Vector3d center = Eigen::Vector3d(default_width / 2.0, 0, 0);
+  Eigen::Vector3d center = Eigen::Vector3d(width / 2.0, 0, 0);
   box_tf.translation() = center;
   shapeNode->setRelativeTransform(box_tf);
 
@@ -183,14 +175,16 @@ SkeletonPtr MultiLinkDI::createCube(const Eigen::Vector3d& _position,
   return newCubeSkeleton;
 }
 
-BodyNode* MultiLinkDI::makeRootBody(const SkeletonPtr& di, const std::string& name)
+BodyNode* MultiLinkDI::makeRootBody(const SkeletonPtr& di, const std::string& name,
+                                    const double width, const double height,
+                                    const double depth)
 {
     // Set up the properties for the Joint
     RevoluteJoint::Properties properties;
     properties.mName = name + "_joint";
     properties.mAxis = Eigen::Vector3d::UnitZ();
     properties.mT_ParentBodyToJoint.translation() =
-        Eigen::Vector3d(0, 0, default_depth/2) + basePos_;
+        Eigen::Vector3d(0, 0, depth/2) + basePos_;
     properties.mDampingCoefficients[0] = default_damping;
     properties.mRestPositions[0] = default_rest_position;
     properties.mSpringStiffnesses[0] = default_stiffness;
@@ -200,8 +194,8 @@ BodyNode* MultiLinkDI::makeRootBody(const SkeletonPtr& di, const std::string& na
           nullptr, properties, BodyNode::AspectProperties(name)).second;
 
     // Make a shape for the Joint
-    const double R = default_height / 2.0;
-    const double h = default_depth;
+    const double R = height / 2.0;
+    const double h = depth;
     std::shared_ptr<CylinderShape> cyl(new CylinderShape(R, h));
 
     // Line up the cylinder with the Joint axis
@@ -215,20 +209,23 @@ BodyNode* MultiLinkDI::makeRootBody(const SkeletonPtr& di, const std::string& na
     shapeNode->setRelativeTransform(tf);
 
     // Set the geometry of the Body
-    setGeometry(bn);
+    setGeometry(bn, width, height, depth);
 
+    bodyNodes_.push_back(bn);
     return bn;
 }
 
 BodyNode* MultiLinkDI::addBody(const SkeletonPtr& di, BodyNode* parent,
-                               const std::string& name)
+                               const std::string& name,
+                               const double width, const double height,
+                               const double depth)
 {
   // Set up the properties for the Joint
   RevoluteJoint::Properties properties;
   properties.mName = name + "_joint";
   properties.mAxis = Eigen::Vector3d::UnitZ();
   properties.mT_ParentBodyToJoint.translation() =
-      Eigen::Vector3d(default_width, 0, 0);
+      Eigen::Vector3d(width, 0, 0);
   properties.mRestPositions[0] = default_rest_position;
   properties.mSpringStiffnesses[0] = default_stiffness;
   properties.mDampingCoefficients[0] = default_damping;
@@ -238,8 +235,8 @@ BodyNode* MultiLinkDI::addBody(const SkeletonPtr& di, BodyNode* parent,
         parent, properties, BodyNode::AspectProperties(name)).second;
 
   // Make a shape for the Joint
-  const double R = default_height / 2.0;
-  const double h = default_depth;
+  const double R = height / 2.0;
+  const double h = depth;
   std::shared_ptr<CylinderShape> cyl(new CylinderShape(R, h));
 
   // Line up the cylinder with the Joint axis
@@ -253,7 +250,46 @@ BodyNode* MultiLinkDI::addBody(const SkeletonPtr& di, BodyNode* parent,
   shapeNode->setRelativeTransform(tf);
 
   // Set the geometry of the Body
-  setGeometry(bn);
-
+  setGeometry(bn, width, height, depth);
+  bodyNodes_.push_back(bn);
   return bn;
+}
+
+void MultiLinkDI::initLineSegment()
+{
+    if(waypoints_.size() == 0)
+    {
+        return;
+    }
+
+   for(size_t idx=0;idx<waypoints_.size()-1;idx++)
+   {
+       Eigen::Vector3d prevConfig = waypoints_[idx].head(3);
+       Eigen::Vector3d nextConfig = waypoints_[idx+1].head(3);
+
+       Eigen::VectorXd deltaConfig = nextConfig - prevConfig;
+       for(double i=0.0;
+           i <= 1.0; i+= getResolutionSize())
+       {
+           Eigen::VectorXd newConfig = prevConfig + i * deltaConfig;
+           Eigen::VectorXd newConfigNext = newConfig + getResolutionSize() * deltaConfig;
+
+           Eigen::Vector3d newPos = getEndEffectorPos(newConfig);
+           Eigen::Vector3d newPosNext = getEndEffectorPos(newConfigNext);
+
+           dart::dynamics::SimpleFramePtr lineFrame =
+                   std::make_shared<dart::dynamics::SimpleFrame>(
+                     dart::dynamics::Frame::World());
+
+           dart::dynamics::LineSegmentShapePtr lineSeg =
+                   std::make_shared<dart::dynamics::LineSegmentShape>(newPos, newPosNext, 3.0);
+           lineSeg->addDataVariance(dart::dynamics::Shape::DYNAMIC_VERTICES);
+
+           lineFrame->setShape(lineSeg);
+           lineFrame->createVisualAspect();
+           lineFrame->getVisualAspect()->setColor(default_force_line_color);
+           world_->addSimpleFrame(lineFrame);
+       }
+
+   }
 }
