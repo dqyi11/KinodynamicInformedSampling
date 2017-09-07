@@ -32,6 +32,7 @@ const static Eigen::Vector3d default_plane_size = Eigen::Vector3d(8.0, 8.0, 0.02
 class MultiLinkDI
 {
 public:
+    typedef enum  { X = 0, Y, Z } orientationType;
     MultiLinkDI(const unsigned int num_of_links, Eigen::Vector3d& pos);
     virtual ~MultiLinkDI();
 
@@ -61,41 +62,75 @@ public:
 
     double getResolutionSize() { return default_resolution_size; }
 
-    dart::dynamics::BodyNode* makeRootBody(const std::string& name,
+    dart::dynamics::BodyNode* makeRootBody(const orientationType type,
+                                           const std::string& name,
                                            const double width = default_width,
                                            const double height = default_height,
-                                           const double depth = default_depth)
+                                           const double depth = default_depth,
+                                           const Eigen::Vector3d& relativeEuler = Eigen::Vector3d(),
+                                           const double initConfig = 0.0)
     {
-        return makeRootBody(di_, name, width, height, depth);
+        return makeRootBody(di_, type, name, width, height, depth, relativeEuler, initConfig);
     }
 
     dart::dynamics::BodyNode* addBody(dart::dynamics::BodyNode* parent,
+                                      const orientationType type,
                                       const std::string& name,
                                       const double width = default_width,
                                       const double height = default_height,
-                                      const double depth = default_depth)
+                                      const double depth = default_depth,
+                                      const Eigen::Vector3d& relativeEuler = Eigen::Vector3d(),
+                                      const Eigen::Vector3d& relativeTrans = Eigen::Vector3d(),
+                                      const double initConfig = 0.0)
     {
-        return addBody(di_, parent, name, width, height, depth);
+        return addBody(di_, parent, type, name, width, height, depth, relativeEuler,
+                       relativeTrans, initConfig);
+    }
+
+    void setHomeConfig(unsigned int idx, double config)
+    {
+        homeConfig_[idx] = config;
+    }
+
+    void setHomeConfig(const Eigen::VectorXd& homeConfig)
+    {
+        for(uint i=0;i<num_of_links_;i++)
+        {
+            homeConfig_[i] = homeConfig[i];
+        }
+    }
+
+    void updateHomeConfig()
+    {
+        for(uint i=0;i<num_of_links_;i++)
+        {
+            di_->getDof(i)->setPosition(homeConfig_[i]);
+        }
     }
 
 protected:
-    void setGeometry(const dart::dynamics::BodyNodePtr& bn, const double width,
-                     const double height, const double depth);
+    void setGeometry(const dart::dynamics::BodyNodePtr& bn, const orientationType type,
+                     const double width, const double height, const double depth);
 
     dart::dynamics::SkeletonPtr createCube(const Eigen::Vector3d& _position,
                                            const Eigen::Vector3d& _size,
                                            double _mass);
 
     dart::dynamics::BodyNode* makeRootBody(const dart::dynamics::SkeletonPtr& di,
+                                           const orientationType type,
                                            const std::string& name,
                                            const double width, const double height,
-                                           const double depth);
+                                           const double depth, const Eigen::Vector3d& relativeEuler,
+                                           const double initConfig);
 
     dart::dynamics::BodyNode* addBody(const dart::dynamics::SkeletonPtr& di,
                                       dart::dynamics::BodyNode* parent,
+                                      const orientationType type,
                                       const std::string& name,
                                       const double width, const double height,
-                                      const double depth);
+                                      const double depth, const Eigen::Vector3d& relativeEuler,
+                                      const Eigen::Vector3d& relativeTrans,
+                                      const double initConfig);
 
     void initLineSegment();
 
@@ -107,6 +142,7 @@ protected:
     std::vector<dart::dynamics::BodyNode*> bodyNodes_;
 
     Eigen::Vector3d basePos_;
+    std::vector<double> homeConfig_;
 
     std::vector<dart::dynamics::SkeletonPtr> objects_;
 

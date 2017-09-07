@@ -57,7 +57,7 @@ ompl::base::Cost ompl::base::MyOptimizationObjective::motionCost(const ompl::bas
 // @return Infromed sampler
 //
 ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInformedStateSampler(
-    const ProblemDefinitionPtr probDefn, unsigned int maxNumberCalls) const
+    const ProblemDefinitionPtr& probDefn, unsigned int maxNumberCalls) const
 {
     if (sampler_ == nullptr)
     {

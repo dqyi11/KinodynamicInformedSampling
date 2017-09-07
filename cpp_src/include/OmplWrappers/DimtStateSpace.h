@@ -32,29 +32,14 @@ namespace ompl
             virtual void interpolate(const State *from, const State *to,
                                      const double t, State *state) const
             {
-                const StateType *rfrom = static_cast<const StateType *>(from);
-                const StateType *rto = static_cast<const StateType *>(to);
-                const StateType *rstate = static_cast<StateType *>(state);
+                double minTime = dimt_->getMinTime(from, to);
+                dimt_->interpolate(from, to, t * minTime, state);
                 /*
-                Eigen::VectorXd eig_from(param.dimensions), eig_to(param.dimensions), eig_state(param.dimensions);
-
-                for (unsigned int i = 0; i < dimension_; ++i)
-                {
-                    eig_from[i] = rfrom->values[i];
-                    eig_to[i] = rto->values[i];
-                }
-                dimt_->interpolate(eig_from, eig_to, t, eig_state);
-                for (unsigned int i = 0; i < dimension_; ++i)
-                {
-                    rstate->values[i] = eig_state[i];
-                }
-                */
                 // TODO: Fix assert fail in steering function (using straight line for now)
                 for (unsigned int i = 0; i < dimension_; ++i)
                     rstate->values[i] = rfrom->values[i] + (rto->values[i] - rfrom->values[i]) * t;
+                */
             }
-
-
 
             virtual bool isMetricSpace() const
             {

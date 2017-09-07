@@ -41,18 +41,12 @@ void planWithSimpleSetup(void)
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
     ob::RealVectorBounds bounds(param.dimensions);
-    for(uint i=0;i<param.dimensions;i++)
+    for(uint i=0;i<param.dof;i++)
     {
-        if(i%2==0)
-        {
-            bounds.setLow(-param.s_max);
-            bounds.setHigh(param.s_max);
-        }
-        else
-        {
-            bounds.setLow(-param.v_max);
-            bounds.setHigh(param.v_max);
-        }
+        bounds.setLow(i, -param.s_max);
+        bounds.setHigh(i, param.s_max);
+        bounds.setLow(i+param.dof, -param.v_max);
+        bounds.setHigh(i+param.dof, param.v_max);
     }
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
@@ -61,7 +55,7 @@ void planWithSimpleSetup(void)
     ob::StateValidityCheckerPtr svc = createMultiLinkDIStateValidityChecker(si, di);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
-    si->setStateValidityCheckingResolution(0.01);  // 3%
+    si->setStateValidityCheckingResolution(0.002);  // 3%
     si->setup();
 
     ob::ProblemDefinitionPtr base_pdef = createProblem(si, "problem.json");
@@ -100,17 +94,18 @@ void planWithSimpleSetup(void)
     planner->setup();
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(60.0);
+    //ob::PlannerStatus solved = planner->solve(30.0);
 
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
-    //ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
+    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     //return;
     if(pdef->hasSolution())
     {
         std::cout << "Has a solution" << std::endl;
         ob::PathPtr path = pdef->getSolutionPath();
-        dumpPathToFile(path, "path.txt");
+        dumpPathToFile(path, "waypointpath.txt");
+        dumpPathToFile(path, dimt, "path.txt");
     }
 
 }

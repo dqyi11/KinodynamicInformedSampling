@@ -85,7 +85,7 @@ namespace ompl
             /// @param maxNumberCalls Maximum number of sampling calls
             /// @return Infromed sampler
             ///
-            virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn,
+            InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr& probDefn,
                                                                  unsigned int maxNumberCalls) const override;
 
             ///

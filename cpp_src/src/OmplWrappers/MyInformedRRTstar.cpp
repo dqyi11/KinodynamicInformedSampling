@@ -149,12 +149,12 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
     if (useKNearest_)
 
         OMPL_INFORM("%s: k_rrt_ %u ->> Initial k-nearest value of %u", getName().c_str(),
-                    k_rrg_,
-                    (unsigned int)std::ceil(k_rrg_ * log((double)(nn_->size() + 1u))));
+                    k_rrt_,
+                    (unsigned int)std::ceil(k_rrt_ * log((double)(nn_->size() + 1u))));
     else
         OMPL_INFORM(
             "%s: Initial rewiring radius of %.2f", getName().c_str(),
-            std::min(maxDistance_, r_rrg_ * std::pow(log((double)(nn_->size() + 1u)) / ((double)(nn_->size() + 1u)),
+            std::min(maxDistance_, r_rrt_ * std::pow(log((double)(nn_->size() + 1u)) / ((double)(nn_->size() + 1u)),
                                                      1 / (double)(si_->getStateDimension()))));
 
 
@@ -178,7 +178,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
             }
         }*/
 
-        /* DISABLE
+        /*
         //first iteration, try to explicitly connect start to goal
         if (iterations_ == 0)
         {
@@ -193,8 +193,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 OMPL_INFORM("TRIVIAL PROBLEM< CONNECT START TO GOAL OPTIMALY---NOT RUNNING PLANNER ");
                 return base::PlannerStatus(false, false);
             }
-        }
-        */
+        }*/
 
         iterations_++;
 
@@ -255,11 +254,10 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                         std::cout << " GETLINE FAILED " << std::endl;
                     }
                     bool success = toState(stateStr, rstate);
-                    if( success == false )
+                    if( success == false)
                     {
                         std::cout << "FAIL " << std::endl;
                     }
-                    //std::cout << stateStr.c_str() << std::endl;
                 }
                 else
                 {
@@ -367,9 +365,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                         break;
                     }
                     else
-                    {
                         valid[*i] = -1;
-                    }
                 }
             }
             else  // if not delayCC
@@ -661,7 +657,7 @@ bool MyInformedRRTstar::toState(std::string stateString, ompl::base::State* toSt
 std::string MyInformedRRTstar::fromState(ompl::base::State* fromState)
 {
     std::stringstream oss;
-    for(int dimIdx = 0; dimIdx < getSpaceInformation()->getStateDimension(); ++dimIdx)
+    for(unsigned int dimIdx = 0; dimIdx < getSpaceInformation()->getStateDimension(); ++dimIdx)
     {
         oss << fromState->as<ompl::base::RealVectorStateSpace::StateType>()->values[dimIdx] << " ";
     }

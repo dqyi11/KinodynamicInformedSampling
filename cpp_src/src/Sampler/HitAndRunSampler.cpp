@@ -49,9 +49,8 @@ namespace ompl
             return prev_sample_;
         }
 
-        bool GibbsSampler::sampleInLevelSet(Eigen::VectorXd& sample)
+        bool GibbsSampler::sampleInLevelSet(Eigen::VectorXd &sample)
         {
-
             double sampleCost = std::numeric_limits<double>::infinity();
             int trys = 0;
             bool inLevelset = true;
@@ -64,7 +63,7 @@ namespace ompl
             Eigen::VectorXd q;
             do
             {
-                if(timeElapsedDouble >= timelimit_)
+                if (timeElapsedDouble >= timelimit_)
                 {
                     inLevelset = false;
                     break;
@@ -74,18 +73,20 @@ namespace ompl
                     skip++;
                     trys = 0;
                 }
-                q = getRandomSample(stateMin_[(numAcceptedSamples_ + skip) % getSpaceDimension()], stateMax_[(numAcceptedSamples_ + skip) % getSpaceDimension()], (numAcceptedSamples_ + skip) % getSpaceDimension());
+                q = getRandomSample(stateMin_[(numAcceptedSamples_ + skip) % getSpaceDimension()],
+                                    stateMax_[(numAcceptedSamples_ + skip) % getSpaceDimension()],
+                                    (numAcceptedSamples_ + skip) % getSpaceDimension());
                 trys++;
 
                 t2 = std::chrono::high_resolution_clock::now();
-                timeElapsed = t2-t1;
+                timeElapsed = t2 - t1;
                 timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
 
             } while (!isInLevelSet(q, sampleCost));
             prev_sample_ = q;
 
             sample << q, sampleCost;
-            if(inLevelset)
+            if (inLevelset)
             {
                 numAcceptedSamples_++;
             }
@@ -104,7 +105,7 @@ namespace ompl
             // std::cout << "Updated Level Set" << std::endl;
         }
 
-        bool HitAndRunSampler::sampleInLevelSet(Eigen::VectorXd& sample)
+        bool HitAndRunSampler::sampleInLevelSet(Eigen::VectorXd &sample)
         {
             double lamda_lower_bound = 0.0, lamda_upper_bound = 1.0;
             Eigen::VectorXd dir(getSpaceDimension());
@@ -122,7 +123,7 @@ namespace ompl
             bool inLevelset = true;
             do
             {
-                if(timeElapsedDouble > timelimit_)
+                if (timeElapsedDouble > timelimit_)
                 {
                     inLevelset = false;
                     break;
@@ -140,12 +141,31 @@ namespace ompl
                     dir = dir / sum;
                     lamda_upper_bound = diagonalLength_;
                     lamda_lower_bound = -diagonalLength_;
-                   // skip++;
+                    // skip++;
                     trys = 0;
                 }
                 // Generate random sample along dir
-                double lamda = uniRndGnr_.sample(lamda_lower_bound, lamda_upper_bound);
+                double lamda;
+                double power = 4;
+                if (lamda_lower_bound < 0 && lamda_upper_bound > 0)
+                {
+                    double rand_no1 = uniRndGnr_.sample(0, 1);
+                    double rand_no2 = uniRndGnr_.sample(0, 1);
+                    lamda = rand_no1 < 0.5 ? lamda_lower_bound * pow(rand_no2,1/power) : lamda_upper_bound * pow(rand_no2,1/power);
+                }
+                else
+                {
+                    double rand_no = uniRndGnr_.sample(0, 1);
+                    if (lamda_lower_bound > 0)
+                        lamda = pow(pow(lamda_lower_bound, power) +
+                                     rand_no * (pow(lamda_upper_bound, power) - pow(lamda_lower_bound, power)),1/power);
+                    else if (lamda_upper_bound < 0)
+                      lamda = -pow(pow(lamda_upper_bound,power) +
+                                        rand_no * (pow(lamda_lower_bound,power) -
+                                                   pow(lamda_upper_bound,power)),1/power);
+                }
 
+                // lamda = uniRndGnr_.sample(lamda_lower_bound, lamda_upper_bound);
                 newSample = prev_sample_ + lamda * dir;
                 if (!isInBound(newSample))
                 {
@@ -160,7 +180,7 @@ namespace ompl
                 trys++;
 
                 t2 = std::chrono::high_resolution_clock::now();
-                timeElapsed = t2-t1;
+                timeElapsed = t2 - t1;
                 timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();
 
             } while (retry);
@@ -168,7 +188,7 @@ namespace ompl
             sample << newSample, newSampleCost;
             pushPrevSamples(newSample);
 
-            if(inLevelset)
+            if (inLevelset)
             {
                 numAcceptedSamples_++;
             }
