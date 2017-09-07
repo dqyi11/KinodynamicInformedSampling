@@ -661,7 +661,7 @@ bool MyInformedRRTstar::toState(std::string stateString, ompl::base::State* toSt
 std::string MyInformedRRTstar::fromState(ompl::base::State* fromState)
 {
     std::stringstream oss;
-    for(int dimIdx = 0; dimIdx < getSpaceInformation()->getStateDimension(); ++dimIdx)
+    for(unsigned int dimIdx = 0; dimIdx < getSpaceInformation()->getStateDimension(); ++dimIdx)
     {
         oss << fromState->as<ompl::base::RealVectorStateSpace::StateType>()->values[dimIdx] << " ";
     }

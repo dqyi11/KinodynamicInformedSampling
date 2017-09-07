@@ -6,6 +6,24 @@
 #include "jsoncpp/json/json.h"
 #include "MultiLinkDI.hpp"
 
+MultiLinkDI::orientationType translate(std::string str)
+{
+    if(str=="X" or str=="x")
+    {
+        return MultiLinkDI::orientationType::X;
+    }
+    else if(str=="Y" or str=="y")
+    {
+        return MultiLinkDI::orientationType::Y;
+    }
+    else if(str=="Z" or str=="z")
+    {
+        return MultiLinkDI::orientationType::Z;
+    }
+
+    return MultiLinkDI::orientationType::Z;
+}
+
 std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
 {
    std::shared_ptr<MultiLinkDI> di = nullptr;
@@ -42,61 +60,85 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     dart::dynamics::BodyNode* bn = nullptr;
     for(int i=0;i<links.size();i++)
     {
+        Eigen::Vector3d relativeTrans;
+        Eigen::Vector3d relativeEuler;
+        Json::Value eulerVal = links[i].get("euler", 0);
+        for(int j=0;j<eulerVal.size();j++)\
+        {
+            relativeEuler[j] = eulerVal[j].asDouble() * M_PI/180;
+        }
         if(i==0)
         {
-            bn = di->makeRootBody(links[i].get("name", "").asString(),
+            bn = di->makeRootBody(translate(links[i].get("orientation", "").asString()),
+                                  links[i].get("name", "").asString(),
                                   links[i].get("width", 0).asDouble(),
                                   links[i].get("height", 0).asDouble(),
-                                  links[i].get("depth",0).asDouble());
+                                  links[i].get("depth",0).asDouble(),
+                                  relativeEuler,
+                                  links[i].get("initConfig",0).asDouble());
         }
         else{
-            bn = di->addBody(bn, links[i].get("name", "").asString(),
+            Json::Value transVal = links[i].get("trans", 0);
+            for(int j=0;j<transVal.size();j++)\
+            {
+                relativeTrans[j] = transVal[j].asDouble();
+            }
+            bn = di->addBody(bn, translate(links[i].get("orientation", "").asString()),
+                             links[i].get("name", "").asString(),
                              links[i].get("width", 0).asDouble(),
                              links[i].get("height", 0).asDouble(),
-                             links[i].get("depth",0).asDouble());
+                             links[i].get("depth",0).asDouble(),
+                             relativeEuler, relativeTrans,
+                             links[i].get("initConfig",0).asDouble());
         }
     }
 
     Json::Value plane = root["plane"];
-    for(int i=0;i<plane.size();i++)
+    if(plane.isNull() == false)
     {
-        Eigen::Vector3d plane_pos, plane_size;
-        Json::Value planePosVal = plane[i].get("plane_pos", 0);
-        Json::Value planeSizeVal = plane[i].get("plane_size", 0);
-        for(int j=0;j<planePosVal.size();j++)
+        for(int i=0;i<plane.size();i++)
         {
-            plane_pos[j] = planePosVal[j].asDouble();
+            Eigen::Vector3d plane_pos, plane_size;
+            Json::Value planePosVal = plane[i].get("plane_pos", 0);
+            Json::Value planeSizeVal = plane[i].get("plane_size", 0);
+            for(int j=0;j<planePosVal.size();j++)
+            {
+                plane_pos[j] = planePosVal[j].asDouble();
+            }
+            for(int j=0;j<planeSizeVal.size();j++)
+            {
+                plane_size[j] = planeSizeVal[j].asDouble();
+            }
+            di->addPlane(plane_pos, plane_size);
         }
-        for(int j=0;j<planeSizeVal.size();j++)
-        {
-            plane_size[j] = planeSizeVal[j].asDouble();
-        }
-        di->addPlane(plane_pos, plane_size);
     }
 
     Json::Value obstacles = root["obstacles"];
-    for(int i=0;i<obstacles.size();i++)
+    if(obstacles.isNull()==false)
     {
-      std::string type = obstacles[i].get("type","").asString();
-      if(type == "hypercube")
-      {
-        Json::Value centerVal, sizeVal;
-
-        Eigen::Vector3d obs_center;
-        Eigen::Vector3d obs_size;
-
-        centerVal = obstacles[i].get("center", 0);
-        for(int j=0;j<centerVal.size();j++)
+        for(int i=0;i<obstacles.size();i++)
         {
-          obs_center[j] = centerVal[j].asDouble();
+          std::string type = obstacles[i].get("type","").asString();
+          if(type == "hypercube")
+          {
+            Json::Value centerVal, sizeVal;
+
+            Eigen::Vector3d obs_center;
+            Eigen::Vector3d obs_size;
+
+            centerVal = obstacles[i].get("center", 0);
+            for(int j=0;j<centerVal.size();j++)
+            {
+              obs_center[j] = centerVal[j].asDouble();
+            }
+            sizeVal = obstacles[i].get("size",0);
+            for(int j=0;j<sizeVal.size();j++)
+            {
+              obs_size[j] = sizeVal[j].asDouble();
+            }
+            di->addCube(obs_center, obs_size);
+          }
         }
-        sizeVal = obstacles[i].get("size",0);
-        for(int j=0;j<sizeVal.size();j++)
-        {
-          obs_size[j] = sizeVal[j].asDouble();
-        }
-        di->addCube(obs_center, obs_size);
-      }
     }
 
     di->setConfiguration(startConfig);

@@ -29,6 +29,15 @@ public:
 
     virtual double getMinTimeIfSmallerThan(const ompl::base::State* x1, const ompl::base::State* x2,
                                     double timeThreshold)  = 0;
+
+    virtual double getMinTime(const Eigen::VectorXd & x1, const Eigen::VectorXd & x2) = 0;
+
+    virtual Eigen::VectorXd interpolate(const Eigen::VectorXd & x1, const Eigen::VectorXd & x2,
+                                        double t) = 0;
+
+    virtual std::vector<Eigen::VectorXd> discretize(const ompl::base::State* x1, const ompl::base::State* x2, double step_t) = 0;
+
+    virtual std::vector<Eigen::VectorXd> discretize(const Eigen::VectorXd & x1, const Eigen::VectorXd & x2, double step_t) = 0;
 };
 
 class DoubleIntegratorMinimumTime
@@ -74,6 +83,27 @@ public:
                      double t, ompl::base::State* x) const
     {
         return doubleIntegratorImpl_->interpolate(x1, x2, t, x);
+    }
+
+    std::vector<Eigen::VectorXd> discretize(const ompl::base::State* x1, const ompl::base::State* x2, double step_t)
+    {
+        return doubleIntegratorImpl_->discretize(x1, x2, step_t);
+    }
+
+    double getMinTime(const Eigen::VectorXd & x1, const Eigen::VectorXd & x2)
+    {
+        return doubleIntegratorImpl_->getMinTime(x1, x2);
+    }
+
+    Eigen::VectorXd interpolate(const Eigen::VectorXd & x1, const Eigen::VectorXd & x2,
+                                double t)
+    {
+        return doubleIntegratorImpl_->interpolate(x1, x2, t);
+    }
+
+    std::vector<Eigen::VectorXd> discretize(const Eigen::VectorXd & x1, const Eigen::VectorXd & x2, double step_t)
+    {
+        return doubleIntegratorImpl_->discretize(x1, x2, step_t);
     }
 
 };

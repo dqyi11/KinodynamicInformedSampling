@@ -39,12 +39,14 @@ namespace ompl
             ompl::base::PlannerStatus solveAfterLoadingSamples(std::string filename, double solveTime)
             {
                 mode_ = LOAD_SAMPLES;
+
+                /*
                 if(nn_)
                 {
                     //nn_.reset(new NearestNeighborsLinear<Motion *>());
                     nn_.reset(new NearestNeighborsGNAT<Motion*>());
                     nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
-                }
+                }*/
 
                 sampleLoadStream_.open(filename.c_str(), std::ios::in);
                 if (solveTime < 1.0)
@@ -56,12 +58,13 @@ namespace ompl
             {
                 mode_ = SAVE_SAMPLES;
 
+                /*
                 if(nn_)
                 {
                     //nn_.reset(new NearestNeighborsLinear<Motion *>());
                     nn_.reset(new NearestNeighborsGNAT<Motion*>());
                     nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
-                }
+                }*/
 
                 sampleSaveStream_.open(filename.c_str(), std::ios::out);
                 if (solveTime < 1.0)
