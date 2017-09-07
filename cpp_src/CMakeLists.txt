@@ -13,6 +13,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/
 
 # Find Eigen OMPL and Boost and Eigen
 find_package(OMPL REQUIRED)
+if(OMPL_FOUND)
+    message("OMPL include: " ${OMPL_INCLUDE_DIRS})
+    message("OMPL libs: " ${OMPL_LIBRARIES})
+endif()
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(EIGEN3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})

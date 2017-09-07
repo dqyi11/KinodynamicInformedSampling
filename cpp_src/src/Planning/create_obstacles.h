@@ -4,7 +4,7 @@
 #include "Dimt/Params.h"
 #include "OmplWrappers/ValidityChecker.h"
 #include "jsoncpp/json/json.h"
-#include "MultiLinkDIValidityChecker.hpp"
+#include "HerbValidityChecker.hpp"
 
 ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::SpaceInformationPtr si,
                                                                std::string filename)
@@ -62,10 +62,10 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
     return ompl::base::StateValidityCheckerPtr(pVC);
 }
 
-ompl::base::StateValidityCheckerPtr createMultiLinkDIStateValidityChecker(ompl::base::SpaceInformationPtr si,
-                                                                          std::shared_ptr<MultiLinkDI> di)
+ompl::base::StateValidityCheckerPtr createHerbStateValidityChecker(ompl::base::SpaceInformationPtr si,
+                                                                   std::shared_ptr<herb::Herb> herb)
 {
-    ompl::base::StateValidityCheckerPtr pVC = std::make_shared<MultiLinkDIValidityChecker>(si, di);
+    ompl::base::StateValidityCheckerPtr pVC = std::make_shared<HerbValidityChecker>(si, herb);
     return pVC;
 }
 

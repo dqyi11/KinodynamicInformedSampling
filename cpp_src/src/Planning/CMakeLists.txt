@@ -1,8 +1,11 @@
-add_library(multilink-di-validity-checker
-            MultiLinkDIValidityChecker.cpp
+add_library(herb-validity-checker
+            HerbValidityChecker.cpp
             )
-target_link_libraries(multilink-di-validity-checker
-                      multilink-di-dart
+target_link_libraries(herb-validity-checker
+                      ${DART_LIBRARIES}
+		      ${aikido_LIBRARIES}
+		      ${Boost_LIBRARIES} 
+	              libherb
                      )
 
 # Ompl Planner
@@ -15,7 +18,7 @@ target_link_libraries(kdp_pointmass2d
                       ${Boost_SYSTEM_LIBRARY} 
                       ${JSONCPP_LIBRARY}
                       dimtLib
-                      multilink-di-validity-checker
+                      herb-validity-checker
                      )
 
 # Informed Pointmass
@@ -30,7 +33,7 @@ target_link_libraries(informed_pointmass
                       samplerLib 
                       dimtLib 
                       omplwrapperLib
-                      multilink-di-validity-checker
+                      herb-validity-checker
                      )
 
 # Informed Pointmass all
@@ -45,7 +48,7 @@ target_link_libraries(informed_pointmass_all
                    samplerLib
                    dimtLib
                    omplwrapperLib
-                   multilink-di-validity-checker
+                   herb-validity-checker
                   )
 
 # Informed Pointmass diff HMC
@@ -60,7 +63,7 @@ target_link_libraries(informed_pointmass_diff_hmc
                    samplerLib
                    dimtLib
                    omplwrapperLib
-                   multilink-di-validity-checker
+                   herb-validity-checker
                   )
 
 # Informed Pointmass diff velocity bounds
@@ -75,5 +78,8 @@ target_link_libraries(informed_pointmass_diff_velocity_bounds
                    samplerLib
                    dimtLib
                    omplwrapperLib
-                   multilink-di-validity-checker
+                   herb-validity-checker
                   )
+
+install(TARGETS informed_pointmass RUNTIME DESTINATION bin)
+install(TARGETS informed_pointmass_all RUNTIME DESTINATION bin)
