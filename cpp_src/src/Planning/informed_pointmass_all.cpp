@@ -150,7 +150,7 @@ void planWithSimpleSetup(void)
 
     int start_idx = 0;
     int iteration_num = 10;
-    double duration = 3.0; //run time in seconds
+    double duration = 10.0; //run time in seconds
     std::string caseName = "simple";
 
     for(int i=start_idx;i<iteration_num;i++)
