@@ -36,6 +36,8 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
   {
 
     int link_num = root["link_num"].asInt();
+    int link_num_a = root["link_num_a"].asInt();
+    int link_num_b = root["link_num_b"].asInt();
     int dimension = link_num * 2;
 
     Eigen::VectorXd startConfig(dimension);
@@ -48,17 +50,24 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
       goalConfig[i] = goalVal[i].asDouble();
     }
 
-    Eigen::Vector3d diPos;
-    Json::Value diPosVal = root["di_pos"];
-    for(int i=0;i<diPosVal.size();i++)
+    Eigen::Vector3d diAPos;
+    Json::Value diAPosVal = root["di_a_pos"];
+    for(int i=0;i<diAPosVal.size();i++)
     {
-      diPos[i] = diPosVal[i].asDouble();
+      diAPos[i] = diAPosVal[i].asDouble();
+    }
+    Eigen::Vector3d diBPos;
+    Json::Value diBPosVal = root["di_b_pos"];
+    for(int i=0;i<diBPosVal.size();i++)
+    {
+      diBPos[i] = diBPosVal[i].asDouble();
     }
 
-    di = std::make_shared<MultiLinkDI>(link_num, diPos);
+    di = std::make_shared<MultiLinkDI>(link_num_a, link_num_b,
+                                       diAPos, diBPos);
     Json::Value links = root["links"];
     dart::dynamics::BodyNode* bn = nullptr;
-    for(int i=0;i<links.size();i++)
+    for(int i=0;i<link_num_a;i++)
     {
         Eigen::Vector3d relativeTrans;
         Eigen::Vector3d relativeEuler;
@@ -69,7 +78,8 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
         }
         if(i==0)
         {
-            bn = di->makeRootBody(translate(links[i].get("orientation", "").asString()),
+            bn = di->makeRootBody(MultiLinkDI::sideType::A,
+                                  translate(links[i].get("orientation", "").asString()),
                                   links[i].get("name", "").asString(),
                                   links[i].get("width", 0).asDouble(),
                                   links[i].get("height", 0).asDouble(),
@@ -83,7 +93,45 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
             {
                 relativeTrans[j] = transVal[j].asDouble();
             }
-            bn = di->addBody(bn, translate(links[i].get("orientation", "").asString()),
+            bn = di->addBody(bn, MultiLinkDI::sideType::A,
+                             translate(links[i].get("orientation", "").asString()),
+                             links[i].get("name", "").asString(),
+                             links[i].get("width", 0).asDouble(),
+                             links[i].get("height", 0).asDouble(),
+                             links[i].get("depth",0).asDouble(),
+                             relativeEuler, relativeTrans,
+                             links[i].get("initConfig",0).asDouble());
+        }
+    }
+
+    for(int i=link_num_a;i<link_num;i++)
+    {
+        Eigen::Vector3d relativeTrans;
+        Eigen::Vector3d relativeEuler;
+        Json::Value eulerVal = links[i].get("euler", 0);
+        for(int j=0;j<eulerVal.size();j++)\
+        {
+            relativeEuler[j] = eulerVal[j].asDouble() * M_PI/180;
+        }
+        if(i==link_num_a)
+        {
+            bn = di->makeRootBody(MultiLinkDI::sideType::B,
+                                  translate(links[i].get("orientation", "").asString()),
+                                  links[i].get("name", "").asString(),
+                                  links[i].get("width", 0).asDouble(),
+                                  links[i].get("height", 0).asDouble(),
+                                  links[i].get("depth",0).asDouble(),
+                                  relativeEuler,
+                                  links[i].get("initConfig",0).asDouble());
+        }
+        else{
+            Json::Value transVal = links[i].get("trans", 0);
+            for(int j=0;j<transVal.size();j++)\
+            {
+                relativeTrans[j] = transVal[j].asDouble();
+            }
+            bn = di->addBody(bn, MultiLinkDI::sideType::B,
+                             translate(links[i].get("orientation", "").asString()),
                              links[i].get("name", "").asString(),
                              links[i].get("width", 0).asDouble(),
                              links[i].get("height", 0).asDouble(),
@@ -158,7 +206,7 @@ void loadMultiLinkDIPath( std::shared_ptr<MultiLinkDI> di, std::string pathFilen
         std::string stateStr;
         while( std::getline(pathFile, stateStr) )
         {
-          size_t dim = di->getNumOfLinks()*2;
+          size_t dim = di->getNumOfTotalLinks()*2;
           Eigen::VectorXd waypointVec(dim);
           std::stringstream iss(stateStr);
           int dimIdx = 0;

@@ -21,14 +21,16 @@ public:
     // Override virtual function on demand
     void draw() override;
 
+    /*
     void setPath(Eigen::MatrixXd& path)
     {
         path_ = path;
-    }
+    }*/
 
     void clearPath()
     {
-        path_ = Eigen::MatrixXd(0,0);
+        pathA_ = Eigen::MatrixXd(0,0);
+        pathB_ = Eigen::MatrixXd(0,0);
     }
 
     void setConfigPath(Eigen::MatrixXd& configPath);
@@ -44,12 +46,14 @@ public:
 protected:
     void simulateCurrentWaypoint();
 
-    Eigen::MatrixXd path_;
+    Eigen::MatrixXd pathA_;
+    Eigen::MatrixXd pathB_;
     MultiLinkDI* di_;
     int waypointIdx_;
 
-    int default_step_time = 50000;
-    int default_end_delay_time = 500000;
+
+    int default_step_time = 500;
+    int default_end_delay_time = 500;
 };
 
 #endif // MULTILINKDI_WINDOW_HPP_

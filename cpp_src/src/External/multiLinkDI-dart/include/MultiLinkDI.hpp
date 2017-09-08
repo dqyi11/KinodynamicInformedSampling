@@ -33,7 +33,11 @@ class MultiLinkDI
 {
 public:
     typedef enum  { X = 0, Y, Z } orientationType;
-    MultiLinkDI(const unsigned int num_of_links, Eigen::Vector3d& pos);
+    typedef enum { A = 0, B } sideType;
+    MultiLinkDI(const unsigned int num_of_links_A,
+                const unsigned int num_of_links_B,
+                Eigen::Vector3d& posA,
+                Eigen::Vector3d& posB);
     virtual ~MultiLinkDI();
 
     Eigen::VectorXd getConfiguration();
@@ -50,10 +54,17 @@ public:
     void initVisualization();
     void updateVisualization();
 
-    Eigen::Vector3d getEndEffectorPos(const Eigen::VectorXd& config);
-    Eigen::Vector3d getEndEffectorPos();
+    Eigen::Vector3d getEndEffectorPos(const sideType side, const Eigen::VectorXd& config);
+    Eigen::Vector3d getEndEffectorPos(const sideType side);
 
-    unsigned int getNumOfLinks() { return num_of_links_; }
+    unsigned int getNumOfTotalLinks() { return num_of_links_; }
+    unsigned int getNumOfLinks( sideType side )
+    {
+        if(side==A)
+            return num_of_links_A_;
+        else
+            return num_of_links_B_;
+    }
 
     void addWaypoint( Eigen::VectorXd waypoint ) { waypoints_.push_back(waypoint); }
     void clearWaypoints() { waypoints_.clear(); }
@@ -62,7 +73,8 @@ public:
 
     double getResolutionSize() { return default_resolution_size; }
 
-    dart::dynamics::BodyNode* makeRootBody(const orientationType type,
+    dart::dynamics::BodyNode* makeRootBody(const sideType side,
+                                           const orientationType type,
                                            const std::string& name,
                                            const double width = default_width,
                                            const double height = default_height,
@@ -70,10 +82,16 @@ public:
                                            const Eigen::Vector3d& relativeEuler = Eigen::Vector3d(),
                                            const double initConfig = 0.0)
     {
-        return makeRootBody(di_, type, name, width, height, depth, relativeEuler, initConfig);
+        if(side==A)
+        {
+            return makeRootBody(diA_, side, type, name, width, height, depth, relativeEuler, initConfig);
+        }
+
+        return makeRootBody(diB_, side, type, name, width, height, depth, relativeEuler, initConfig);
     }
 
     dart::dynamics::BodyNode* addBody(dart::dynamics::BodyNode* parent,
+                                      const sideType side,
                                       const orientationType type,
                                       const std::string& name,
                                       const double width = default_width,
@@ -83,7 +101,12 @@ public:
                                       const Eigen::Vector3d& relativeTrans = Eigen::Vector3d(),
                                       const double initConfig = 0.0)
     {
-        return addBody(di_, parent, type, name, width, height, depth, relativeEuler,
+        if(side==A)
+        {
+            return addBody(diA_, parent, side, type, name, width, height, depth, relativeEuler,
+                           relativeTrans, initConfig);
+        }
+        return addBody(diB_, parent, side, type, name, width, height, depth, relativeEuler,
                        relativeTrans, initConfig);
     }
 
@@ -102,9 +125,13 @@ public:
 
     void updateHomeConfig()
     {
-        for(uint i=0;i<num_of_links_;i++)
+        for(uint i=0;i<num_of_links_A_;i++)
         {
-            di_->getDof(i)->setPosition(homeConfig_[i]);
+            diA_->getDof(i)->setPosition(homeConfig_[i]);
+        }
+        for(uint i=0;i<num_of_links_B_;i++)
+        {
+            diB_->getDof(i)->setPosition(homeConfig_[i+num_of_links_A_]);
         }
     }
 
@@ -117,6 +144,7 @@ protected:
                                            double _mass);
 
     dart::dynamics::BodyNode* makeRootBody(const dart::dynamics::SkeletonPtr& di,
+                                           const sideType side,
                                            const orientationType type,
                                            const std::string& name,
                                            const double width, const double height,
@@ -125,6 +153,7 @@ protected:
 
     dart::dynamics::BodyNode* addBody(const dart::dynamics::SkeletonPtr& di,
                                       dart::dynamics::BodyNode* parent,
+                                      const sideType side,
                                       const orientationType type,
                                       const std::string& name,
                                       const double width, const double height,
@@ -135,13 +164,18 @@ protected:
     void initLineSegment();
 
     unsigned int num_of_links_;
+    unsigned int num_of_links_A_;
+    unsigned int num_of_links_B_;
 
     dart::simulation::WorldPtr world_;
-    dart::dynamics::SkeletonPtr di_;
+    dart::dynamics::SkeletonPtr diA_;
+    dart::dynamics::SkeletonPtr diB_;
     dart::dynamics::SkeletonPtr plane_;
-    std::vector<dart::dynamics::BodyNode*> bodyNodes_;
+    std::vector<dart::dynamics::BodyNode*> bodyNodesA_;
+    std::vector<dart::dynamics::BodyNode*> bodyNodesB_;
 
-    Eigen::Vector3d basePos_;
+    Eigen::Vector3d baseAPos_;
+    Eigen::Vector3d baseBPos_;
     std::vector<double> homeConfig_;
 
     std::vector<dart::dynamics::SkeletonPtr> objects_;

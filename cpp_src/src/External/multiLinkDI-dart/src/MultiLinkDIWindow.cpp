@@ -5,24 +5,25 @@
 void MultiLinkDIWindow::draw()
 {
     SimWindow::draw();
-
-
 }
 
 void MultiLinkDIWindow::setConfigPath(Eigen::MatrixXd& configPath)
 {
     clearPath();
     uint waypoint_num = configPath.rows();
-    path_ = Eigen::MatrixXd(waypoint_num, 3);
+
+
+    pathA_ = Eigen::MatrixXd(waypoint_num, 3);
+    pathB_ = Eigen::MatrixXd(waypoint_num, 3);
     if(di_)
     {
         for(uint i=0; i<waypoint_num; i++)
         {
             Eigen::Vector3d config = configPath.row(i);
-            path_.row(i) = di_->getEndEffectorPos(config);
+            pathA_.row(i) = di_->getEndEffectorPos(MultiLinkDI::sideType::A, config);
+            pathB_.row(i) = di_->getEndEffectorPos(MultiLinkDI::sideType::B, config);
         }
     }
-
 }
 
 void MultiLinkDIWindow::keyboard(unsigned char key, int x, int y)
@@ -33,8 +34,8 @@ void MultiLinkDIWindow::keyboard(unsigned char key, int x, int y)
     {
         prevWaypoint();
         std::cout << "PRESS A " << waypointIdx_ << std::endl;
-        Eigen::VectorXd configA = di_->getWaypoint(waypointIdx_);
-        di_->setConfiguration( configA );
+        Eigen::VectorXd config = di_->getWaypoint(waypointIdx_);
+        di_->setConfiguration( config );
         break;
     }
     case 'd':
@@ -89,7 +90,10 @@ void MultiLinkDIWindow::simulateCurrentWaypoint()
             di_->setConfiguration( newConfig );
 
             render();
-            std::cout << "time step " << i << " " << collision << std::endl;
+            if(collision==true)
+            {
+                std::cout << "time step " << i << " " << collision << std::endl;
+            }
         }
         usleep(default_end_delay_time);
         di_->setConfiguration(currConfig);
