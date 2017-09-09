@@ -89,7 +89,10 @@ void MultiLinkDIWindow::simulateCurrentWaypoint()
             di_->setConfiguration( newConfig );
 
             render();
-            std::cout << "time step " << i << " " << collision << std::endl;
+            if(collision==true)
+            {
+                std::cout << "time step " << i << " " << collision << std::endl;
+            }
         }
         usleep(default_end_delay_time);
         di_->setConfiguration(currConfig);

@@ -94,7 +94,7 @@ void planWithSimpleSetup(void)
     planner->setup();
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(6000.0);
+    ob::PlannerStatus solved = planner->solve(60.0);
 
     //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
@@ -107,6 +107,14 @@ void planWithSimpleSetup(void)
         dumpPathToFile(path, "waypointpath.txt");
         dumpPathToFile(path, dimt, "path.txt");
     }
+
+    ompl::base::State* start = getStart(si, "problem.txt");
+    ompl::base::State* goal = getGoal(si, "problem.txt");
+    std::vector<ompl::base::State*> stateSeq;
+    stateSeq.push_back(start);
+    stateSeq.push_back(goal);
+    dumpPathToFile(stateSeq, dimt, "testpath.txt");
+
 
 }
 

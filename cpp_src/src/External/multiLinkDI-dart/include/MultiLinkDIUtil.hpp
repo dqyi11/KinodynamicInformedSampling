@@ -142,8 +142,9 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     }
 
     di->setConfiguration(startConfig);
-  }
+    std::cout << "START COLLIDE " << di->isCollided(startConfig) << std::endl;
 
+  }
   problemFile.close();
 
   return di;

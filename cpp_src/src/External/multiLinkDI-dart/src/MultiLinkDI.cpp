@@ -19,6 +19,7 @@ MultiLinkDI::MultiLinkDI(const unsigned int num_of_links, Eigen::Vector3d& pos)
 
   di_ = Skeleton::create("di");
   world_->addSkeleton(di_);
+  di_->setSelfCollisionCheck(true);
 
   window_.setWorld(world_);
   window_.setMultiLinkDI(this);
@@ -89,6 +90,10 @@ bool MultiLinkDI::isCollided(const Eigen::VectorXd& config)
   setConfiguration(config);
   auto collisionEngine = world_->getConstraintSolver()->getCollisionDetector();
   auto collisionGroup = collisionEngine->createCollisionGroup(di_.get());
+  if (collisionGroup->collide())
+  {
+      return true;
+  }
   auto collisionGroup2 = collisionEngine->createCollisionGroup();
   for(std::vector<dart::dynamics::SkeletonPtr>::iterator it = objects_.begin();
       it != objects_.end();it++)
@@ -342,6 +347,7 @@ void MultiLinkDI::initLineSegment()
        Eigen::VectorXd prevConfig = waypoints_[idx].head(num_of_links_);
        Eigen::VectorXd nextConfig = waypoints_[idx+1].head(num_of_links_);
 
+       /*
        Eigen::VectorXd deltaConfig = nextConfig - prevConfig;
        for(double i=0.0;
            i <= 1.0; i+= getResolutionSize())
@@ -366,7 +372,21 @@ void MultiLinkDI::initLineSegment()
            lineFrame->createVisualAspect();
            lineFrame->getVisualAspect()->setColor(default_force_line_color);
            world_->addSimpleFrame(lineFrame);
-       }
+       }*/
+       dart::dynamics::SimpleFramePtr lineFrame =
+               std::make_shared<dart::dynamics::SimpleFrame>(
+                 dart::dynamics::Frame::World());
+       Eigen::Vector3d newPos = getEndEffectorPos(prevConfig);
+       Eigen::Vector3d newPosNext = getEndEffectorPos(nextConfig);
+
+       dart::dynamics::LineSegmentShapePtr lineSeg =
+               std::make_shared<dart::dynamics::LineSegmentShape>(newPos, newPosNext, 3.0);
+       lineSeg->addDataVariance(dart::dynamics::Shape::DYNAMIC_VERTICES);
+
+       lineFrame->setShape(lineSeg);
+       lineFrame->createVisualAspect();
+       lineFrame->getVisualAspect()->setColor(default_force_line_color);
+       world_->addSimpleFrame(lineFrame);
 
    }
 }

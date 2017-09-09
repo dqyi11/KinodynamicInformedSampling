@@ -33,6 +33,29 @@ void dumpPathToFile(ompl::base::PathPtr path, DIMTPtr dimt, std::string filename
   ofout.close();  
 }
 
+void dumpPathToFile(std::vector<ompl::base::State*> path, DIMTPtr dimt, std::string filename)
+{
+    std::ofstream ofout(filename, std::ofstream::out);
+    if(ofout.is_open())
+    {
+      for(size_t idx=0; idx< path.size()-1; idx++)
+      {
+        ompl::base::State* state1 = path[idx];
+        ompl::base::State* state2 = path[idx+1];
+        std::vector<Eigen::VectorXd> points = dimt->discretize(state1, state2, 0.05);
+        for(size_t j=0;j<points.size();j++)
+        {
+          for(size_t i=0; i<param.dimensions; i++)
+          {
+            ofout << points[j][i] << " ";
+          }
+          ofout << std::endl;
+        }
+      }
+    }
+    ofout.close();
+}
+
 void dumpPathToFile(ompl::base::PathPtr path, std::string filename)
 {
   std::ofstream ofout(filename, std::ofstream::out);
