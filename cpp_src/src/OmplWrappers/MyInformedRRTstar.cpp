@@ -17,7 +17,7 @@
 #include "ompl/datastructures/NearestNeighbors.h"
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 // using namespace ompl::geometric::InformedRRTstar;
-// using namespace ompl::geometric::RRT;0
+// using namespace ompl::geometric::RRT;
 using namespace ompl;
 using namespace ompl::geometric;
 
