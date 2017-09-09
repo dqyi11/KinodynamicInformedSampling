@@ -116,3 +116,52 @@ void MultiLinkDIWindow::nextWaypoint()
         waypointIdx_ = 0;
     }
 }
+
+void MultiLinkDIWindow::drawBodyNode(const dart::dynamics::BodyNode* bodyNode,
+                             const Eigen::Vector4d& color,
+                             bool useDefaultColor,
+                             bool recursive) const
+{
+  if (!bodyNode)
+    return;
+
+  if (!mRI)
+    return;
+
+  mRI->pushMatrix();
+
+  // Use the relative transform of this Frame. We assume that we are being
+  // called from the parent Frame's renderer.
+  // TODO(MXG): This can cause trouble if the draw function is originally called
+  // on an Entity or Frame which is not a child of the World Frame
+  mRI->transform(bodyNode->getRelativeTransform());
+
+  // _ri->pushName(???); TODO(MXG): What should we do about this for Frames?
+  auto shapeNodes = bodyNode->getShapeNodesWith<dart::dynamics::VisualAspect>();
+  for (const auto& shapeNode : shapeNodes)
+    drawShapeFrame(shapeNode, color, useDefaultColor);
+  // _ri.popName();
+
+  if (mShowPointMasses)
+  {
+    const auto& softBodyNode
+        = dynamic_cast<const dart::dynamics::SoftBodyNode*>(bodyNode);
+    if (softBodyNode)
+      drawPointMasses(softBodyNode->getPointMasses(), color);
+  }
+
+  if (mShowMarkers)
+  {
+    for (auto i = 0u; i < bodyNode->getNumMarkers(); ++i)
+      drawMarker(bodyNode->getMarker(i));
+  }
+
+  // render the subtree
+  if (recursive)
+  {
+    for (const auto& entity : bodyNode->getChildEntities())
+      drawEntity(entity, color, useDefaultColor);
+  }
+
+  mRI->popMatrix();
+}

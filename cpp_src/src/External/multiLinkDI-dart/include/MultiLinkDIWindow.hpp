@@ -44,6 +44,12 @@ public:
 protected:
     void simulateCurrentWaypoint();
 
+    virtual void drawBodyNode(
+          const dart::dynamics::BodyNode* bodyNode,
+          const Eigen::Vector4d& color = Eigen::Vector4d::Constant(0.5),
+          bool useDefaultColor = true,
+          bool recursive = false) const;
+
     Eigen::MatrixXd path_;
     MultiLinkDI* di_;
     int waypointIdx_;

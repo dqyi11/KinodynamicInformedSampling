@@ -2,6 +2,7 @@
 #include <string>
 #include "MultiLinkDI.hpp"
 #include "MultiLinkDIWindow.hpp"
+#include <dart/collision/CollisionFilter.hpp>
 
 using namespace dart::simulation;
 using namespace dart::dynamics;
@@ -20,6 +21,7 @@ MultiLinkDI::MultiLinkDI(const unsigned int num_of_links, Eigen::Vector3d& pos)
   di_ = Skeleton::create("di");
   world_->addSkeleton(di_);
   di_->setSelfCollisionCheck(true);
+  di_->setAdjacentBodyCheck(false);
 
   window_.setWorld(world_);
   window_.setMultiLinkDI(this);
@@ -90,7 +92,12 @@ bool MultiLinkDI::isCollided(const Eigen::VectorXd& config)
   setConfiguration(config);
   auto collisionEngine = world_->getConstraintSolver()->getCollisionDetector();
   auto collisionGroup = collisionEngine->createCollisionGroup(di_.get());
-  if (collisionGroup->collide())
+
+  auto filter = std::make_shared<dart::collision::BodyNodeCollisionFilter>();
+  dart::collision::CollisionOption option(false, 1u, nullptr);
+  option.collisionFilter = filter;
+
+  if (true==collisionGroup->collide(option))
   {
       return true;
   }
@@ -102,9 +109,9 @@ bool MultiLinkDI::isCollided(const Eigen::VectorXd& config)
       collisionGroup2->addShapeFramesOf(obj.get());
   }
 
-  dart::collision::CollisionOption option;
+  dart::collision::CollisionOption option2;
   dart::collision::CollisionResult result;
-  bool collision = collisionGroup->collide(collisionGroup2.get(), option, &result);
+  bool collision = collisionGroup->collide(collisionGroup2.get(), option2, &result);
 
   setConfiguration(originalConfig);
   return collision;
@@ -315,7 +322,6 @@ BodyNode* MultiLinkDI::addBody(const SkeletonPtr& di, BodyNode* parent,
       R = depth / 2.0; h = width;
       tf.linear() = dart::math::eulerXYZToMatrix(relativeEuler);
       break;
-
   case Y:
       R = width / 2,0; h = depth;
       tf.linear() = dart::math::eulerXYZToMatrix(relativeEuler);
