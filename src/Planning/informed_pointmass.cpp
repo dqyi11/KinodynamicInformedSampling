@@ -67,9 +67,11 @@ void planWithSimpleSetup(void)
     si->setStateValidityCheckingResolution(0.002);  // 3%
     si->setup();
 
-    ob::ProblemDefinitionPtr base_pdef = createProblem(si, "problem.json");
+    #define PROBLEM_FILENAME "herb_problem.json"
 
-    const ompl::base::OptimizationObjectivePtr base_opt = createDimtOptimizationObjective(si, dimt, "problem.json");
+    ob::ProblemDefinitionPtr base_pdef = createProblem(si, PROBLEM_FILENAME);
+
+    const ompl::base::OptimizationObjectivePtr base_opt = createDimtOptimizationObjective(si, dimt, PROBLEM_FILENAME);
     base_pdef->setOptimizationObjective(base_opt);
 
     std::cout << "STATE SPACE BOUNDARY" << std::endl;
@@ -97,9 +99,9 @@ void planWithSimpleSetup(void)
     //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
     sampler->setSingleSampleTimelimit(60.);
 
-    const ompl::base::OptimizationObjectivePtr opt = createOptimizationObjective(si, sampler, "problem.json");
+    const ompl::base::OptimizationObjectivePtr opt = createOptimizationObjective(si, sampler, PROBLEM_FILENAME);
 
-    ob::ProblemDefinitionPtr pdef = createProblem(si, "problem.json");
+    ob::ProblemDefinitionPtr pdef = createProblem(si, PROBLEM_FILENAME);
     //opt->setCostThreshold(ob::Cost(1.51));
     pdef->setOptimizationObjective(opt);
 
