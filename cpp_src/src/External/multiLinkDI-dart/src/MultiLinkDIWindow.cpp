@@ -101,6 +101,10 @@ void MultiLinkDIWindow::simulateCurrentWaypoint()
 
 void MultiLinkDIWindow::prevWaypoint()
 {
+    if(di_->getWaypointNum()==0)
+    {
+        return;
+    }
     waypointIdx_ --;
     if(waypointIdx_ < 0)
     {
@@ -110,6 +114,10 @@ void MultiLinkDIWindow::prevWaypoint()
 
 void MultiLinkDIWindow::nextWaypoint()
 {
+    if(di_->getWaypointNum()==0)
+    {
+        return;
+    }
     waypointIdx_ ++;
     if(waypointIdx_ >= di_->getWaypointNum())
     {
@@ -137,7 +145,7 @@ void MultiLinkDIWindow::drawBodyNode(const dart::dynamics::BodyNode* bodyNode,
   mRI->transform(bodyNode->getRelativeTransform());
 
   // _ri->pushName(???); TODO(MXG): What should we do about this for Frames?
-  auto shapeNodes = bodyNode->getShapeNodesWith<dart::dynamics::VisualAspect>();
+  auto shapeNodes = bodyNode->getShapeNodesWith<dart::dynamics::CollisionAspect>();
   for (const auto& shapeNode : shapeNodes)
     drawShapeFrame(shapeNode, color, useDefaultColor);
   // _ri.popName();

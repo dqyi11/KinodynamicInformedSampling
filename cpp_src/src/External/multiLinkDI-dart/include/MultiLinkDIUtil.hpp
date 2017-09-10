@@ -34,7 +34,6 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
   bool parseSuccess = reader.parse(problemFile, root, false);
   if(parseSuccess)
   {
-
     int link_num = root["link_num"].asInt();
     int dimension = link_num * 2;
 

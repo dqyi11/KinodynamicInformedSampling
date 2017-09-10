@@ -33,7 +33,7 @@ class MultiLinkDI
 {
 public:
     typedef enum  { X = 0, Y, Z } orientationType;
-    MultiLinkDI(const unsigned int num_of_links, Eigen::Vector3d& pos);
+    MultiLinkDI(const unsigned int num_of_links, const Eigen::Vector3d& pos);
     virtual ~MultiLinkDI();
 
     Eigen::VectorXd getConfiguration();
