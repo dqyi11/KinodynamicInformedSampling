@@ -35,8 +35,8 @@ void planWithSimpleSetup(void)
     const int dimension = param.dimensions;
 
     std::shared_ptr<herb::Herb> herb = loadHerb();
-    //aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);
-    aikido::constraint::NonCollidingPtr nonColliding = nullptr;    
+    aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);
+    //aikido::constraint::NonCollidingPtr nonColliding = nullptr;    
 
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
@@ -112,9 +112,9 @@ void planWithSimpleSetup(void)
     planner->setup();
 
     // Run planner
-    //ob::PlannerStatus solved = planner->solve(30.0);
+    ob::PlannerStatus solved = planner->solve(30.0);
 
-    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     //return;
