@@ -62,10 +62,13 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
     return ompl::base::StateValidityCheckerPtr(pVC);
 }
 
-ompl::base::StateValidityCheckerPtr createHerbStateValidityChecker(ompl::base::SpaceInformationPtr si,
-                                                                   std::shared_ptr<herb::Herb> herb)
+ompl::base::StateValidityCheckerPtr 
+createHerbStateValidityChecker(ompl::base::SpaceInformationPtr si,
+                               std::shared_ptr<herb::Herb> herb,
+                               aikido::constraint::NonCollidingPtr nonColliding)
 {
-    ompl::base::StateValidityCheckerPtr pVC = std::make_shared<HerbValidityChecker>(si, herb);
+    ompl::base::StateValidityCheckerPtr pVC = 
+        std::make_shared<HerbValidityChecker>(si, herb, nonColliding);
     return pVC;
 }
 

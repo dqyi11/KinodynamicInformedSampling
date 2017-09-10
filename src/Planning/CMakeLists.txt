@@ -8,18 +8,6 @@ target_link_libraries(herb-validity-checker
 	              libherb
                      )
 
-# Ompl Planner
-add_executable(kdp_pointmass2d 
-               kdp_pointmass2d.cpp
-              )
-target_link_libraries(kdp_pointmass2d 
-                      ${OMPL_LIBRARIES} 
-                      ${Boost_FILESYSTEM_LIBRARY} 
-                      ${Boost_SYSTEM_LIBRARY} 
-                      ${JSONCPP_LIBRARY}
-                      dimtLib
-                      herb-validity-checker
-                     )
 
 # Informed Pointmass
 add_executable(informed_pointmass
@@ -34,6 +22,7 @@ target_link_libraries(informed_pointmass
                       dimtLib 
                       omplwrapperLib
                       herb-validity-checker
+	              libherb
                      )
 
 # Informed Pointmass all
@@ -49,6 +38,7 @@ target_link_libraries(informed_pointmass_all
                    dimtLib
                    omplwrapperLib
                    herb-validity-checker
+	           libherb
                   )
 
 # Informed Pointmass diff HMC
@@ -64,6 +54,7 @@ target_link_libraries(informed_pointmass_diff_hmc
                    dimtLib
                    omplwrapperLib
                    herb-validity-checker
+                   libherb
                   )
 
 # Informed Pointmass diff velocity bounds
@@ -79,6 +70,7 @@ target_link_libraries(informed_pointmass_diff_velocity_bounds
                    dimtLib
                    omplwrapperLib
                    herb-validity-checker
+                   libherb
                   )
 
 install(TARGETS informed_pointmass RUNTIME DESTINATION bin)

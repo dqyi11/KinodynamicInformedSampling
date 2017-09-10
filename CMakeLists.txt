@@ -14,9 +14,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/
 # Find Eigen OMPL and Boost and Eigen
 find_package(OMPL REQUIRED)
 if(OMPL_FOUND)
-    message("OMPL include: " ${OMPL_INCLUDE_DIRS})
-    message("OMPL libs: " ${OMPL_LIBRARIES})
+    message("OMPL INCLUDE:" ${OMPL_INCLUDE_DIRS})
+    message("OMPL LIBS:" ${OMPL_LIBRARIES})
 endif()
+
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(EIGEN3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
@@ -26,6 +27,33 @@ if(NLOPT_FOUND)
     include_directories(${NLOPT_INCLUDE_DIRS})
     add_definitions( -DUSE_NLOPT=1 )
 endif()
+
+find_package(DART REQUIRED)
+include_directories(${DART_INCLUDE_DIRS})
+
+find_package(aikido REQUIRED COMPONENTS
+  constraint
+  control
+  control_ros
+  distance
+  perception
+  control
+  control_ros
+  planner_ompl
+  planner_parabolic
+  rviz
+  statespace
+  util)
+include_directories(${aikido_INCLUDE_DIRS})
+
+find_package(libherb REQUIRED)
+include_directories(${libherb_INCLUDE_DIRS})
+
+find_package(pr_ordata REQUIRED)
+include_directories(${pr_ordata_INCLUDE_DIRS})
+
+find_package(pr_tsr REQUIRED)
+include_directories(${pr_tsr_INCLUDE_DIRS})
 
 find_package(JsonCpp REQUIRED)
 if(NOT JSONCPP_FOUND)

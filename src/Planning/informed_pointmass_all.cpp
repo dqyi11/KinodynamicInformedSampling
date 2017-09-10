@@ -116,22 +116,26 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
 
 void planWithSimpleSetup(void)
 {
-    // Initializations
-    std::vector<double> maxVelocities(param.dof, param.v_max);
-    std::vector<double> maxAccelerations(param.dof, param.a_max);
-    DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
-
     // Intiatilizations for sampler
     const int dimension = param.dimensions;
 
     std::shared_ptr<herb::Herb> herb = loadHerb();
+    aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);
+
+    // Initializations
+    std::vector<double> maxVelocities(param.dof, param.v_max);
+    std::vector<double> maxAccelerations(param.dof, param.a_max);
+    for(uint i=0;i<param.dof;i++)
+    {
+        maxVelocities[i] = getHerbRightArmVelUpperLimit(herb, i);
+    }
+    DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
     ob::RealVectorBounds bounds(param.dimensions);
     for(uint i=0;i<param.dof;i++)
     {
-
         bounds.setLow(i, getHerbRightArmPosLowerLimit(herb, i));
         bounds.setHigh(i, getHerbRightArmPosUpperLimit(herb, i));
         bounds.setLow(i+param.dof, getHerbRightArmVelLowerLimit(herb, i));
@@ -139,12 +143,13 @@ void planWithSimpleSetup(void)
     }
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-
-    ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb);
+    
+    ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb, nonColliding);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
-    si->setStateValidityCheckingResolution(0.01);  // 3%
+    si->setStateValidityCheckingResolution(0.002);  // 3%
     si->setup();
+
 
     // Set custom start and goal
     ompl::base::State *start_state = getStart(si, "problem.json");
@@ -152,7 +157,7 @@ void planWithSimpleSetup(void)
 
     int start_idx = 0;
     int iteration_num = 10;
-    double duration = 3.0; //run time in seconds
+    double duration = 30.0; //run time in seconds
     std::string caseName = "simple";
 
     for(int i=start_idx;i<iteration_num;i++)

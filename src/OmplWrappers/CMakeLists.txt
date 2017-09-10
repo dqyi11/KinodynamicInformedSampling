@@ -5,9 +5,8 @@ add_library(omplwrapperLib SHARED
             OmplHelpers.cpp
             ValidityChecker.cpp
            )
-
 target_link_libraries(omplwrapperLib
-                      #${OMPL_LIBRARIES}
+                      ${OMPL_LIBRARIES}
                      )
 
 install(TARGETS omplwrapperLib EXPORT omplwrapperLibConfig

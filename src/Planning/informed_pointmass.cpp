@@ -30,15 +30,22 @@ bool MAIN_VERBOSE = true;
 
 void planWithSimpleSetup(void)
 {
-    // Initializations
-    std::vector<double> maxVelocities(param.dof, param.v_max);
-    std::vector<double> maxAccelerations(param.dof, param.a_max);
-    DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
     // Intiatilizations for sampler
     const int dimension = param.dimensions;
 
     std::shared_ptr<herb::Herb> herb = loadHerb();
+    //aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);
+    aikido::constraint::NonCollidingPtr nonColliding = nullptr;    
+
+    // Initializations
+    std::vector<double> maxVelocities(param.dof, param.v_max);
+    std::vector<double> maxAccelerations(param.dof, param.a_max);
+    for(uint i=0;i<param.dof;i++)
+    {
+        maxVelocities[i] = getHerbRightArmVelUpperLimit(herb, i);
+    }
+    DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
@@ -54,8 +61,7 @@ void planWithSimpleSetup(void)
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     
-
-    ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb);
+    ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb, nonColliding);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
     si->setStateValidityCheckingResolution(0.002);  // 3%
@@ -65,6 +71,13 @@ void planWithSimpleSetup(void)
 
     const ompl::base::OptimizationObjectivePtr base_opt = createDimtOptimizationObjective(si, dimt, "problem.json");
     base_pdef->setOptimizationObjective(base_opt);
+
+    std::cout << "STATE SPACE BOUNDARY" << std::endl;
+    ompl::base::RealVectorBounds bds = si->getStateSpace()->as<ompl::base::RealVectorStateSpace>()->getBounds();
+    for(size_t i=0;i<si->getStateSpace()->getDimension();i++)
+    {
+        std::cout << "Dimension " << i << " [" << bds.low[i] << " , " << bds.high[i] << "]" << std::endl;
+    }
 
     // Construct Sampler with the base pdef and base optimization objective
     double sigma = 1;
