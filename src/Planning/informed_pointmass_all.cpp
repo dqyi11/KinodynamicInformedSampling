@@ -150,10 +150,11 @@ void planWithSimpleSetup(void)
     si->setStateValidityCheckingResolution(0.002);  // 3%
     si->setup();
 
+    #define PROBLEM_FILENAME "herb_problem.json"
 
     // Set custom start and goal
-    ompl::base::State *start_state = getStart(si, "problem.json");
-    ompl::base::State *goal_state = getGoal(si, "problem.json");
+    ompl::base::State *start_state = getStart(si, PROBLEM_FILENAME);
+    ompl::base::State *goal_state = getGoal(si, PROBLEM_FILENAME);
 
     int start_idx = 0;
     int iteration_num = 10;
