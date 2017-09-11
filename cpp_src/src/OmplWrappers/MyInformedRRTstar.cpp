@@ -67,7 +67,7 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) 
     // A hack to approximate an infinite connection radius
     setRewireFactor(10000.);
 
-    setTreePruning(true);
+    setTreePruning(false);
     setNewStateRejection(false);
     setDelayCC(false);
 }
@@ -294,6 +294,7 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
         // valid
         if (si_->checkMotion(nmotion->state, dstate))
         {
+            //std::cout << "check motion succeed" << std::endl;
             // create a motion
             Motion *motion = new Motion(si_);
             si_->copyState(motion->state, dstate);
@@ -580,6 +581,10 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 approximatedist = distanceFromGoal;
             }
         }
+        /*else
+        {
+            std::cout << "check motion failed " << std::endl;
+        }*/
 
         // terminate if a sufficient solution is found
         if (solution && sufficientlyShort)

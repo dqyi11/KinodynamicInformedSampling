@@ -14,8 +14,11 @@ bool MultiLinkDIValidityChecker::isValid(const ompl::base::State *state) const
 
         if(di_->isCollided(vec)==true)
         {
+            //std::cout << "COLLIDED " << vec << std::endl;
             return false;
         }
+
+        //std::cout << "NOT COLLIDED " << vec << std::endl;
     }
     return true;
 }

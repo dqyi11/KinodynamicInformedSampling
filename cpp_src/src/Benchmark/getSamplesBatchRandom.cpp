@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
             goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = uniRndGnr.sample(minval, maxval);
         }
         // create a level set
-        double rndNum = uniRndGnr.sample(1.0, 1.1);
+        double rndNum = uniRndGnr.sample(1.0, 1.05);
         const double levelSet = rndNum * dimt->getMinTime(startState, goalState);
 
         std::cout <<  " ratio " << rndNum << " " << std::flush;
