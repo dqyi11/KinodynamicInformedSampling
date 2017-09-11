@@ -90,10 +90,9 @@ aikido::constraint::NonCollidingPtr createWorldNonColliding(std::shared_ptr<herb
 	using aikido::constraint::TSR;
 	using aikido::constraint::NonColliding;
 
-  dart::simulation::WorldPtr env(new dart::simulation::World);
 
-  SkeletonPtr table, glass;
-  Eigen::Isometry3d tablePose, glassPose, glassGoalPose;
+    SkeletonPtr table, glass;
+    Eigen::Isometry3d tablePose, glassPose, glassGoalPose;
     //Specify the URDFs of the objects of interest
     const std::string tableURDFUri("package://pr_ordata/data/furniture/table.urdf");
     const std::string glassURDFUri("package://pr_ordata/data/objects/plastic_glass.urdf");
@@ -128,13 +127,13 @@ aikido::constraint::NonCollidingPtr createWorldNonColliding(std::shared_ptr<herb
     std::shared_ptr<CollisionGroup> armGroup = collisionDetector->createCollisionGroup();
     armGroup->addShapeFramesOf(rightArmSpace->getMetaSkeleton().get());
 
-  std::shared_ptr<CollisionGroup> envGroup = collisionDetector->createCollisionGroup();
-  envGroup->addShapeFramesOf(table.get());
-  envGroup->addShapeFramesOf(glass.get());
+    std::shared_ptr<CollisionGroup> envGroup = collisionDetector->createCollisionGroup();
+    envGroup->addShapeFramesOf(table.get());
+    envGroup->addShapeFramesOf(glass.get());
 
-nonCollidingConstraint->addPairwiseCheck(armGroup, envGroup);
+    nonCollidingConstraint->addPairwiseCheck(armGroup, envGroup);
 
-  return nonCollidingConstraint;
+    return nonCollidingConstraint;
 
 }
 

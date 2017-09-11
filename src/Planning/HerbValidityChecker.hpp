@@ -18,16 +18,18 @@ public:
     {
         statespace_ = std::make_shared<aikido::statespace::dart::MetaSkeletonStateSpace>
             (herb_->getRightArm());
-        testable_ = getCollisionConstraints(statespace_, nonColliding);
+        testable_ = getCollisionConstraints(herb, statespace_, nonColliding);
     }
 
     virtual ~HerbValidityChecker();
 
     aikido::constraint::TestablePtr getCollisionConstraints(
+          std::shared_ptr<herb::Herb> herb,
 	  aikido::statespace::dart::MetaSkeletonStateSpacePtr _space,
 	  aikido::constraint::NonCollidingPtr _nonColliding) const;
 
     aikido::constraint::NonCollidingPtr getSelfCollisionConstraint(
+          std::shared_ptr<herb::Herb> herb,
           aikido::statespace::dart::MetaSkeletonStateSpacePtr _space) const;
 
     bool isValid(const ompl::base::State *state) const;

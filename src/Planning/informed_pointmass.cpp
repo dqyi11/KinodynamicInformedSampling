@@ -35,8 +35,7 @@ void planWithSimpleSetup(void)
     const int dimension = param.dimensions;
 
     std::shared_ptr<herb::Herb> herb = loadHerb();
-    //aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);
-    aikido::constraint::NonCollidingPtr nonColliding = nullptr;    
+    aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);  
 
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
@@ -64,7 +63,7 @@ void planWithSimpleSetup(void)
     ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb, nonColliding);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
-    si->setStateValidityCheckingResolution(0.002);  // 3%
+    si->setStateValidityCheckingResolution(0.0002);  // 3%
     si->setup();
 
     ob::ProblemDefinitionPtr base_pdef = createProblem(si, "problem.json");
@@ -110,9 +109,9 @@ void planWithSimpleSetup(void)
     planner->setup();
 
     // Run planner
-    //ob::PlannerStatus solved = planner->solve(30.0);
+    ob::PlannerStatus solved = planner->solve(30.0);
 
-    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     //return;
