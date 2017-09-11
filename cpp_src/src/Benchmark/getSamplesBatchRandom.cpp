@@ -129,18 +129,18 @@ int main(int argc, char *argv[])
 
         int curr=0;
 
-        std::cout << " HMC " << std::flush;
+        std::cout << " MCMC " << std::flush;
         {
-            MatrixXd hmcSamples;
+            MatrixXd mcmcSamples;
             double alpha = 0.5;
             double L = 5;
             double epsilon = 0.1;
             double sigma = 1;
             int maxSteps = 50000000;
-            ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-            hmcSamples = hmcSampler.sample(numSamples, times[curr]);
-            rejectionRatios[curr] = hmcSampler.getAcceptanceRatio();
-            sampleNums[curr] = hmcSamples.rows();
+            ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, epsilon, sigma, maxSteps);
+            mcmcSamples = mcmcSampler.sample(numSamples, times[curr]);
+            rejectionRatios[curr] = mcmcSampler.getAcceptanceRatio();
+            sampleNums[curr] = mcmcSamples.rows();
         }
         printTime(times[curr], std::cout);
         curr++;
