@@ -120,8 +120,69 @@ void planWithSimpleSetup(void)
     const int dimension = param.dimensions;
 
     std::shared_ptr<herb::Herb> herb = loadHerb();
-    aikido::constraint::NonCollidingPtr nonColliding = createWorldNonColliding(herb);
+    std::shared_ptr<aikido::statespace::dart::MetaSkeletonStateSpace> rightArmSpace
+    = std::make_shared<aikido::statespace::dart::MetaSkeletonStateSpace>(herb->getRightArm());
+    using dart::dynamics::Frame;
+    using dart::dynamics::SimpleFrame;
+    using dart::collision::CollisionGroup;
+    using dart::collision::CollisionDetectorPtr;
+    using dart::dynamics::Skeleton;
+    using dart::dynamics::SkeletonPtr;
 
+    using aikido::constraint::NonColliding;
+    using aikido::statespace::dart::MetaSkeletonStateSpace;
+    using dart::dynamics::SimpleFrame;
+    using aikido::constraint::TSR;
+    using aikido::constraint::NonColliding;
+
+
+    SkeletonPtr table, glass;
+    Eigen::Isometry3d tablePose, glassPose, glassGoalPose;
+    //Specify the URDFs of the objects of interest
+    const std::string tableURDFUri("package://pr_ordata/data/furniture/table.urdf");
+    const std::string glassURDFUri("package://pr_ordata/data/objects/plastic_glass.urdf");
+
+    // Poses for table and glass
+    tablePose = Eigen::Isometry3d::Identity();
+    tablePose.translation() = Eigen::Vector3d(0.8, 0.4, 0);
+    Eigen::Matrix3d rot;
+    rot = Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()) *
+          Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) *
+          Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX());
+    tablePose.linear() = rot;
+
+    glassPose = Eigen::Isometry3d::Identity();
+    glassPose.translation() = tablePose.translation() + Eigen::Vector3d(0, -0.6, 0.73);
+
+    glassGoalPose = glassPose;
+    glassGoalPose.translation() += Eigen::Vector3d(0.0, 0.5, 0.0);
+
+    // Load table
+    table = makeBodyFromURDF(tableURDFUri, tablePose);
+    if(table==nullptr)
+    {
+       std::cout << "table is null" << std::endl;
+    }
+
+    // Load plastic glass
+    glass = makeBodyFromURDF(glassURDFUri, glassPose);
+    if(glass==nullptr)
+    {
+       std::cout << "glass is null" << std::endl;
+    }
+
+    CollisionDetectorPtr collisionDetector = dart::collision::FCLCollisionDetector::create();
+    auto nonCollidingConstraint =
+      std::make_shared<NonColliding>(rightArmSpace, collisionDetector);
+
+    std::shared_ptr<CollisionGroup> armGroup = collisionDetector->createCollisionGroup();
+    armGroup->addShapeFramesOf(rightArmSpace->getMetaSkeleton().get());
+
+    std::shared_ptr<CollisionGroup> envGroup = collisionDetector->createCollisionGroup();
+    envGroup->addShapeFramesOf(table.get());
+    //envGroup->addShapeFramesOf(glass.get());
+
+    nonCollidingConstraint->addPairwiseCheck(armGroup, envGroup);
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
@@ -144,10 +205,10 @@ void planWithSimpleSetup(void)
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     
-    ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb, nonColliding);
+    ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb, rightArmSpace, nonCollidingConstraint);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
-    si->setStateValidityCheckingResolution(0.002);  // 3%
+    si->setStateValidityCheckingResolution(0.001);  // 3%
     si->setup();
 
     #define PROBLEM_FILENAME "herb_problem.json"
@@ -157,8 +218,8 @@ void planWithSimpleSetup(void)
     ompl::base::State *goal_state = getGoal(si, PROBLEM_FILENAME);
 
     int start_idx = 0;
-    int iteration_num = 10;
-    double duration = 30.0; //run time in seconds
+    int iteration_num = 20;
+    double duration = 20.0; //run time in seconds
     std::string caseName = "simple";
 
     for(int i=start_idx;i<iteration_num;i++)
@@ -169,8 +230,8 @@ void planWithSimpleSetup(void)
             std::cout << " Hit And Run " << std::endl;
             auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
-
 
         /*
         // HMC
@@ -181,13 +242,12 @@ void planWithSimpleSetup(void)
         }*/
 
 
-
-
         // HRS
         {
             std::cout << " HRS " << std::endl;
             auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // Rejection
@@ -195,6 +255,7 @@ void planWithSimpleSetup(void)
             std::cout << " Rejection " << std::endl;
             auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
 
         // MCMC
@@ -202,6 +263,7 @@ void planWithSimpleSetup(void)
             std::cout << " HMC " << std::endl;
             auto planner = createPlanner(caseName, i, MCMC, si, dimt, start_state, goal_state, duration);
             ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            //ob::PlannerStatus solved = planner->solve(duration);
         }
 
     }

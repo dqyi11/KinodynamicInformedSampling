@@ -65,6 +65,7 @@ ompl::base::InformedSamplerPtr ompl::base::MyOptimizationObjective::allocInforme
                                  "must be provided or set.");
     }
     return sampler_;
+    //return ompl::base::OptimizationObjective::allocInformedStateSampler(probDefn, maxNumberCalls);
 }
 
 

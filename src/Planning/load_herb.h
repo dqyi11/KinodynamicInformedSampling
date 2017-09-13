@@ -76,7 +76,7 @@ double getHerbRightArmPosLowerLimit(std::shared_ptr<herb::Herb> herb, int idx)
   return 0.0;
 }
 
-aikido::constraint::NonCollidingPtr createWorldNonColliding(std::shared_ptr<herb::Herb> herb)
+aikido::constraint::NonCollidingPtr createWorldNonColliding(std::shared_ptr<aikido::statespace::dart::MetaSkeletonStateSpace> armSpace)
 {
 	using dart::dynamics::Frame;
 	using dart::dynamics::SimpleFrame;
@@ -87,6 +87,7 @@ aikido::constraint::NonCollidingPtr createWorldNonColliding(std::shared_ptr<herb
 
 	using aikido::constraint::NonColliding;
 	using aikido::statespace::dart::MetaSkeletonStateSpace;
+	using dart::dynamics::SimpleFrame;
 	using aikido::constraint::TSR;
 	using aikido::constraint::NonColliding;
 
@@ -114,18 +115,24 @@ aikido::constraint::NonCollidingPtr createWorldNonColliding(std::shared_ptr<herb
 
     // Load table
     table = makeBodyFromURDF(tableURDFUri, tablePose);
+    if(table==nullptr)
+    {
+       std::cout << "table is null" << std::endl;
+    }
 
     // Load plastic glass
     glass = makeBodyFromURDF(glassURDFUri, glassPose);
+    if(glass==nullptr)
+    {
+       std::cout << "glass is null" << std::endl;
+    }
 
-    auto rightArmSpace =
-      std::make_shared<MetaSkeletonStateSpace>(herb->getRightArm());
     CollisionDetectorPtr collisionDetector = dart::collision::FCLCollisionDetector::create();
     auto nonCollidingConstraint =
-      std::make_shared<NonColliding>(rightArmSpace, collisionDetector);
+      std::make_shared<NonColliding>(armSpace, collisionDetector);
 
     std::shared_ptr<CollisionGroup> armGroup = collisionDetector->createCollisionGroup();
-    armGroup->addShapeFramesOf(rightArmSpace->getMetaSkeleton().get());
+    armGroup->addShapeFramesOf(armSpace->getMetaSkeleton().get());
 
     std::shared_ptr<CollisionGroup> envGroup = collisionDetector->createCollisionGroup();
     envGroup->addShapeFramesOf(table.get());

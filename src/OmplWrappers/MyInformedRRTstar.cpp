@@ -247,19 +247,21 @@ base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondi
                 }
                 else if (mode_ == LOAD_SAMPLES)
                 {
-                    // load sample to file
-                    std::string stateStr;
-                    bool getSuccess = std::getline(sampleLoadStream_, stateStr);
-                    if( getSuccess == false )
+                    if(loadedSamplesStr_.size()>0)
                     {
-                        std::cout << " GETLINE FAILED " << std::endl;
+                        
+                        std::string stateStr = loadedSamplesStr_.front();
+                        loadedSamplesStr_.pop_front();
+                        bool success = toState(stateStr, rstate);
+                        if( success == false )
+                        {
+                            std::cout << "FAIL " << std::endl;
+                        }
+                        //std::cout << stateStr.c_str() << std::endl;
                     }
-                    bool success = toState(stateStr, rstate);
-                    if( success == false )
-                    {
-                        std::cout << "FAIL " << std::endl;
+                    else{
+                        throw std::runtime_error("NO SAMPLE LEFT");
                     }
-                    //std::cout << stateStr.c_str() << std::endl;
                 }
                 else
                 {

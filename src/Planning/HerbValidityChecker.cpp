@@ -8,25 +8,20 @@ HerbValidityChecker::~HerbValidityChecker()
 
 bool HerbValidityChecker::isValid(const ompl::base::State *state) const
 {
-    if(herb_)
-    {
-        auto st = static_cast<const aikido::planner::ompl::GeometricStateSpace::StateType*>(state);
-        if(st==nullptr || st->mState == nullptr)
-            return false;
-        
-        if(testable_ == nullptr)
-        {
-            return true;
-        }
-        if(testable_->isSatisfied(st->mState))
-        {
-            return true;
-        }
-        else
-        {
-            return false; 
-        }
-    }
+  
+	auto st = static_cast<const aikido::planner::ompl::GeometricStateSpace::StateType*>(state);
+	if(st==nullptr || st->mState == nullptr)
+	    return false;
+
+	if(testable_->isSatisfied(st->mState))
+	{
+	    return true;
+	}
+	else
+	{
+	    return false; 
+	}
+    
     return true;
 }
 
@@ -43,12 +38,13 @@ aikido::constraint::TestablePtr HerbValidityChecker::getCollisionConstraints(
   std::vector<aikido::constraint::TestablePtr> constraints;
   constraints.reserve(2);
   constraints.emplace_back(selfNonColliding);
-  if (nonColliding_)
+  if (_nonColliding)
   {
-    if (nonColliding_->getStateSpace() != _space)
+    /*
+    if (_nonColliding->getStateSpace() != _space)
     {
       throw std::runtime_error("NonColliding has incorrect statespace.");
-    }
+    }*/
     constraints.emplace_back(_nonColliding);
   }
 

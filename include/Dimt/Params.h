@@ -48,7 +48,7 @@ constexpr Params param_7dof = {
     7, // dof
     14, // dimensions
     3.14,  // s_max
-    4.0, // a_max
+    5.0, // a_max
     10 // v_max
 };
 

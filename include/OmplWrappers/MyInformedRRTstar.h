@@ -49,6 +49,26 @@ namespace ompl
                 }*/
 
                 sampleLoadStream_.open(filename.c_str(), std::ios::in);
+                if(sampleLoadStream_.is_open()==false)
+                {
+                    throw std::runtime_error("fail in loading sample file");
+                }
+                else
+                {
+                    std::cout << "sample file loaded" << std::endl;
+                }
+                loadedSamplesStr_.clear();
+                if(sampleLoadStream_.eof())
+                {
+                    throw std::runtime_error("EOF");
+                }
+                std::string tmpStr;
+                while(std::getline(sampleLoadStream_, tmpStr))
+                {
+                    loadedSamplesStr_.push_back(tmpStr);
+                    //std::cout << "TEST " << tmpStr.c_str() << std::endl;
+                }
+                
                 if (solveTime < 1.0)
                     return solve(timedPlannerTerminationCondition(solveTime));
                 return solve(timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
@@ -85,6 +105,8 @@ namespace ompl
             std::ifstream sampleLoadStream_;
 
             uint64_t samplesGeneratedNum_;
+
+            std::list<std::string> loadedSamplesStr_;
 
         };
 

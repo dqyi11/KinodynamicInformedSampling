@@ -12,13 +12,14 @@ class HerbValidityChecker : public ompl::base::StateValidityChecker
 public:
     HerbValidityChecker(const ompl::base::SpaceInformationPtr &si,
                         std::shared_ptr<herb::Herb> herb,
+                        std::shared_ptr<aikido::statespace::dart::MetaSkeletonStateSpace> space,
                         aikido::constraint::NonCollidingPtr nonColliding)
                               
-        : ompl::base::StateValidityChecker(si), herb_(herb), nonColliding_(nullptr)
+        : ompl::base::StateValidityChecker(si)
     {
-        statespace_ = std::make_shared<aikido::statespace::dart::MetaSkeletonStateSpace>
-            (herb_->getRightArm());
-        testable_ = getCollisionConstraints(herb, statespace_, nonColliding);
+        testable_ = getCollisionConstraints(herb, space, nonColliding);
+
+        std::cout << "CREATED " << std::endl;
     }
 
     virtual ~HerbValidityChecker();
@@ -34,9 +35,6 @@ public:
 
     bool isValid(const ompl::base::State *state) const;
 protected:
-    std::shared_ptr<herb::Herb> herb_;
-    std::shared_ptr<aikido::statespace::dart::MetaSkeletonStateSpace> statespace_;
-    aikido::constraint::NonCollidingPtr nonColliding_;
     aikido::constraint::TestablePtr testable_;
 };
 
