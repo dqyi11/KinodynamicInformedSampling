@@ -30,7 +30,8 @@ bool MAIN_VERBOSE = true;
 
 void planWithSimpleSetup(void)
 {
-
+    bool withObstacle = true;
+   
     // Intiatilizations for sampler
     const int dimension = param.dimensions;
 
@@ -91,22 +92,25 @@ void planWithSimpleSetup(void)
     auto nonCollidingConstraint =
       std::make_shared<NonColliding>(rightArmSpace, collisionDetector);
 
-    std::shared_ptr<CollisionGroup> armGroup = collisionDetector->createCollisionGroup();
-    armGroup->addShapeFramesOf(rightArmSpace->getMetaSkeleton().get());
+    if(withObstacle)
+    {
+	std::shared_ptr<CollisionGroup> armGroup = collisionDetector->createCollisionGroup();
+	armGroup->addShapeFramesOf(rightArmSpace->getMetaSkeleton().get());
 
-    std::shared_ptr<CollisionGroup> envGroup = collisionDetector->createCollisionGroup();
-    envGroup->addShapeFramesOf(table.get());
-    //envGroup->addShapeFramesOf(glass.get());
+	std::shared_ptr<CollisionGroup> envGroup = collisionDetector->createCollisionGroup();
+	envGroup->addShapeFramesOf(table.get());
+	//envGroup->addShapeFramesOf(glass.get());
 
-    nonCollidingConstraint->addPairwiseCheck(armGroup, envGroup);
+	nonCollidingConstraint->addPairwiseCheck(armGroup, envGroup);
+    }
  
-
     // Initializations
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
     for(uint i=0;i<param.dof;i++)
     {
         maxVelocities[i] = getHerbRightArmVelUpperLimit(herb, i);
+        maxAccelerations[i] = getHerbRightArmAccelLimit(herb, i);
     }
     DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
@@ -181,9 +185,9 @@ void planWithSimpleSetup(void)
     std::cout << "goal valid " << svc->isValid(goal) << std::endl;
 
     // Run planner
-    //ob::PlannerStatus solved = planner->solve(10.0);
+    ob::PlannerStatus solved = planner->solve(2.0);
 
-    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 10.0);
+    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 10.0);
     //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     //return;

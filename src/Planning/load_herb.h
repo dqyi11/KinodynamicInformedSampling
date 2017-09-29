@@ -40,6 +40,16 @@ std::shared_ptr<herb::Herb> loadHerb()
     return herb;
 }
 
+double getHerbRightArmAccelLimit(std::shared_ptr<herb::Herb> herb, int idx)
+{
+  if(herb->getRightArm())
+  {
+      auto arm = herb->getRightArm();
+      return herb->getAccelerationLimits(*arm)[idx];
+  }
+  return 0.0;
+}
+
 double getHerbRightArmVelUpperLimit(std::shared_ptr<herb::Herb> herb, int idx)
 {
   if(herb->getRightArm())

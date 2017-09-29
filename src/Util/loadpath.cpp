@@ -89,6 +89,7 @@ int main(int argc, char** argv)
   // Default options for flags
   bool herbSim = true;
   bool perceptionSim = true;
+  bool withObstacle = false;
 
   std::string pathFilename = "";
 
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
     ("help", "produce help message")
     ("herbsim,h", po::bool_switch(&herbSim), "Run HERB in simulation")
     ("perceptionsim,p", po::bool_switch(&perceptionSim), "Run perception in simulation")
+    ("obstacle,o", po::bool_switch(&withObstacle), "With obstacles")
     ("path", po::value(&pathFilename), "path filename")
   ;
 
@@ -133,7 +135,7 @@ int main(int argc, char** argv)
   SkeletonPtr table, glass;
   Eigen::Isometry3d tablePose, glassPose, glassGoalPose;
 
-  if (perceptionSim) {
+  if (perceptionSim && withObstacle) {
 
     //Specify the URDFs of the objects of interest
     const std::string tableURDFUri("package://pr_ordata/data/furniture/table.urdf");
