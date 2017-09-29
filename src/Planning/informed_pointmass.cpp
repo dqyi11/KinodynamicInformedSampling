@@ -147,7 +147,10 @@ void planWithSimpleSetup(void)
     {
         std::cout << "Dimension " << i << " [" << bds.low[i] << " , " << bds.high[i] << "]" << std::endl;
     }
-
+    for(size_t i=0;i<param.dof;i++)
+    {
+        std::cout << "Max Acceleration " << i << " " << maxAccelerations[i] << std::endl; 
+    }
     // Construct Sampler with the base pdef and base optimization objective
     double sigma = 1;
     //int max_steps = 20;
