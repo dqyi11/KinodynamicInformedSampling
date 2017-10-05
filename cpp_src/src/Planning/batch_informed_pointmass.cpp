@@ -2,9 +2,6 @@
 #include <fstream>
 
 #include <ompl/geometric/SimpleSetup.h>
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
-#include <ompl/geometric/planners/rrt/RRTstar.h>
-#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 
 #include "Sampler/Sampler.h"
 #include "Sampler/RejectionSampler.h"
@@ -34,6 +31,9 @@ void planWithSimpleSetup(void)
     std::vector<double> maxVelocities(param.dof, param.v_max);
     std::vector<double> maxAccelerations(param.dof, param.a_max);
     DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
+
+    // Intiatilizations for sampler
+    const int dimension = param.dimensions;
 
     // Construct the state space we are planning in
     ob::StateSpacePtr space = std::make_shared< ob::DimtStateSpace >(dimt);
@@ -74,9 +74,9 @@ void planWithSimpleSetup(void)
     //const auto sampler = std::make_shared<ompl::base::HMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, L, epsilon, sigma, max_steps);
     //const auto sampler = std::make_shared<ompl::base::MCMCSampler>(si, base_pdef, level_set, max_call_num, batch_size, alpha, sigma, max_steps);
     //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
-    const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
-    //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
-    sampler->setSingleSampleTimelimit(10.);
+    //const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
+    const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+    sampler->setSingleSampleTimelimit(60.);
 
     const ompl::base::OptimizationObjectivePtr opt = createOptimizationObjective(si, sampler, "problem.json");
 
@@ -91,9 +91,9 @@ void planWithSimpleSetup(void)
     planner->setup();
 
     // Run planner
-    ob::PlannerStatus solved = planner->solve(60.0);
+    //ob::PlannerStatus solved = planner->solve(60.0);
 
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
+    ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
     //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     //return;
@@ -104,14 +104,6 @@ void planWithSimpleSetup(void)
         dumpPathToFile(path, "waypointpath.txt");
         dumpPathToFile(path, dimt, "path.txt");
     }
-
-    ompl::base::State* start = getStart(si, "problem.txt");
-    ompl::base::State* goal = getGoal(si, "problem.txt");
-    std::vector<ompl::base::State*> stateSeq;
-    stateSeq.push_back(start);
-    stateSeq.push_back(goal);
-    dumpPathToFile(stateSeq, dimt, "testpath.txt");
-
 
 }
 

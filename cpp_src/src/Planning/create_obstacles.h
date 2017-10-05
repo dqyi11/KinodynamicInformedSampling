@@ -19,7 +19,7 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
     if(parseSuccess)
     {
        Json::Value obstacles = root["obstacles"];
-       for(int i=0;i<obstacles.size();i++)
+       for(uint i=0;i<obstacles.size();i++)
        {
           std::string type = obstacles[i].get("type","").asString();
           Json::Value center, radius;
@@ -28,12 +28,12 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
           Eigen::VectorXd obs_radius(param.dimensions / 2);
 
           center = obstacles[i].get("center", 0);
-          for(int j=0;j<center.size();j++)
+          for(uint j=0;j<center.size();j++)
           {
             obs_center[j] = center[j].asDouble();
           }
           radius = obstacles[i].get("radius",0);
-          for(int j=0;j<radius.size();j++)
+          for(uint j=0;j<radius.size();j++)
           {
             obs_radius[j] = radius[j].asDouble();
           }

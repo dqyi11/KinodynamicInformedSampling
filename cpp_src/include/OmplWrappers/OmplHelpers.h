@@ -37,3 +37,10 @@ Eigen::VectorXd get_eigen_vector(const std::vector<T> &vec)
 /// @return Pointer to an ompl state
 ///
 bool get_ompl_state(const Eigen::VectorXd &vec, ompl::base::State* state);
+
+void print_out_states(ompl::base::State *statePtr);
+
+void print_out_states(const Eigen::VectorXd &state);
+
+bool approximate_cost(double a, double b);
+

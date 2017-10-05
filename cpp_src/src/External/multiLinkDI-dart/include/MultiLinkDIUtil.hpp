@@ -41,7 +41,7 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     Eigen::VectorXd goalConfig(dimension);
     Json::Value startVal = root["start"];
     Json::Value goalVal = root["goal"];
-    for(int i=0;i<startVal.size();i++)
+    for(uint i=0;i<startVal.size();i++)
     {
       startConfig[i] = startVal[i].asDouble();
       goalConfig[i] = goalVal[i].asDouble();
@@ -49,7 +49,7 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
 
     Eigen::Vector3d diPos;
     Json::Value diPosVal = root["di_pos"];
-    for(int i=0;i<diPosVal.size();i++)
+    for(uint i=0;i<diPosVal.size();i++)
     {
       diPos[i] = diPosVal[i].asDouble();
     }
@@ -57,12 +57,12 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     di = std::make_shared<MultiLinkDI>(link_num, diPos);
     Json::Value links = root["links"];
     dart::dynamics::BodyNode* bn = nullptr;
-    for(int i=0;i<links.size();i++)
+    for(uint i=0;i<links.size();i++)
     {
         Eigen::Vector3d relativeTrans;
         Eigen::Vector3d relativeEuler;
         Json::Value eulerVal = links[i].get("euler", 0);
-        for(int j=0;j<eulerVal.size();j++)\
+        for(uint j=0;j<eulerVal.size();j++)\
         {
             relativeEuler[j] = eulerVal[j].asDouble() * M_PI/180;
         }
@@ -78,7 +78,7 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
         }
         else{
             Json::Value transVal = links[i].get("trans", 0);
-            for(int j=0;j<transVal.size();j++)\
+            for(uint j=0;j<transVal.size();j++)\
             {
                 relativeTrans[j] = transVal[j].asDouble();
             }
@@ -95,16 +95,16 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     Json::Value plane = root["plane"];
     if(plane.isNull() == false)
     {
-        for(int i=0;i<plane.size();i++)
+        for(uint i=0;i<plane.size();i++)
         {
             Eigen::Vector3d plane_pos, plane_size;
             Json::Value planePosVal = plane[i].get("plane_pos", 0);
             Json::Value planeSizeVal = plane[i].get("plane_size", 0);
-            for(int j=0;j<planePosVal.size();j++)
+            for(uint j=0;j<planePosVal.size();j++)
             {
                 plane_pos[j] = planePosVal[j].asDouble();
             }
-            for(int j=0;j<planeSizeVal.size();j++)
+            for(uint j=0;j<planeSizeVal.size();j++)
             {
                 plane_size[j] = planeSizeVal[j].asDouble();
             }
@@ -115,7 +115,7 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     Json::Value obstacles = root["obstacles"];
     if(obstacles.isNull()==false)
     {
-        for(int i=0;i<obstacles.size();i++)
+        for(uint i=0;i<obstacles.size();i++)
         {
           std::string type = obstacles[i].get("type","").asString();
           if(type == "hypercube")
@@ -126,12 +126,12 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
             Eigen::Vector3d obs_size;
 
             centerVal = obstacles[i].get("center", 0);
-            for(int j=0;j<centerVal.size();j++)
+            for(uint j=0;j<centerVal.size();j++)
             {
               obs_center[j] = centerVal[j].asDouble();
             }
             sizeVal = obstacles[i].get("size",0);
-            for(int j=0;j<sizeVal.size();j++)
+            for(uint j=0;j<sizeVal.size();j++)
             {
               obs_size[j] = sizeVal[j].asDouble();
             }
@@ -141,10 +141,8 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
     }
 
     di->setConfiguration(startConfig);
-    std::cout << "START COLLIDE " << di->isCollided(startConfig) << std::endl;
-    std::cout << "GOAL COLLIDE " << di->isCollided(goalConfig) << std::endl;
-
   }
+
   problemFile.close();
 
   return di;
@@ -162,7 +160,7 @@ void loadMultiLinkDIPath( std::shared_ptr<MultiLinkDI> di, std::string pathFilen
           size_t dim = di->getNumOfLinks()*2;
           Eigen::VectorXd waypointVec(dim);
           std::stringstream iss(stateStr);
-          int dimIdx = 0;
+          uint dimIdx = 0;
           double val = 0;
           while( iss >> val && dimIdx < dim)
           {

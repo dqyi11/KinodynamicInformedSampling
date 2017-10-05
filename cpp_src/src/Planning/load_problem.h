@@ -41,7 +41,7 @@ ompl::base::State* getGoal(ompl::base::SpaceInformationPtr si, std::string filen
     if(parseSuccess)
     {
         Json::Value goalVal = root["goal"];
-        for(int i=0;i<goalVal.size();i++)
+        for(uint i=0;i<goalVal.size();i++)
         {
             goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVal[i].asDouble();
         }
