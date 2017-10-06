@@ -129,7 +129,7 @@ namespace ompl
 
                     cStart = calculateLeaf(getStartState(), sample, startIndex);
                     cGoal = calculateLeaf(sample, getGoalState(), startIndex);
-
+                    //std::cout << getLevelSet() << std::endl;
                     t2 = std::chrono::high_resolution_clock::now();
                     timeElapsed = t2-t1;
                     timeElapsedDouble = std::chrono::duration_cast<std::chrono::seconds>(timeElapsed).count();

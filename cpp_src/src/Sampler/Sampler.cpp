@@ -538,6 +538,7 @@ namespace ompl
                 Eigen::VectorXd newsample( getSpaceDimension() + 1 );
                 if(sampleInLevelSet(newsample))
                 {
+                    std::cout << " num " << numAcceptedSamples_ << std::endl;
                     samples.row(numAcceptedSamples_-1) = newsample;
                 }
 
