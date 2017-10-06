@@ -5,7 +5,6 @@ target_link_libraries(multilink-di-validity-checker
                       multilink-di-dart
                      )
 
-# Ompl Planner
 add_executable(kdp_pointmass2d 
                kdp_pointmass2d.cpp
               )
@@ -13,9 +12,7 @@ target_link_libraries(kdp_pointmass2d
                       ${OMPL_LIBRARIES} 
                       ${Boost_FILESYSTEM_LIBRARY} 
                       ${Boost_SYSTEM_LIBRARY} 
-                      ${JSONCPP_LIBRARY}
                       dimtLib
-                      multilink-di-validity-checker
                      )
 
 # Informed Pointmass
@@ -77,3 +74,6 @@ target_link_libraries(informed_pointmass_diff_velocity_bounds
                    omplwrapperLib
                    multilink-di-validity-checker
                   )
+
+install(TARGETS informed_pointmass RUNTIME DESTINATION bin)
+install(TARGETS informed_pointmass_all RUNTIME DESTINATION bin)

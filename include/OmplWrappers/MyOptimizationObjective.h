@@ -86,7 +86,7 @@ namespace ompl
             /// @return Infromed sampler
             ///
             virtual InformedSamplerPtr allocInformedStateSampler(const ProblemDefinitionPtr probDefn,
-                                                                 unsigned int maxNumberCalls) const override;
+                                                                 unsigned int maxNumberCalls) const;
 
             ///
             /// Function to provide and informed sampler

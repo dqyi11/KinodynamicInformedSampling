@@ -17,4 +17,9 @@ target_link_libraries(multilink-di-dart ${DART_LIBRARIES})
 #target_link_libraries(${PROJECT_NAME}_test ${DART_LIBRARIES}
 #                                           ${PROJECT_NAME})
 
+install(TARGETS multilink-di-dart EXPORT multilink-di-dartConfig
+                    ARCHIVE DESTINATION lib
+                    LIBRARY DESTINATION lib
+                    RUNTIME DESTINATION bin)
+
 

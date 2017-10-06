@@ -24,6 +24,11 @@ ompl::base::State* getStart(ompl::base::SpaceInformationPtr si, std::string file
         {
           start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVal[i].asDouble();
         }
+        std::cout << "LOAD START " << start_state->as<ompl::base::RealVectorStateSpace::StateType>() << std::endl;
+    }
+    else
+    {
+        std::cout << "failed in parse START" << std::endl;
     }
     file.close();
     return start_state;
@@ -45,6 +50,11 @@ ompl::base::State* getGoal(ompl::base::SpaceInformationPtr si, std::string filen
         {
             goal_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = goalVal[i].asDouble();
         }
+        std::cout << "LOAD GOAL " << goal_state->as<ompl::base::RealVectorStateSpace::StateType>() << std::endl;
+    }
+    else
+    {
+        std::cout << "failed in parse GOAL" << std::endl;
     }
     file.close();
     return goal_state;
