@@ -44,16 +44,6 @@
 
 namespace
 {
-    void print_out_states3(const Eigen::VectorXd &state)
-    {
-        std::cout << "[ ";
-        for (uint i = 0; i < state.size(); i++)
-        {
-            std::cout << state[i] << " ";
-        }
-        std::cout << " ]" << std::endl;
-    }
-
     // Verbose constant
     const bool VERBOSE = true;
 

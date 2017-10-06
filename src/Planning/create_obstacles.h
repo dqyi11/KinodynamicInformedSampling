@@ -4,7 +4,7 @@
 #include "Dimt/Params.h"
 #include "OmplWrappers/ValidityChecker.h"
 #include "jsoncpp/json/json.h"
-#include "HerbValidityChecker.hpp"
+#include "MultiLinkDIValidityChecker.hpp"
 
 ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::SpaceInformationPtr si,
                                                                std::string filename)
@@ -19,7 +19,7 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
     if(parseSuccess)
     {
        Json::Value obstacles = root["obstacles"];
-       for(int i=0;i<obstacles.size();i++)
+       for(uint i=0;i<obstacles.size();i++)
        {
           std::string type = obstacles[i].get("type","").asString();
           Json::Value center, radius;
@@ -28,12 +28,12 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
           Eigen::VectorXd obs_radius(param.dimensions / 2);
 
           center = obstacles[i].get("center", 0);
-          for(int j=0;j<center.size();j++)
+          for(uint j=0;j<center.size();j++)
           {
             obs_center[j] = center[j].asDouble();
           }
           radius = obstacles[i].get("radius",0);
-          for(int j=0;j<radius.size();j++)
+          for(uint j=0;j<radius.size();j++)
           {
             obs_radius[j] = radius[j].asDouble();
           }
@@ -62,14 +62,10 @@ ompl::base::StateValidityCheckerPtr createStateValidityChecker(ompl::base::Space
     return ompl::base::StateValidityCheckerPtr(pVC);
 }
 
-ompl::base::StateValidityCheckerPtr 
-createHerbStateValidityChecker(ompl::base::SpaceInformationPtr si,
-                               std::shared_ptr<herb::Herb> herb,
-                               std::shared_ptr<aikido::statespace::dart::MetaSkeletonStateSpace> space,
-                               aikido::constraint::NonCollidingPtr nonColliding)
+ompl::base::StateValidityCheckerPtr createMultiLinkDIStateValidityChecker(ompl::base::SpaceInformationPtr si,
+                                                                          std::shared_ptr<MultiLinkDI> di)
 {
-    ompl::base::StateValidityCheckerPtr pVC = 
-        std::make_shared<HerbValidityChecker>(si, herb, space, nonColliding);
+    ompl::base::StateValidityCheckerPtr pVC = std::make_shared<MultiLinkDIValidityChecker>(si, di);
     return pVC;
 }
 

@@ -145,7 +145,7 @@ namespace ompl
             ///
             MyInformedSampler(const SpaceInformationPtr &si, const ProblemDefinitionPtr &problem,
                               const double levelSet, const unsigned int maxNumberCalls,
-                              const int sampleBatchSize, const double timelimit = 60)
+                              const int sampleBatchSize, const double timelimit = 300)
               : InformedSampler(problem, maxNumberCalls)
               , sampleBatchSize_(sampleBatchSize)
               , si_(si)

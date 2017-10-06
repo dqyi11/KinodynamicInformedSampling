@@ -53,36 +53,6 @@
 #include <nlopt.hpp>
 #endif
 
-namespace
-{
-    bool same_cost(double a, double b)
-    {
-        return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
-    }
-
-    void print_out_states2(ompl::base::State *statePtr)
-    {
-        double *val = static_cast<ompl::base::RealVectorStateSpace::StateType *>(statePtr)->values;
-
-        std::cout << "Printing sample of size: " << param.dimensions << " | Vec: [ ";
-        for (uint i = 0; i < param.dimensions; i++)
-        {
-            std::cout << val[i] << " ";
-        }
-        std::cout << "]" << std::endl;
-    }
-
-    void print_out_states2(const Eigen::VectorXd &state)
-    {
-        std::cout << "[ ";
-        for (uint i = 0; i < state.size(); i++)
-        {
-            std::cout << state[i] << " ";
-        }
-        std::cout << " ]" << std::endl;
-    }
-
-}  // namespace
 
 namespace ompl
 {
@@ -538,6 +508,7 @@ namespace ompl
                 Eigen::VectorXd newsample( getSpaceDimension() + 1 );
                 if(sampleInLevelSet(newsample))
                 {
+                    std::cout << " num " << numAcceptedSamples_ << std::endl;
                     samples.row(numAcceptedSamples_-1) = newsample;
                 }
 

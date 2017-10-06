@@ -1,8 +1,8 @@
-#ifndef MY_INFORMED_RRT_STAR_H_
-#define MY_INFORMED_RRT_STAR_H_
+#ifndef MY_BIT_STAR_H_
+#define MY_BIT_STAR_H_
 
 // OMPL
-#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
+#include <ompl/geometric/planners/bitstar/BITstar.h>
 #include "ompl/datastructures/NearestNeighborsLinear.h"
 #include "ompl/datastructures/NearestNeighborsGNAT.h"
 #include <iostream>
@@ -13,11 +13,11 @@ namespace ompl
 {
     namespace base
     {
-        class MyInformedRRTstar : public ompl::geometric::InformedRRTstar
+        class MyBITstar : public ompl::geometric::BITstar
         {
         public:
             typedef enum { LOAD_SAMPLES, SAVE_SAMPLES, RANDOM_SAMPLES } PlannerMode;
-            MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si);
+            MyBITstar(const ompl::base::SpaceInformationPtr &si);
 
             virtual ompl::base::PlannerStatus solve(const ompl::base::PlannerTerminationCondition &ptc) override;
 
@@ -50,26 +50,6 @@ namespace ompl
                 }*/
 
                 sampleLoadStream_.open(filename.c_str(), std::ios::in);
-                if(sampleLoadStream_.is_open()==false)
-                {
-                    throw std::runtime_error("fail in loading sample file");
-                }
-                else
-                {
-                    std::cout << "sample file loaded" << std::endl;
-                }
-                loadedSamplesStr_.clear();
-                if(sampleLoadStream_.eof())
-                {
-                    throw std::runtime_error("EOF");
-                }
-                std::string tmpStr;
-                while(std::getline(sampleLoadStream_, tmpStr))
-                {
-                    loadedSamplesStr_.push_back(tmpStr);
-                    //std::cout << "TEST " << tmpStr.c_str() << std::endl;
-                }
-                
                 if (solveTime < 1.0)
                     return solve(timedPlannerTerminationCondition(solveTime));
                 return solve(timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
@@ -107,13 +87,11 @@ namespace ompl
 
             uint64_t samplesGeneratedNum_;
 
-            std::list<std::string> loadedSamplesStr_;
-
         };
 
-        using MyInformedRRTstarPtr = std::shared_ptr<MyInformedRRTstar>;
+        using MyBITstarPtr = std::shared_ptr<MyBITstar>;
 
     }
 }
 
-#endif // MY_INFORMED_RRT_STAR_H_
+#endif // MY_BIT_STAR_H_

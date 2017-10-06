@@ -1,13 +1,9 @@
-add_library(herb-validity-checker
-            HerbValidityChecker.cpp
+add_library(multilink-di-validity-checker
+            MultiLinkDIValidityChecker.cpp
             )
-target_link_libraries(herb-validity-checker
-                      ${DART_LIBRARIES}
-		      ${aikido_LIBRARIES}
-		      ${Boost_LIBRARIES} 
-	              libherb
+target_link_libraries(multilink-di-validity-checker
+                      multilink-di-dart
                      )
-
 
 # Informed Pointmass
 add_executable(informed_pointmass
@@ -21,8 +17,7 @@ target_link_libraries(informed_pointmass
                       samplerLib 
                       dimtLib 
                       omplwrapperLib
-                      herb-validity-checker
-	              libherb
+                      multilink-di-validity-checker
                      )
 
 # Informed Pointmass all
@@ -37,8 +32,7 @@ target_link_libraries(informed_pointmass_all
                    samplerLib
                    dimtLib
                    omplwrapperLib
-                   herb-validity-checker
-	           libherb
+                   multilink-di-validity-checker
                   )
 
 # Informed Pointmass diff HMC
@@ -53,8 +47,7 @@ target_link_libraries(informed_pointmass_diff_hmc
                    samplerLib
                    dimtLib
                    omplwrapperLib
-                   herb-validity-checker
-                   libherb
+                   multilink-di-validity-checker
                   )
 
 # Informed Pointmass diff velocity bounds
@@ -69,8 +62,7 @@ target_link_libraries(informed_pointmass_diff_velocity_bounds
                    samplerLib
                    dimtLib
                    omplwrapperLib
-                   herb-validity-checker
-                   libherb
+                   multilink-di-validity-checker
                   )
 
 install(TARGETS informed_pointmass RUNTIME DESTINATION bin)

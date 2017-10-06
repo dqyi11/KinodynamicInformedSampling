@@ -53,7 +53,7 @@ std::tuple<bool, std::vector<int>> handleArguments(int argc, char *argv[])
         if (cmdOptionExists(argv, argv + argc, "-batch"))
             args.push_back(atoi(getCmdOption(argv, argv + argc, "-batch")));
         else
-            args.push_back(20);  // Default to 20 batches
+            args.push_back(10);  // Default to 20 batches
 
         return std::make_tuple(true, args);
     }
@@ -104,10 +104,12 @@ int main(int argc, char *argv[])
         throw std::runtime_error("file not opened");
     }
 
-    int numSamplers = 4;
+    int numSamplers = 1;
+    numbatch = 50;
+    numSamplers = 500;
     for (int i = 0; i < numbatch; i++)
     {
-        std::cout << "BATCH " << i << std::flush;
+        //std::cout << "BATCH " << i << std::flush;
         std::vector<std::chrono::high_resolution_clock::duration> times(numSamplers);
         std::vector<uint> sampleNums(numSamplers);
         std::vector<double> rejectionRatios(numSamplers, 1.0);
@@ -119,28 +121,30 @@ int main(int argc, char *argv[])
             goalState->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = uniRndGnr.sample(minval, maxval);
         }
         // create a level set
-        double rndNum = uniRndGnr.sample(1.0, 1.1);
-        const double levelSet = rndNum * dimt->getMinTime(startState, goalState);
-
-        std::cout <<  " ratio " << rndNum << " " << std::flush;
+        //double rndNum = uniRndGnr.sample(1.0, 2.0);
+        //const double levelSet = rndNum * dimt->getMinTime(startState, goalState);
+        
+        const double levelSet = 1.51 - i * 0.01;
+        //std::cout <<  " ratio " << rndNum << " " << std::flush;
 
         // create new problem definition
         ompl::base::ProblemDefinitionPtr pdef = createDimtProblem(startState, goalState, si, dimt);
 
         int curr=0;
 
-        std::cout << " HMC " << std::flush;
+        /*
+        std::cout << " MCMC " << std::flush;
         {
-            MatrixXd hmcSamples;
+            MatrixXd mcmcSamples;
             double alpha = 0.5;
             double L = 5;
             double epsilon = 0.1;
             double sigma = 1;
             int maxSteps = 50000000;
-            ompl::base::HMCSampler hmcSampler(si, pdef, levelSet, 100, 100, alpha, L, epsilon, sigma, maxSteps);
-            hmcSamples = hmcSampler.sample(numSamples, times[curr]);
-            rejectionRatios[curr] = hmcSampler.getAcceptanceRatio();
-            sampleNums[curr] = hmcSamples.rows();
+            ompl::base::MCMCSampler mcmcSampler(si, pdef, levelSet, 100, 100, epsilon, sigma, maxSteps);
+            mcmcSamples = mcmcSampler.sample(numSamples, times[curr]);
+            rejectionRatios[curr] = mcmcSampler.getAcceptanceRatio();
+            sampleNums[curr] = mcmcSamples.rows();
         }
         printTime(times[curr], std::cout);
         curr++;
@@ -169,23 +173,29 @@ int main(int argc, char *argv[])
         }
         printTime(times[curr], std::cout);
         curr++;
-
-        std::cout << " REJ " << std::flush;
+        */
+        //std::cout << " REJ " << std::flush;
         {
+            std::cout << levelSet << " " << std::flush;
             MatrixXd rejSamples;
             ompl::base::RejectionSampler rejSampler(si, pdef, levelSet, 100, 100);
             rejSamples = rejSampler.sample(numSamples, times[curr]);
             rejectionRatios[curr] = rejSampler.getAcceptanceRatio();
             sampleNums[curr] = rejSamples.rows();
+
+            std::cout << rejectionRatios[curr] << std::endl;
         }
-        printTime(times[curr], std::cout);
-        curr++;
+        //printTime(times[curr], std::cout);
+        //curr++;
 
-        std::cout << "        REJ RATIO[" << rejectionRatios[3] << "]" << std::flush;
+        //std::cout << "        REJ RATIO[" << rejectionRatios[3] << "]" << std::flush;
 
-        appendTimeAndRatioToFile(times, rejectionRatios, sampleNums, logFile);
+        //appendTimeAndRatioToFile(times, rejectionRatios, sampleNums, logFile);
 
-        std::cout << std::endl;
+        //std::cout << 
+ 
+
+        //std::cout << std::endl;
     }
 
     logFile.close();

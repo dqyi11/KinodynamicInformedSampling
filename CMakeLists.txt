@@ -31,30 +31,6 @@ endif()
 find_package(DART REQUIRED)
 include_directories(${DART_INCLUDE_DIRS})
 
-find_package(aikido REQUIRED COMPONENTS
-  constraint
-  control
-  control_ros
-  distance
-  perception
-  control
-  control_ros
-  planner_ompl
-  planner_parabolic
-  rviz
-  statespace
-  util)
-include_directories(${aikido_INCLUDE_DIRS})
-
-find_package(libherb REQUIRED)
-include_directories(${libherb_INCLUDE_DIRS})
-
-find_package(pr_ordata REQUIRED)
-include_directories(${pr_ordata_INCLUDE_DIRS})
-
-find_package(pr_tsr REQUIRED)
-include_directories(${pr_tsr_INCLUDE_DIRS})
-
 find_package(JsonCpp REQUIRED)
 if(NOT JSONCPP_FOUND)
    message("Jsoncpp not found")

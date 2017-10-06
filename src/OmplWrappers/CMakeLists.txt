@@ -2,6 +2,7 @@
 add_library(omplwrapperLib SHARED
             MyOptimizationObjective.cpp
             MyInformedRRTstar.cpp
+            MyBITstar.cpp
             OmplHelpers.cpp
             ValidityChecker.cpp
            )
