@@ -142,7 +142,6 @@ std::shared_ptr<MultiLinkDI> createMultiLinkDI( std::string problemFilename )
 
     di->setConfiguration(startConfig);
   }
-
   problemFile.close();
 
   return di;

@@ -147,7 +147,9 @@ void planWithSimpleSetup(void)
 
     int start_idx = 0;
     int iteration_num = 10;
-    double duration = 30.0; //run time in seconds
+
+    double duration = 10.0; //run time in seconds
+
     std::string caseName = "simple";
 
     for(int i=start_idx;i<iteration_num;i++)
@@ -157,7 +159,7 @@ void planWithSimpleSetup(void)
         {
             std::cout << " Hit And Run " << std::endl;
             auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
 
@@ -166,7 +168,7 @@ void planWithSimpleSetup(void)
         {
             std::cout << " HMC " << std::endl;
             auto planner = createPlanner(caseName, i, HMC, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            planner->solveAfterLoadingSamples("samples.txt", duration);
         }*/
 
 
@@ -176,21 +178,21 @@ void planWithSimpleSetup(void)
         {
             std::cout << " HRS " << std::endl;
             auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // Rejection
         {
             std::cout << " Rejection " << std::endl;
             auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
         // MCMC
         {
             std::cout << " HMC " << std::endl;
             auto planner = createPlanner(caseName, i, MCMC, si, dimt, start_state, goal_state, duration);
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+            planner->solveAfterLoadingSamples("samples.txt", duration);
         }
 
     }

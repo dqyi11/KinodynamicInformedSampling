@@ -20,7 +20,7 @@ ompl::base::State* getStart(ompl::base::SpaceInformationPtr si, std::string file
     if(parseSuccess)
     {
         Json::Value startVal = root["start"];
-        for(int i=0;i<startVal.size();i++)
+        for(uint i=0;i<startVal.size();i++)
         {
           start_state->as<ompl::base::RealVectorStateSpace::StateType>()->values[i] = startVal[i].asDouble();
         }

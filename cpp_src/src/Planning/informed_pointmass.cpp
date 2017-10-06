@@ -76,7 +76,9 @@ void planWithSimpleSetup(void)
     //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
     const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
     //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
+
     sampler->setSingleSampleTimelimit(10.);
+
 
     const ompl::base::OptimizationObjectivePtr opt = createOptimizationObjective(si, sampler, "problem.json");
 
