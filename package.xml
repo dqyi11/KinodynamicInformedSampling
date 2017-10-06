@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>kdplanning</name>
+  <version>0.1.0</version>
+  <description>The HERB Pantry Loading demo</description>
+  <license>UNRELEASED</license>
+
+  <maintainer email="cliddick@cmu.ed">Clint Liddick</maintainer>
+  <author email="cliddick@cmu.edu">Clint Liddick</author>
+
+  <depend>aikido</depend>
+  <depend>libherb</depend>
+
+  <!-- This is required by REP-136. -->
+  <exec_depend>catkin</exec_depend>
+  <buildtool_depend>cmake</buildtool_depend>
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+  <depend>pr_ordata</depend>
+  <depend>pr_tsr</depend>
+  <depend>herb_description</depend>
+</package>
