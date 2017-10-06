@@ -5,6 +5,16 @@ target_link_libraries(multilink-di-validity-checker
                       multilink-di-dart
                      )
 
+add_executable(kdp_pointmass2d 
+               kdp_pointmass2d.cpp
+              )
+target_link_libraries(kdp_pointmass2d 
+                      ${OMPL_LIBRARIES} 
+                      ${Boost_FILESYSTEM_LIBRARY} 
+                      ${Boost_SYSTEM_LIBRARY} 
+                      dimtLib
+                     )
+
 # Informed Pointmass
 add_executable(informed_pointmass
                informed_pointmass.cpp
