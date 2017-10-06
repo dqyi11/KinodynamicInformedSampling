@@ -17,14 +17,9 @@
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "create_obstacles.h"
-#include "load_problem.h"
-<<<<<<< HEAD
-#include "file_util.hpp"
+#include "Util/load_problem.h"
+#include "Util/file_util.hpp"
 #include "load_herb.h"
-=======
-#include "../External/multiLinkDI-dart/include/MultiLinkDIUtil.hpp"
-#include "file_util.hpp"
->>>>>>> dimt
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -35,11 +30,7 @@ bool MAIN_VERBOSE = true;
 
 void planWithSimpleSetup(void)
 {
-<<<<<<< HEAD
     bool withObstacle = true;
-   
-    // Intiatilizations for sampler
-    const int dimension = param.dimensions;
 
     std::shared_ptr<herb::Herb> herb = loadHerb();
     std::shared_ptr<aikido::statespace::dart::MetaSkeletonStateSpace> rightArmSpace
@@ -118,11 +109,7 @@ void planWithSimpleSetup(void)
         maxVelocities[i] = getHerbRightArmVelUpperLimit(herb, i);
         maxAccelerations[i] = getHerbRightArmAccelLimit(herb, i);
     }
-=======
-    // Initializations
-    std::vector<double> maxVelocities(param.dof, param.v_max);
-    std::vector<double> maxAccelerations(param.dof, param.a_max);
->>>>>>> dimt
+
     DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
     // Construct the state space we are planning in
@@ -130,23 +117,16 @@ void planWithSimpleSetup(void)
     ob::RealVectorBounds bounds(param.dimensions);
     for(uint i=0;i<param.dof;i++)
     {
-<<<<<<< HEAD
 
         bounds.setLow(i, getHerbRightArmPosLowerLimit(herb, i));
         bounds.setHigh(i, getHerbRightArmPosUpperLimit(herb, i));
         bounds.setLow(i+param.dof, getHerbRightArmVelLowerLimit(herb, i));
         bounds.setHigh(i+param.dof, getHerbRightArmVelUpperLimit(herb, i));
-=======
-        bounds.setLow(i, -param.s_max);
-        bounds.setHigh(i, param.s_max);
-        bounds.setLow(i+param.dof, -param.v_max);
-        bounds.setHigh(i+param.dof, param.v_max);
->>>>>>> dimt
+
     }
     space->as<ompl::base::DimtStateSpace>()->setBounds(bounds);
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     
-<<<<<<< HEAD
     ob::StateValidityCheckerPtr svc = createHerbStateValidityChecker(si, herb, rightArmSpace, nonCollidingConstraint);
     //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
     si->setStateValidityChecker(svc);
@@ -170,20 +150,7 @@ void planWithSimpleSetup(void)
     {
         std::cout << "Max Acceleration " << i << " " << maxAccelerations[i] << std::endl; 
     }
-=======
-    std::shared_ptr<MultiLinkDI> di = createMultiLinkDI("problem.json");
-    ob::StateValidityCheckerPtr svc = createMultiLinkDIStateValidityChecker(si, di);
-    //ob::StateValidityCheckerPtr svc = createStateValidityChecker(si, "obstacles.json");
-    si->setStateValidityChecker(svc);
-    si->setStateValidityCheckingResolution(0.002);  // 3%
-    si->setup();
 
-    ob::ProblemDefinitionPtr base_pdef = createProblem(si, "problem.json");
-
-    const ompl::base::OptimizationObjectivePtr base_opt = createDimtOptimizationObjective(si, dimt, "problem.json");
-    base_pdef->setOptimizationObjective(base_opt);
-
->>>>>>> dimt
     // Construct Sampler with the base pdef and base optimization objective
     double sigma = 1;
     //int max_steps = 20;
@@ -200,37 +167,28 @@ void planWithSimpleSetup(void)
     //const auto sampler = std::make_shared<ompl::base::DimtHierarchicalRejectionSampler>(si, base_pdef, dimt, level_set, max_call_num, batch_size);
     const auto sampler = std::make_shared<ompl::base::HitAndRunSampler>(si, base_pdef, level_set, max_call_num, batch_size, num_trials);
     //const auto sampler = std::make_shared<ompl::base::RejectionSampler>(si, base_pdef, level_set, max_call_num, batch_size);
-<<<<<<< HEAD
+
     sampler->setSingleSampleTimelimit(60.);
 
     const ompl::base::OptimizationObjectivePtr opt = createOptimizationObjective(si, sampler, PROBLEM_FILENAME);
 
     ob::ProblemDefinitionPtr pdef = createProblem(si, PROBLEM_FILENAME);
-=======
 
-    sampler->setSingleSampleTimelimit(10.);
-
-
-    const ompl::base::OptimizationObjectivePtr opt = createOptimizationObjective(si, sampler, "problem.json");
-
-    ob::ProblemDefinitionPtr pdef = createProblem(si, "problem.json");
->>>>>>> dimt
     //opt->setCostThreshold(ob::Cost(1.51));
     pdef->setOptimizationObjective(opt);
 
     ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
 
-<<<<<<< HEAD
+
 
     ompl::base::State* start = getStart(si, PROBLEM_FILENAME);
     ompl::base::State* goal = getGoal(si, PROBLEM_FILENAME);
-=======
->>>>>>> dimt
+
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);
     planner->setup();
 
-<<<<<<< HEAD
+
     std::cout << "start valid " << svc->isValid(start) << std::endl;
     std::cout << "goal valid " << svc->isValid(goal) << std::endl;
 
@@ -238,12 +196,7 @@ void planWithSimpleSetup(void)
     ob::PlannerStatus solved = planner->solve(2.0);
 
     //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 10.0);
-=======
-    // Run planner
-    ob::PlannerStatus solved = planner->solve(60.0);
 
-    //ob::PlannerStatus solved = planner->solveAndSaveSamples("samples.txt", 60.0);
->>>>>>> dimt
     //ob::lannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", 60.0);
 
     //return;
@@ -255,17 +208,11 @@ void planWithSimpleSetup(void)
         dumpPathToFile(path, dimt, "path.txt");
     }
 
-<<<<<<< HEAD
-=======
-    ompl::base::State* start = getStart(si, "problem.txt");
-    ompl::base::State* goal = getGoal(si, "problem.txt");
     std::vector<ompl::base::State*> stateSeq;
     stateSeq.push_back(start);
     stateSeq.push_back(goal);
     dumpPathToFile(stateSeq, dimt, "testpath.txt");
 
-
->>>>>>> dimt
 }
 
 int main()

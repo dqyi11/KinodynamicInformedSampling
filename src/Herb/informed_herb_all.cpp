@@ -18,7 +18,7 @@
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "create_obstacles.h"
-#include "load_problem.h"
+#include "Util/load_problem.h"
 #include "load_herb.h"
 
 namespace ob = ompl::base;
@@ -218,15 +218,10 @@ void planWithSimpleSetup(void)
     ompl::base::State *goal_state = getGoal(si, PROBLEM_FILENAME);
 
     int start_idx = 0;
-<<<<<<< HEAD:src/Planning/informed_pointmass_all.cpp
+
     int iteration_num = 20;
     double duration = 20.0; //run time in seconds
-=======
-    int iteration_num = 10;
 
-    double duration = 10.0; //run time in seconds
-
->>>>>>> dimt:src/Planning/informed_pointmass_all.cpp
     std::string caseName = "simple";
 
     for(int i=start_idx;i<iteration_num;i++)
@@ -236,12 +231,9 @@ void planWithSimpleSetup(void)
         {
             std::cout << " Hit And Run " << std::endl;
             auto planner = createPlanner(caseName, i, HNR, si, dimt, start_state, goal_state, duration);
-<<<<<<< HEAD:src/Planning/informed_pointmass_all.cpp
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-            //ob::PlannerStatus solved = planner->solve(duration);
-=======
             planner->solveAfterLoadingSamples("samples.txt", duration);
->>>>>>> dimt:src/Planning/informed_pointmass_all.cpp
+            //ob::PlannerStatus solved = planner->solve(duration);
+
         }
 
         /*
@@ -257,36 +249,27 @@ void planWithSimpleSetup(void)
         {
             std::cout << " HRS " << std::endl;
             auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
-<<<<<<< HEAD:src/Planning/informed_pointmass_all.cpp
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-            //ob::PlannerStatus solved = planner->solve(duration);
-=======
             planner->solveAfterLoadingSamples("samples.txt", duration);
->>>>>>> dimt:src/Planning/informed_pointmass_all.cpp
+            //ob::PlannerStatus solved = planner->solve(duration);
+
         }
 
         // Rejection
         {
             std::cout << " Rejection " << std::endl;
             auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
-<<<<<<< HEAD:src/Planning/informed_pointmass_all.cpp
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-            //ob::PlannerStatus solved = planner->solve(duration);
-=======
             planner->solveAfterLoadingSamples("samples.txt", duration);
->>>>>>> dimt:src/Planning/informed_pointmass_all.cpp
+            //ob::PlannerStatus solved = planner->solve(duration);
+
         }
 
         // MCMC
         {
             std::cout << " HMC " << std::endl;
             auto planner = createPlanner(caseName, i, MCMC, si, dimt, start_state, goal_state, duration);
-<<<<<<< HEAD:src/Planning/informed_pointmass_all.cpp
-            ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
-            //ob::PlannerStatus solved = planner->solve(duration);
-=======
             planner->solveAfterLoadingSamples("samples.txt", duration);
->>>>>>> dimt:src/Planning/informed_pointmass_all.cpp
+            //ob::PlannerStatus solved = planner->solve(duration);
+
         }
 
     }

@@ -10,9 +10,12 @@ find_package(aikido QUIET
     planner_parabolic
     statespace
     io
+    rviz
 )
 include_directories(${aikido_INCLUDE_DIRS})
-if(NOT aikido_FOUND)
+if(aikido_FOUND)
+  message("aikido FOUND")
+else()
   message("aikido not FOUND")
   return()
 endif()

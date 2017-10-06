@@ -8,7 +8,7 @@
 #include <boost/program_options.hpp>
 #include <libherb/herb.hpp>
 #include <aikido/rviz/InteractiveMarkerViewer.hpp>
-#include <aikido/util/CatkinResourceRetriever.hpp>
+#include <aikido/io/CatkinResourceRetriever.hpp>
 #include <dart/utils/urdf/DartLoader.hpp>
 #include <dart/collision/CollisionDetector.hpp>
 #include <dart/collision/CollisionOption.hpp>
@@ -50,7 +50,7 @@ const dart::dynamics::SkeletonPtr makeBodyFromURDF(const std::string& uri,
 {
   // Resolves package:// URIs by emulating the behavior of 'catkin_find'.
   const auto resourceRetriever
-    = std::make_shared<aikido::util::CatkinResourceRetriever>();
+    = std::make_shared<aikido::io::CatkinResourceRetriever>();
 
   dart::utils::DartLoader urdfLoader;
   const dart::dynamics::SkeletonPtr skeleton = urdfLoader.parseSkeleton(

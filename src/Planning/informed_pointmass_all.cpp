@@ -18,7 +18,7 @@
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "create_obstacles.h"
-#include "load_problem.h"
+#include "Util/load_problem.h"
 #include "../External/multiLinkDI-dart/include/MultiLinkDIUtil.hpp"
 
 namespace ob = ompl::base;
