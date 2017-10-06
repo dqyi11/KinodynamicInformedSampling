@@ -59,6 +59,7 @@ constexpr Params param_12dof = {
     10 // v_max
 };
 
-constexpr Params param = param_2dof;
+
+constexpr Params param = param_6dof;
 
 // constexpr Params param = param_1dof;

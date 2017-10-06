@@ -120,12 +120,6 @@ void planWithSimpleSetup(void)
     std::vector<double> maxAccelerations(param.dof, param.a_max);
     DIMTPtr dimt = std::make_shared<DIMT>( maxAccelerations, maxVelocities );
 
-    // Intiatilizations for sampler
-    const int dimension = param.dimensions;
-
-
-
-
     int start_idx = 0;
     int iteration_num = 20;
     double duration = 45.0; //run time in seconds
@@ -190,28 +184,28 @@ void planWithSimpleSetup(void)
                 {
                     std::cout << " MCMC " << std::endl;
                     auto planner = createPlanner(caseName, i, MCMC, si, dimt, start_state, goal_state, duration);
-                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                    planner->solveAfterLoadingSamples("samples.txt", duration);
                 }
 
                 // HMC
                 {
                     std::cout << " HMC " << std::endl;
                     auto planner = createPlanner(caseName, i, HMC, si, dimt, start_state, goal_state, duration);
-                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                    planner->solveAfterLoadingSamples("samples.txt", duration);
                 }
 
                 // HRS
                 {
                     std::cout << " HRS " << std::endl;
                     auto planner = createPlanner(caseName, i, HRS, si, dimt, start_state, goal_state, duration);
-                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                    planner->solveAfterLoadingSamples("samples.txt", duration);
                 }
 
                 // Rejection
                 {
                     std::cout << " Rejection " << std::endl;
                     auto planner = createPlanner(caseName, i, RS, si, dimt, start_state, goal_state, duration);
-                    ob::PlannerStatus solved = planner->solveAfterLoadingSamples("samples.txt", duration);
+                    planner->solveAfterLoadingSamples("samples.txt", duration);
                 }
             }
         }

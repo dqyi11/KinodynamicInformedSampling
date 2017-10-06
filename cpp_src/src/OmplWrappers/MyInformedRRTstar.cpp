@@ -30,20 +30,6 @@ using namespace ompl::geometric;
 
 bool RRT_VERBOSE = false;
 
-void print_out_states(ompl::base::State *statePtr)
-{
-    double *val = static_cast<ompl::base::RealVectorStateSpace::StateType *>(statePtr)->values;
-
-    std::vector<double> val_vec(val, val + sizeof val / sizeof val[0]);
-
-    std::cout << "Printing sample of size: " << std::cout << val_vec.size() << " | Vec: [ ";
-    for (uint i = 0; i < param.dimensions; i++)
-    {
-        std::cout << val[i] << " ";
-    }
-    std::cout << " ]" << std::endl;
-}
-
 //
 // MyInformedRRTstar
 // This is here mainly for debugging

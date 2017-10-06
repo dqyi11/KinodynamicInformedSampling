@@ -158,7 +158,7 @@ namespace ompl
             int numOfTries_;
             NormalRealRandomGenerator normRndGnr_;
             double diagonalLength_;
-            int numOfPrevSamples_;
+            uint numOfPrevSamples_;
             std::vector<Eigen::VectorXd> prevSamples_;
             int headOfPrevSamples_;
 

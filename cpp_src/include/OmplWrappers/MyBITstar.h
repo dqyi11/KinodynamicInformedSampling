@@ -1,8 +1,8 @@
-#ifndef MY_INFORMED_RRT_STAR_H_
-#define MY_INFORMED_RRT_STAR_H_
+#ifndef MY_BIT_STAR_H_
+#define MY_BIT_STAR_H_
 
 // OMPL
-#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
+#include <ompl/geometric/planners/bitstar/BITstar.h>
 #include "ompl/datastructures/NearestNeighborsLinear.h"
 #include "ompl/datastructures/NearestNeighborsGNAT.h"
 #include <iostream>
@@ -13,11 +13,11 @@ namespace ompl
 {
     namespace base
     {
-        class MyInformedRRTstar : public ompl::geometric::InformedRRTstar
+        class MyBITstar : public ompl::geometric::BITstar
         {
         public:
             typedef enum { LOAD_SAMPLES, SAVE_SAMPLES, RANDOM_SAMPLES } PlannerMode;
-            MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si);
+            MyBITstar(const ompl::base::SpaceInformationPtr &si);
 
             virtual ompl::base::PlannerStatus solve(const ompl::base::PlannerTerminationCondition &ptc) override;
 
@@ -89,9 +89,9 @@ namespace ompl
 
         };
 
-        using MyInformedRRTstarPtr = std::shared_ptr<MyInformedRRTstar>;
+        using MyBITstarPtr = std::shared_ptr<MyBITstar>;
 
     }
 }
 
-#endif // MY_INFORMED_RRT_STAR_H_
+#endif // MY_BIT_STAR_H_
