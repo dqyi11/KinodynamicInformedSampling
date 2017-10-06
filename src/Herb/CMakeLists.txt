@@ -1,4 +1,16 @@
-find_package(aikido QUIET)
+find_package(aikido QUIET
+  COMPONENTS
+    common
+    constraint
+    control
+    control_ros
+    distance
+    planner
+    planner_ompl
+    planner_parabolic
+    statespace
+    io
+)
 include_directories(${aikido_INCLUDE_DIRS})
 if(NOT aikido_FOUND)
   return()
