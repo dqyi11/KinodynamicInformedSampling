@@ -37,7 +37,7 @@ bool RRT_VERBOSE = false;
 
 namespace ompl
 {
-namespace base
+namespace geometric
 {
 
 MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) : InformedRRTstar(si)
@@ -57,6 +57,79 @@ MyInformedRRTstar::MyInformedRRTstar(const ompl::base::SpaceInformationPtr &si) 
     setNewStateRejection(false);
     setDelayCC(false);
 }
+
+void MyInformedRRTstar::initLogFile(std::string scenarioName, std::string samplerName, int id)
+{
+    std::stringstream ss;
+    ss << scenarioName.c_str() << "_" << samplerName.c_str() << "_" << id << ".csv";
+    out_.open(ss.str());
+
+    std::cout << "SAVING FILE TO " << ss.str() << " = " << out_.is_open() << std::endl;
+}
+
+ompl::base::PlannerStatus MyInformedRRTstar::solve(double solveTime)
+{
+    if (solveTime < 1.0)
+        return solve(ompl::base::timedPlannerTerminationCondition(solveTime));
+    return solve(ompl::base::timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+}
+
+ompl::base::PlannerStatus MyInformedRRTstar::solveAfterLoadingSamples(std::string filename, double solveTime)
+{
+    mode_ = LOAD_SAMPLES;
+
+    /*
+    if(nn_)
+    {
+        //nn_.reset(new NearestNeighborsLinear<Motion *>());
+        nn_.reset(new NearestNeighborsGNAT<Motion*>());
+        nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+    }*/
+
+    sampleLoadStream_.open(filename.c_str(), std::ios::in);
+    if(sampleLoadStream_.is_open()==false)
+    {
+        throw std::runtime_error("fail in loading sample file");
+    }
+    else
+    {
+        std::cout << "sample file loaded" << std::endl;
+    }
+    loadedSamplesStr_.clear();
+    if(sampleLoadStream_.eof())
+    {
+        throw std::runtime_error("EOF");
+    }
+    std::string tmpStr;
+    while(std::getline(sampleLoadStream_, tmpStr))
+    {
+        loadedSamplesStr_.push_back(tmpStr);
+        //std::cout << "TEST " << tmpStr.c_str() << std::endl;
+    }
+
+    if (solveTime < 1.0)
+        return solve(ompl::base::timedPlannerTerminationCondition(solveTime));
+    return solve(ompl::base::timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+}
+
+ompl::base::PlannerStatus MyInformedRRTstar::solveAndSaveSamples(std::string filename, double solveTime)
+{
+    mode_ = SAVE_SAMPLES;
+
+    /*
+    if(nn_)
+    {
+        //nn_.reset(new NearestNeighborsLinear<Motion *>());
+        nn_.reset(new NearestNeighborsGNAT<Motion*>());
+        nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+    }*/
+
+    sampleSaveStream_.open(filename.c_str(), std::ios::out);
+    if (solveTime < 1.0)
+        return solve(ompl::base::timedPlannerTerminationCondition(solveTime));
+    return solve(ompl::base::timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+}
+
 
 base::PlannerStatus MyInformedRRTstar::solve(const base::PlannerTerminationCondition &ptc)
 {

@@ -42,7 +42,7 @@ const double level_set = std::numeric_limits<double>::infinity();
 
 bool MAIN_VERBOSE = true;
 
-ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
+ompl::geometric::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
                                      SamplerType type, ompl::base::SpaceInformationPtr si,
                                      DIMTPtr dimt,
                                      const ompl::base::State* start_state,
@@ -104,7 +104,7 @@ ompl::base::MyInformedRRTstarPtr createPlanner(std::string caseName, int index,
     pdef->setStartAndGoalStates(start, goal);
     pdef->setOptimizationObjective(opt);
 
-    ob::MyInformedRRTstarPtr planner = std::make_shared<ob::MyInformedRRTstar>(si);
+    og::MyInformedRRTstarPtr planner = std::make_shared<og::MyInformedRRTstar>(si);
 
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);

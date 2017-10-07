@@ -1,7 +1,9 @@
 #include <OmplWrappers/MyBITstar.h>
 
+
 #include <iostream>
 
+#include <ompl/base/PlannerTerminationCondition.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
 using namespace ompl;
@@ -13,8 +15,9 @@ using namespace ompl::geometric;
 
 namespace ompl
 {
-namespace base
+namespace geometric
 {
+
 
 MyBITstar::MyBITstar(const ompl::base::SpaceInformationPtr &si) : BITstar(si)
 {
@@ -22,10 +25,65 @@ MyBITstar::MyBITstar(const ompl::base::SpaceInformationPtr &si) : BITstar(si)
 
 }
 
+void MyBITstar::initLogFile(std::string scenarioName, std::string samplerName, int id)
+{
+    std::stringstream ss;
+    ss << scenarioName.c_str() << "_" << samplerName.c_str() << "_" << id << ".csv";
+    out_.open(ss.str());
+
+    std::cout << "SAVING FILE TO " << ss.str() << " = " << out_.is_open() << std::endl;
+}
+
 base::PlannerStatus MyBITstar::solve(const base::PlannerTerminationCondition &ptc)
 {
 
 }
+
+
+ompl::base::PlannerStatus MyBITstar::solve(double solveTime)
+{
+    if (solveTime < 1.0)
+        return solve(ompl::base::timedPlannerTerminationCondition(solveTime));
+    return solve(ompl::base::timedPlannerTerminationCondition(solveTime,
+                                                              std::min(solveTime / 100.0, 0.1)));
+}
+
+ompl::base::PlannerStatus MyBITstar::solveAfterLoadingSamples(std::string filename, double solveTime)
+{
+    mode_ = LOAD_SAMPLES;
+
+    /*
+    if(nn_)
+    {
+        //nn_.reset(new NearestNeighborsLinear<Motion *>());
+        nn_.reset(new NearestNeighborsGNAT<Motion*>());
+        nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+    }*/
+
+    sampleLoadStream_.open(filename.c_str(), std::ios::in);
+    if (solveTime < 1.0)
+        return solve(ompl::base::timedPlannerTerminationCondition(solveTime));
+    return solve(ompl::base::timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+}
+
+ompl::base::PlannerStatus MyBITstar::solveAndSaveSamples(std::string filename, double solveTime)
+{
+    mode_ = SAVE_SAMPLES;
+
+    /*
+    if(nn_)
+    {
+        //nn_.reset(new NearestNeighborsLinear<Motion *>());
+        nn_.reset(new NearestNeighborsGNAT<Motion*>());
+        nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+    }*/
+
+    sampleSaveStream_.open(filename.c_str(), std::ios::out);
+    if (solveTime < 1.0)
+        return solve(ompl::base::timedPlannerTerminationCondition(solveTime));
+    return solve(ompl::base::timedPlannerTerminationCondition(solveTime, std::min(solveTime / 100.0, 0.1)));
+}
+
 
 bool MyBITstar::toState(std::string stateString, ompl::base::State* toState)
 {
