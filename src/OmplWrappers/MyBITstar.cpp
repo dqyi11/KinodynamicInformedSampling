@@ -36,7 +36,7 @@ void MyBITstar::initLogFile(std::string scenarioName, std::string samplerName, i
 
 base::PlannerStatus MyBITstar::solve(const base::PlannerTerminationCondition &ptc)
 {
-
+    return BITstar::solve(ptc);
 }
 
 

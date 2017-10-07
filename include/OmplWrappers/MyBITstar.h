@@ -42,11 +42,9 @@ namespace ompl
             std::ifstream sampleLoadStream_;
 
             uint64_t samplesGeneratedNum_;
-
         };
 
         using MyBITstarPtr = std::shared_ptr<MyBITstar>;
-
     }
 }
 
