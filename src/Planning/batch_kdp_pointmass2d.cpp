@@ -4,7 +4,7 @@
 #include "Dimt/Params.h"
 #include "Dimt/DoubleIntegratorMinimumTime.h"
 #include "ompl/geometric/SimpleSetup.h"
-#include <OmplWrappers/MyBITstar.h>
+#include "ompl/geometric/planners/bitstar/BITstar.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -62,7 +62,7 @@ void planWithSimpleSetup(void)
     pdef->setStartAndGoalStates(start, goal);
     // Construct Planner
     // ob::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
-    ob::PlannerPtr planner(new og::MyBITstar(si));
+    ob::PlannerPtr planner(new og::BITstar(si));
     // Set the problem instance for our planner to solve
     planner->setProblemDefinition(pdef);
     planner->setup();

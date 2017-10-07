@@ -26,6 +26,20 @@ target_link_libraries(batch_kdp_pointmass2d
                       omplwrapperLib
                      )
 
+add_executable(batch_informed_pointmass
+               batch_informed_pointmass.cpp
+              )
+target_link_libraries(batch_informed_pointmass
+                      ${OMPL_LIBRARIES}
+                      ${Boost_FILESYSTEM_LIBRARY}
+                      ${Boost_SYSTEM_LIBRARY}
+                      ${JSONCPP_LIBRARY}
+                      samplerLib
+                      dimtLib
+                      omplwrapperLib
+                      multilink-di-validity-checker
+                     )
+
 # Informed Pointmass
 add_executable(informed_pointmass
                informed_pointmass.cpp
